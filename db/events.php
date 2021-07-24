@@ -15,25 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines message providers (types of messages being sent)
+ * Definitions of events that should be observed
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+$observers = array(
 
-$messageproviders = array (
-
-    // Motivational intervention notification.
-    'motbot_intervention' => array (
-        'defaults' => array(
-            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
-            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDOFF,
-            'airnotifier' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
-        ),
-        'capability'  => 'mod/motbot:receiveintervention',
-    ),
+    array(
+        'eventname'   => '\core\event\course_information_viewed',
+        'callback'    => 'mod_motbot_event_observer::course_viewed',
+    )
 
 );

@@ -50,3 +50,8 @@ $string['target:coursedropout'] = 'Students at risk of dropping out';
 $string['target:coursedropout_help'] = 'This target describes whether the student is considered at risk of dropping out.';
 
 $string['tomanyinstances'] = 'There should only be one Motbot activity in a course.';
+
+$string['user_settings_form:prohibit'] = 'Prohibit';
+$string['user_settings_form:authorize'] = 'Authorize';
+$string['user_settings_form:authorized'] = 'Enable Motbot';
+$string['user_settings_form:authorized_help'] = 'Allow the Motbot to analyze your user activity and intervene if needed.';

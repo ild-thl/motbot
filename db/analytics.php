@@ -105,11 +105,11 @@ $models = [
     //     'enabled' => true,
     // ],
     [
-        'target' => '\core_course\analytics\target\no_recent_accesses',
+        'target' => '\mod_motbot\analytics\target\no_recent_accesses',
         'indicators' => [
             '\core\analytics\indicator\any_course_access',
         ],
-        'timesplitting' => '\core\analytics\time_splitting\past_month',
+        'timesplitting' => '\core\analytics\time_splitting\past_week',
         'enabled' => true,
     ],
 ];
@@ -117,5 +117,5 @@ $models = [
 $result = [];
 
 foreach ($models as $model) {
-    $result[] = static::create_declared_model($definition);
+    $result[] = static::create_declared_model($model);
 }

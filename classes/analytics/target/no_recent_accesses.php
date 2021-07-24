@@ -86,12 +86,19 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      * @return bool
      */
     public function is_valid_sample($sampleid, \core_analytics\analysable $course, $fortraining = true) {
-
-        // $now = time();
+        global $DB;
 
         $userenrol = $this->retrieve('user_enrolments', $sampleid);
 
-        // only users that explicitly allow the bot to analyse thier samples
+        $user = \mod_motbot\manager::get_prediction_subject($sampleid);
+        echo('Course ID: ' . $course->get_id());
+        $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
+
+        if($motbot) {
+            if(!$DB->get_record('motbot_user', array('motbot_id' => $motbot->id, 'user_id' => $user->id, 'authorized' => 1))) {
+                return false;
+            }
+        }
 
         return parent::is_valid_sample($sampleid, $course, $fortraining);
     }

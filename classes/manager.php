@@ -22,7 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_motbot\retention;
+namespace mod_motbot;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -35,6 +35,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 class manager {
     public static function get_prediction_subject($sampleid) {
+        global $DB;
+
         $user_enrolement = $DB->get_record('user_enrolments', array('id'=>$sampleid));
 
         if($user_enrolement) {

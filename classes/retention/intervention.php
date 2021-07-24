@@ -27,15 +27,18 @@ namespace mod_motbot\retention;
 defined('MOODLE_INTERNAL') || die();
 
 class intervention {
-    const TARGET_NAME_REGEX = '/.+\\(.+)/m';
+    const TARGET_NAME_REGEX = '/.+\\\(.+)/m';
     private $subject = null;
     private $prediction = null;
     private $method = null;
+    private $desired_event = null;
+    private $status = 'ongoing';
 
     public function __construct($subject, $prediction) {
         $this->subject = $subject;
         $this->prediction = $prediction;
         $this->method = $prediction;
+        $this->desired_event = $prediction;
 
         $this->schedule();
     }
@@ -61,12 +64,12 @@ class intervention {
         $message = new \core\message\message();
         $message->component = 'mod_motbot'; // Your plugin's name
         $message->name = 'motbot_intervention'; // Your notification name from message.php
-        $message->userfrom = core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here
-        $message->userto = $subject;
+        $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here
+        $message->userto = $this->subject;
         $message->subject = \get_string('message:' . $target_name . '_subject', 'motbot');
         $message->fullmessage = 'message body';
         $message->fullmessageformat = FORMAT_MARKDOWN;
-        $message->fullmessagehtml = \get_string('message:' . $target_name . '_fullmessagehtml', 'motbot');
+        $message->fullmessagehtml = \get_string('message:' . $target_name . '_fullmessagehtml', 'motbot', $this->subject->firstname);
         $message->smallmessage = 'small message';
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
         $message->contexturl = (new \moodle_url('/course/'))->out(false); // A relevant URL for the notification
@@ -76,7 +79,7 @@ class intervention {
 
         // Actually send the message
         $messageid = message_send($message);
-        echo('Message ' . $messageid . ' sent to User ' . $subject->id);
+        echo('Message ' . $messageid . ' sent to User ' . $this->subject->id);
     }
 
     private function schedule() {
@@ -84,7 +87,7 @@ class intervention {
     }
 
     private function intervene() {
-        switch($method) {
+        switch($this->method) {
             default:
                 $this->send_intervention_message();
         }
