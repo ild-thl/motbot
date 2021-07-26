@@ -40,6 +40,20 @@ class mod_motbot_event_observer {
      * @return bool
      */
     public static function course_viewed(\core\event\course_information_viewed $event) {
+        global $DB;
 
+        $conditions_array = array(
+            'user' => $event->userid,
+            'course' => $event->courseid,
+            'desired_event' => $event->eventname,
+            'state' => \mod_motbot\retention\intervention::INTERVENED,
+        );
+
+        $record = $DB->get_record('intervention', $conditions_array);
+
+        if($record) {
+            $intervention = \mod_motbot\retention\intervention::from_db($intervention);
+            $intervention->on_success();
+        }
     }
 }

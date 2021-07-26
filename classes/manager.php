@@ -40,7 +40,14 @@ class manager {
         $user_enrolement = $DB->get_record('user_enrolments', array('id'=>$sampleid));
 
         if($user_enrolement) {
-            return $DB->get_record('user', array('id'=> $user_enrolement->userid));
+            $user = $DB->get_record('user', array('id'=> $user_enrolement->userid));
+
+            if(!$user) {
+                echo('No user found!');
+                return null;
+            }
+
+            return $user;
         }
 
         return null;

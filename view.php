@@ -33,13 +33,13 @@ $moduleinstance = $DB->get_record('motbot', array('id'=> $cm->instance), '*', MU
 require_login();
 $modulecontext = context_module::instance($cm->id);
 
-$motbot_user = $DB->get_record('motbot_user', array('motbot_id' => $moduleinstance->id, 'user_id' => $USER->id), '*');
+$motbot_user = $DB->get_record('motbot_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
 
 if(!$motbot_user) {
     $motbot_user = (object) [
         'id' => null,
-        'motbot_id' => $moduleinstance->id,
-        'user_id' => $USER->id,
+        'motbot' => $moduleinstance->id,
+        'user' => $USER->id,
         'authorized' => 0,
     ];
 }

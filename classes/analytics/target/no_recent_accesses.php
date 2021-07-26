@@ -91,11 +91,10 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
         $userenrol = $this->retrieve('user_enrolments', $sampleid);
 
         $user = \mod_motbot\manager::get_prediction_subject($sampleid);
-        echo('Course ID: ' . $course->get_id());
         $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
         if($motbot) {
-            if(!$DB->get_record('motbot_user', array('motbot_id' => $motbot->id, 'user_id' => $user->id, 'authorized' => 1))) {
+            if(!$DB->get_record('motbot_user', array('motbot' => $motbot->id, 'user' => $user->id, 'authorized' => 1))) {
                 return false;
             }
         }

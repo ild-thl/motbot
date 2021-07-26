@@ -37,12 +37,6 @@ class bot {
 
     public static function log_prediction($modelid, $sampleid, $rangeindex, \context $samplecontext, $scalar_prediction, $predictionscore) {
 
-        $subject = \mod_motbot\manager::get_prediction_subject($sampleid);
-
-        if(!$subject) {
-            echo('No user found!');
-            return;
-        }
 
         $prediction = (object) [
             'modelid' => $modelid,
@@ -53,7 +47,9 @@ class bot {
             'predictionscore' => $predictionscore
         ];
 
-        $intervention = new \mod_motbot\retention\intervention($subject, $prediction);
+        $intervention = \mod_motbot\retention\intervention::from_prediction($prediction);
+
+        $intervention->schedule();
 
         return;
     }
