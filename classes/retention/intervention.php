@@ -41,6 +41,9 @@ class intervention {
     private $desired_event = null;
     private $state = self::SCHEDULED;
     private $message = null;
+    private $usermodified = null;
+    private $timecreated = null;
+    private $timemodified = null;
 
 
     private function __construct() {
@@ -50,15 +53,17 @@ class intervention {
     public static function from_prediction($prediction) {
         global $DB;
 
-        $instance = new self();
+        $intervention = new self();
 
         // Get user id.
-        $subject = \mod_motbot\manager::get_prediction_subject($prediction->sampleid);
-        if(!$subject) {
+        $userid = \mod_motbot\manager::get_prediction_subject($prediction->sampleid);
+        if(!$userid) {
             error_log('no subject');
             return;
         }
-        $instance->user = $subject->id;
+        $intervention->user = $userid;
+
+        $intervention->course = $prediction->samplecontext->instanceid;
 
         // Get target of ananlytics model.
         $model = $DB->get_record('analytics_models', array('id'=> $prediction->modelid), 'target');
@@ -66,41 +71,55 @@ class intervention {
             error_log('Model not found.');
             return;
         }
-        $instance->target = $model->target;
+        $intervention->target = $model->target;
 
-        $instance->desired_event = $instance->get_desired_event();
+        $intervention->desired_event = $intervention->get_desired_event();
 
         // Create DB entry.
-        $instance->id = $DB->insert_record('intervention', $instance->get_db_data());
-        if(!$instance->id) {
+        $intervention->id = $DB->insert_record('intervention', $intervention->get_db_data());
+        if(!$intervention->id) {
             error_log('Intervention couldnt be inserted into DB');
             return;
         }
 
-        return $instance;
+        return $intervention;
     }
 
     public static function from_db($record) {
-        $instance = new self();
+        $intervention = new self();
 
-        $instance->id = $record->id;
-        $instance->user = $record->user;
-        $instance->desired_event = $record->desired_event;
-        $instance->target = $record->target;
-        $instance->state = $record->state;
-        $instance->message = $record->message;
+        $intervention->id = $record->id;
+        $intervention->user = $record->user;
+        $intervention->course = $record->course;
+        $intervention->desired_event = $record->desired_event;
+        $intervention->target = $record->target;
+        $intervention->state = $record->state;
+        $intervention->message = $record->message;
+        $intervention->usermodified = $record->usermodified;
+        $intervention->timecreated = $record->timecreated;
+        $intervention->timemodified = $record->timemodified;
 
-        return $instance;
+        return $intervention;
     }
 
     private function get_db_data() {
+        global $USER;
+
+        if(!$this->timecreated) {
+            $this->timecreated = time();
+        }
+
         return (object) [
             'id' => $this->id,
             'user' => $this->user,
+            'course' => $this->course,
             'desired_event' => $this->desired_event,
             'target' => $this->target,
             'state' => $this->state,
             'message' => $this->message,
+            'usermodified' => $USER->id,
+            'timecreated' => $this->timecreated,
+            'timemodified' => time(),
         ];
     }
 
@@ -109,7 +128,7 @@ class intervention {
 
         switch($this->target) {
             case '\mod_motbot\analytics\target\no_recent_accesses':
-                $desired_event = '\core\event\course_information_viewed';
+                $desired_event = '\core\event\course_viewed';
                 break;
         }
 
@@ -140,8 +159,8 @@ class intervention {
         $message->fullmessagehtml = \get_string('message:' . $target_name . '_fullmessagehtml', 'motbot', $user->firstname);
         $message->smallmessage = 'small message';
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
-        $message->contexturl = (new \moodle_url('/course/'))->out(false); // A relevant URL for the notification
-        $message->contexturlname = 'Course list'; // Link title explaining where users get to for the contexturl
+        $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->course))->out(false); // A relevant URL for the notification
+        $message->contexturlname = 'To Course'; // Link title explaining where users get to for the contexturl
         // $content = array('*' => array('header' => ' test ', 'footer' => ' test ')); // Extra content for specific processor
         // $message->set_additional_content('email', $content);
 

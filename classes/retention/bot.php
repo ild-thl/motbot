@@ -37,15 +37,16 @@ class bot {
 
     public static function log_prediction($modelid, $sampleid, $rangeindex, \context $samplecontext, $scalar_prediction, $predictionscore) {
 
-
         $prediction = (object) [
             'modelid' => $modelid,
-            'contextid' => $samplecontext->id,
+            'samplecontext' => $samplecontext,
             'sampleid' => $sampleid,
             'rangeindex' => $rangeindex,
             'prediction' => $scalar_prediction,
             'predictionscore' => $predictionscore
         ];
+
+        print_r($samplecontext);
 
         $intervention = \mod_motbot\retention\intervention::from_prediction($prediction);
 

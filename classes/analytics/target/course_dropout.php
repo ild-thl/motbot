@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * No recent accesses.
+ * Drop out course target.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -27,13 +27,13 @@ namespace mod_motbot\analytics\target;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * No recent accesses.
+ * Drop out course target.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class no_recent_accesses extends \core_course\analytics\target\no_recent_accesses {
+class course_dropout extends \core_course\analytics\target\course_dropout {
     /**
      * Returns the name.
      *
@@ -42,10 +42,10 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      * @return \lang_string
      */
     public static function get_name() : \lang_string {
-        return new \lang_string('target:norecentaccesses', 'motbot', null, 'en');
+        return new \lang_string('target:coursedropout', 'motbot', null, 'en');
     }
 
-        /**
+    /**
      * Discards courses that are not yet ready to be used for prediction.
      *
      * @param \core_analytics\analysable $course
@@ -88,8 +88,6 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
     public function is_valid_sample($sampleid, \core_analytics\analysable $course, $fortraining = true) {
         global $DB;
 
-        $userenrol = $this->retrieve('user_enrolments', $sampleid);
-
         $userid = \mod_motbot\manager::get_prediction_subject($sampleid);
         $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
@@ -123,21 +121,52 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
 
 
     /**
-     * Do the user has any read action in the course?
+     * calculate_sample
+     *
+     * The meaning of a drop out changes depending on the settings enabled in the course. Following these priorities order:
+     * 1.- Course completion
+     * 2.- No logs during the last quarter of the course
      *
      * @param int $sampleid
-     * @param \core_analytics\analysable $analysable
+     * @param \core_analytics\analysable $course
      * @param int $starttime
      * @param int $endtime
-     * @return float|null 0 -> accesses, 1 -> no accesses.
+     * @return float|null 0 -> not at risk, 1 -> at risk
      */
-    protected function calculate_sample($sampleid, \core_analytics\analysable $analysable, $starttime = false, $endtime = false) {
-        $readactions = $this->retrieve('\core\analytics\indicator\any_course_access', $sampleid);
-        if ($readactions == \core\analytics\indicator\any_course_access::get_min_value()) {
+    protected function calculate_sample($sampleid, \core_analytics\analysable $course, $starttime = false, $endtime = false) {
+        if (!$this->enrolment_active_during_analysis_time($sampleid, $starttime, $endtime)) {
+            // We should not use this sample as the analysis results could be misleading.
+            return null;
+        }
+
+        echo($sampleid);
+
+        $userenrol = $this->retrieve('user_enrolments', $sampleid);
+
+        // We use completion as a success metric only when it is enabled.
+        $completion = new \completion_info($course->get_course_data());
+        if ($completion->is_enabled() && $completion->has_criteria()) {
+            $ccompletion = new \completion_completion(array('userid' => $userenrol->userid, 'course' => $course->get_id()));
+            if ($ccompletion->is_complete()) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+
+        if (!$logstore = \core_analytics\manager::get_analytics_logstore()) {
+            throw new \coding_exception('No available log stores');
+        }
+
+        // No logs during the last quarter of the course.
+        $courseduration = $course->get_end() - $course->get_start();
+        $limit = intval($course->get_end() - ($courseduration / 4));
+        $select = "courseid = :courseid AND userid = :userid AND timecreated > :limit";
+        $params = array('userid' => $userenrol->userid, 'courseid' => $course->get_id(), 'limit' => $limit);
+        $nlogs = $logstore->get_events_select_count($select, $params);
+        if ($nlogs == 0) {
             return 1;
         }
-        return 1;
+        return 0;
     }
-
-
 }

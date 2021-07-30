@@ -43,10 +43,10 @@ $string['nomotbotinstance'] = 'No Motbot activity found in course.';
 $string['pluginadministration'] = 'Plugin Administration';
 $string['pluginname'] = 'Motbot';
 
-$string['target:norecentaccesses'] = 'Students who have not accessed the course recently';
+$string['target:norecentaccesses'] = 'Students who have not accessed the course recently (Motbot)';
 $string['target:norecentaccesses_help'] = 'This target identifies students who have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
 $string['target:norecentaccessesinfo'] = 'The following students have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
-$string['target:coursedropout'] = 'Students at risk of dropping out';
+$string['target:coursedropout'] = 'Students at risk of dropping out (Motbot)';
 $string['target:coursedropout_help'] = 'This target describes whether the student is considered at risk of dropping out.';
 
 $string['tomanyinstances'] = 'There should only be one Motbot activity in a course.';

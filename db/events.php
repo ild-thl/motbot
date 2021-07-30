@@ -26,7 +26,12 @@ $observers = array(
 
     array(
         'eventname'   => '\core\event\course_information_viewed',
-        'callback'    => 'mod_motbot_event_observer::course_viewed',
-    )
+        'callback'    => '\mod_motbot\observer::course_viewed',
+    ),
+
+    array(
+        'eventname'   => '\core\event\course_viewed',
+        'callback'    => '\mod_motbot\observer::course_viewed',
+    ),
 
 );

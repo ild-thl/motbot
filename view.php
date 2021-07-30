@@ -44,6 +44,23 @@ if(!$motbot_user) {
     ];
 }
 
+$interventions = $DB->get_records('intervention', array('user' => $USER->id, 'course' => $course->id), '', 'id, desired_event, target, state, message');
+
+$sql = "SELECT DISTINCT p.id, p.prediction, p.predictionscore
+        FROM mdl_user u
+        JOIN mdl_user_enrolments ue ON ue.userid = u.id
+        JOIN mdl_enrol e ON e.id = ue.enrolid
+        JOIN mdl_role_assignments ra ON ra.userid = u.id
+        JOIN mdl_context ct ON ct.id = ra.contextid AND ct.contextlevel = 50
+        JOIN mdl_course c ON c.id = ct.instanceid AND e.courseid = c.id
+        JOIN mdl_role r ON r.id = ra.roleid AND r.shortname = 'student'
+        JOIN mdl_analytics_predictions p ON p.sampleid = ue.id
+        WHERE e.status = 0 AND u.suspended = 0 AND u.deleted = 0
+        AND (ue.timeend = 0 OR ue.timeend > UNIX_TIMESTAMP(NOW())) AND ue.status = 0 AND u.id = :userid AND c.id = :courseid;";
+$params_array = array('userid' => $USER->id, 'courseid' => $course->id);
+$predicitons = $DB->get_records_sql($sql, $params_array);
+
+
 $toform = (object) [
     'id' => $id,
     'authorized' => $motbot_user ? $motbot_user->authorized : 0,
@@ -55,7 +72,7 @@ require_login($course, true, $cm);
 $PAGE->set_url('/mod/motbot/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->set_context($modulecontext);
+// $PAGE->set_context($modulecontext);
 
 //Instantiate simplehtml_form
 $mform = new mod_motbot_user_settings_form();
@@ -89,4 +106,47 @@ if ($mform->is_cancelled()) {
     $mform->set_data($toform);
     //displays the form
     $mform->display();
+
+    echo html_writer::tag('br', '');
+    echo html_writer::tag('h2', 'Interventions');
+    echo mod_motbot_get_interventions_table($interventions);
+
+
+
+    echo html_writer::tag('br', '');
+    echo html_writer::tag('h2', 'Predictions');
+    echo mod_motbot_get_predictions_table($predicitons);
+
+
+    echo $OUTPUT->footer();
+}
+
+
+function mod_motbot_get_interventions_table($interventions) {
+    $table = new html_table();
+    $table->attributes['class'] = 'generaltable';
+
+    $table->head  = array('id', 'desired_event', 'target', 'state', 'message');
+    $table->align = array('center', 'left', 'left', 'left', 'left');
+
+    foreach ($interventions as $intervention) {
+        $table->data[] = $intervention;
+    }
+
+    return html_writer::table($table);
+}
+
+
+function mod_motbot_get_predictions_table($predictions) {
+    $table = new html_table();
+    $table->attributes['class'] = 'generaltable';
+
+    $table->head  = array('id', 'prediction', 'predictionscore');
+    $table->align = array('center', 'left', 'left');
+
+    foreach ($predictions as $prediction) {
+        $table->data[] = $prediction;
+    }
+
+    return html_writer::table($table);
 }

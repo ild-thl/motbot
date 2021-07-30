@@ -37,19 +37,18 @@ class manager {
     public static function get_prediction_subject($sampleid) {
         global $DB;
 
-        $user_enrolement = $DB->get_record('user_enrolments', array('id'=>$sampleid));
+        $sql = "SELECT u.id as userid
+                FROM mdl_user u
+                JOIN mdl_user_enrolments ue ON ue.userid = u.id
+                WHERE ue.id = :sampleid;";
 
-        if($user_enrolement) {
-            $user = $DB->get_record('user', array('id'=> $user_enrolement->userid));
+        $result = $DB->get_record_sql($sql, array('sampleid' => $sampleid));
 
-            if(!$user) {
-                echo('No user found!');
-                return null;
-            }
-
-            return $user;
+        if(!$result) {
+            echo('No user found!');
+            return null;
         }
 
-        return null;
+        return $result->userid;
     }
 }

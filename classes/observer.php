@@ -22,6 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_motbot;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -31,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_motbot_event_observer {
+class observer {
 
     /**
      * Event processor - course summary viewed
@@ -39,7 +41,7 @@ class mod_motbot_event_observer {
      * @param \core\event\course_information_viewed $event
      * @return bool
      */
-    public static function course_viewed(\core\event\course_information_viewed $event) {
+    public static function course_viewed(\core\event\course_viewed $event) {
         global $DB;
 
         $conditions_array = array(
@@ -52,7 +54,7 @@ class mod_motbot_event_observer {
         $record = $DB->get_record('intervention', $conditions_array);
 
         if($record) {
-            $intervention = \mod_motbot\retention\intervention::from_db($intervention);
+            $intervention = \mod_motbot\retention\intervention::from_db($record);
             $intervention->on_success();
         }
     }
