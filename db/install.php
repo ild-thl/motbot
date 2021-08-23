@@ -15,41 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Manages predictions and creates interventions.
+ * post installation hook for adding entry in customusermenu.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace mod_motbot\retention;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Manages predictions and creates interventions.
- *
- * @package   mod_motbot
- * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Post installation procedure
  */
-class bot {
+function xmldb_motbot_install() {
+    global $CFG;
+    $result = true;
 
-    public static function log_prediction($modelid, $sampleid, $rangeindex, \context $samplecontext, $scalar_prediction, $predictionscore) {
+    $newitem = "\nmodulenameplural,mod_motbot|/mod/motbot/overview.php|grades";
+    $oldmenu = $CFG->customusermenuitems;
+    $oldmenu = str_replace($newitem, "", $oldmenu);
+    $newmenu = $oldmenu .= $newitem;
+    set_config('customusermenuitems', $newmenu);
 
-        $prediction = (object) [
-            'modelid' => $modelid,
-            'samplecontext' => $samplecontext,
-            'sampleid' => $sampleid,
-            'rangeindex' => $rangeindex,
-            'prediction' => $scalar_prediction,
-            'predictionscore' => $predictionscore
-        ];
-
-        $intervention = \mod_motbot\retention\intervention::from_prediction($prediction);
-
-        $intervention->execute();
-
-        return;
-    }
+    return $result;
 }

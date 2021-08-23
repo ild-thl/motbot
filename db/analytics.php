@@ -88,14 +88,14 @@ $models = [
     //     'timesplitting' => '\core\analytics\time_splitting\single_range',
     //     'enabled' => true,
     // ],
-    // [
-    //     'target' => '\core_user\analytics\target\upcoming_activities_due',
-    //     'indicators' => [
-    //         '\core_course\analytics\indicator\activities_due',
-    //     ],
-    //     'timesplitting' => '\core\analytics\time_splitting\upcoming_week',
-    //     'enabled' => true,
-    // ],
+    [
+        'target' => '\mod_motbot\analytics\target\upcoming_activities_due',
+        'indicators' => [
+            '\core_course\analytics\indicator\activities_due',
+        ],
+        'timesplitting' => '\core\analytics\time_splitting\upcoming_week',
+        'enabled' => true,
+    ],
     // [
     //     'target' => '\core_course\analytics\target\no_access_since_course_start',
     //     'indicators' => [
@@ -108,6 +108,16 @@ $models = [
         'target' => '\mod_motbot\analytics\target\no_recent_accesses',
         'indicators' => [
             '\core\analytics\indicator\any_course_access',
+        ],
+        'timesplitting' => '\core\analytics\time_splitting\past_week',
+        'enabled' => true,
+    ],
+    [
+        'target' => '\mod_motbot\analytics\target\low_social_presence',
+        'indicators' => [
+            'mod_motbot\analytics\indicator\social_presence_in_course_forum',
+            'mod_motbot\analytics\indicator\social_presence_in_course_chat',
+            'mod_motbot\analytics\indicator\any_write_action_in_course_feedback_yet',
         ],
         'timesplitting' => '\core\analytics\time_splitting\past_week',
         'enabled' => true,

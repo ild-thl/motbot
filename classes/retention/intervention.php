@@ -26,20 +26,27 @@ namespace mod_motbot\retention;
 
 defined('MOODLE_INTERNAL') || die();
 
-class intervention {
-    const TARGET_NAME_REGEX = '/.+\\\(.+)/m';
+require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 
+class intervention {
     const SCHEDULED = 0;
     const INTERVENED = 1;
     const SUCCESSFUL = 2;
     const UNSUCCESSFUL = 3;
+    const STORED = 4;
 
     private $id = null;
-    private $user = null;
+    private $recipient = null;
+    private $recipientuser = null;
+    private $motbot = null;
+    private $contextid = null;
+    private $context = null;
     private $course = null;
     private $target = null;
-    private $desired_event = null;
+    private $target_target = null;
+    private $desired_events = null;
     private $state = self::SCHEDULED;
+    private $teachers_informed = false;
     private $message = null;
     private $usermodified = null;
     private $timecreated = null;
@@ -50,20 +57,57 @@ class intervention {
 
     }
 
+    public static function get_state_name($state) {
+        return \get_string('state:' . $state, 'motbot');
+    }
+
+    private function get_recipient() {
+        global $DB;
+        if(!$this->recipientuser) {
+            $this->recipientuser = $DB->get_record('user', array('id' => $this->recipient));
+        }
+        return $this->recipientuser;
+    }
+
+
+    private function get_motbot() {
+        global $DB;
+        if(!$this->motbot && $this->get_context()->contextlevel == 50) {
+            $this->motbot = $DB->get_record('motbot', array('course' => $this->get_context()->instanceid));
+        }
+        return $this->motbot;
+    }
+
+    private function get_context() {
+        global $DB;
+        if(!$this->context) {
+            $this->context = $DB->get_record('context', array('id' => $this->contextid));
+        }
+        return $this->context;
+    }
+
+    private function get_course() {
+        global $DB;
+        if(!$this->course && $this->get_context()->contextlevel == 50) {
+            $this->course = $DB->get_record('course', array('id' => $this->get_context()->instanceid));
+        }
+        return $this->course;
+    }
+
+
+    private function get_target() {
+        global $DB;
+        if(!$this->target_target) {
+            $this->target_target = \core_analytics\manager::get_target($this->target);
+        }
+        return $this->target_target;
+    }
+
+
     public static function from_prediction($prediction) {
         global $DB;
 
         $intervention = new self();
-
-        // Get user id.
-        $userid = \mod_motbot\manager::get_prediction_subject($prediction->sampleid);
-        if(!$userid) {
-            error_log('no subject');
-            return;
-        }
-        $intervention->user = $userid;
-
-        $intervention->course = $prediction->samplecontext->instanceid;
 
         // Get target of ananlytics model.
         $model = $DB->get_record('analytics_models', array('id'=> $prediction->modelid), 'target');
@@ -73,10 +117,19 @@ class intervention {
         }
         $intervention->target = $model->target;
 
-        $intervention->desired_event = $intervention->get_desired_event();
+        // Get recipient id.
+        $recipientid = \mod_motbot\manager::get_prediction_subject($prediction->sampleid, $intervention->target);
+        if(!$recipientid) {
+            error_log('no subject');
+            return;
+        }
+        $intervention->recipient = $recipientid;
+
+        $intervention->contextid = $prediction->samplecontext->id;
+        $intervention->desired_events = $intervention->get_desired_events();
 
         // Create DB entry.
-        $intervention->id = $DB->insert_record('intervention', $intervention->get_db_data());
+        $intervention->id = $DB->insert_record('motbot_intervention', $intervention->get_db_data());
         if(!$intervention->id) {
             error_log('Intervention couldnt be inserted into DB');
             return;
@@ -85,15 +138,49 @@ class intervention {
         return $intervention;
     }
 
+    private function is_critical() {
+        global $DB;
+
+        if(!$this->target::is_critical()) {
+            return false;
+        }
+
+        // Check for previous interventions that werent succesful and mark them as such
+        $prevints_conditions = array(
+            'recipient' => $this->recipient,
+            'contextid' => $this->contextid,
+            'desired_events' => $this->desired_events,
+            'state' => \mod_motbot\retention\intervention::INTERVENED,
+        );
+        $prevint_records = $DB->get_records('motbot_intervention', $prevints_conditions, 'id');
+        foreach($prevint_records as $prevint_record) {
+            $prevint = self::from_db($prevint_record)->set_state(self::UNSUCCESSFUL);
+        }
+
+        $sql = "SELECT *
+                FROM mdl_motbot_course_user mu, mdl_motbot m
+                WHERE m.course = :course
+                AND m.id = mu.motbot
+                AND mu.allow_teacher_involvement = 1
+                AND mu.user = :user;";
+        $allowed = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'user' => $this->recipient));
+
+        if(empty($prevint_records) || !$allowed) {
+            return false;
+        }
+        return true;
+    }
+
     public static function from_db($record) {
         $intervention = new self();
 
         $intervention->id = $record->id;
-        $intervention->user = $record->user;
-        $intervention->course = $record->course;
-        $intervention->desired_event = $record->desired_event;
+        $intervention->recipient = $record->recipient;
+        $intervention->contextid = $record->contextid;
+        $intervention->desired_events = $record->desired_events;
         $intervention->target = $record->target;
         $intervention->state = $record->state;
+        $intervention->teachers_informed = $record->teachers_informed;
         $intervention->message = $record->message;
         $intervention->usermodified = $record->usermodified;
         $intervention->timecreated = $record->timecreated;
@@ -111,11 +198,12 @@ class intervention {
 
         return (object) [
             'id' => $this->id,
-            'user' => $this->user,
-            'course' => $this->course,
-            'desired_event' => $this->desired_event,
+            'recipient' => $this->recipient,
+            'contextid' => $this->contextid,
+            'desired_events' => $this->desired_events,
             'target' => $this->target,
             'state' => $this->state,
+            'teachers_informed' => $this->teachers_informed,
             'message' => $this->message,
             'usermodified' => $USER->id,
             'timecreated' => $this->timecreated,
@@ -123,59 +211,130 @@ class intervention {
         ];
     }
 
-    private function get_desired_event() {
-        $desired_event = null;
-
-        switch($this->target) {
-            case '\mod_motbot\analytics\target\no_recent_accesses':
-                $desired_event = '\core\event\course_viewed';
-                break;
-        }
-
-        return $desired_event;
+    private function get_desired_events() {
+        return $this->target::get_desired_events();
     }
 
 
-    private function send_intervention_message() {
-        global $DB;
-        preg_match(self::TARGET_NAME_REGEX, $this->target, $matches);
-        $target_name = $matches[1];
-
-        if(!$target_name || empty($target_name)) {
-            error_log('Target name couldnt be identified.');
+    private function send_message($message, $userto = null) {
+        if(!$message) {
             return;
         }
 
-        $user = $DB->get_record('user', array('id' => $this->user));
+        if(!$message->userto) {
+            $message->userto = $userto;
+        }
+
+
+        // Actually send the message
+        $this->message = message_send($message);
+        if(!$this->message) {
+            return false;
+        }
+
+        $this->update_record();
+        echo('Message ' . $this->message . ' sent to User ' . $message->userto->id);
+
+        return true;
+    }
+
+
+    private function create_teacher_message() {
+        global $DB;
+        $target_name = \mod_motbot_get_name_of_target($this->target);
+
+        if(!$target_name || empty($target_name)) {
+            error_log('Target name couldnt be identified.');
+            return null;
+        }
+
+        $recipient = $this->get_recipient();
+
+        $message = new \core\message\message();
+        $message->component = 'mod_motbot'; // Your plugin's name
+        $message->name = 'motbot_teacher_intervention'; // Your notification name from message.php
+        $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here
+        $message->userto = null;
+        $message->subject = \get_string('message:teacher_subject', 'motbot', $recipient->firstname . ' ' . $recipient->lastname);
+        $message->fullmessage = 'message body';
+        $message->fullmessageformat = FORMAT_HTML;
+        $message->fullmessagehtml = \get_string('message:teacher_fullmessagehtml', 'motbot', (object)['fullname' => $recipient->firstname . ' ' . $recipient->lastname, 'interventions' => mod_motbot_get_interventions_table($this->recipient, $this->contextid)]);
+        $message->smallmessage = 'small message';
+        $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
+        $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification
+        $message->contexturlname = 'To Course'; // Link title explaining where users get to for the contexturl
+
+        return $message;
+    }
+
+
+    private function create_intervention_message() {
+        global $DB;
+        $target_name = \mod_motbot_get_name_of_target($this->target);
+
+        if(!$target_name || empty($target_name)) {
+            error_log('Target name couldnt be identified.');
+            return null;
+        }
+
+        $recipient = $this->get_recipient();
+        $sql = "SELECT m.subject, m.fullmessage, m.fullmessageformat, m.fullmessagehtml, m.smallmessage, m.attachementuri
+                FROM mdl_motbot_message m
+                JOIN mdl_motbot motbot ON m.motbot = motbot.id
+                WHERE motbot.course = :course AND m.target = :target;";
+        $db_m = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'target' => $this->target));
+
+        if(!$db_m) {
+            echo('no message template found in db');
+        }
 
         $message = new \core\message\message();
         $message->component = 'mod_motbot'; // Your plugin's name
         $message->name = 'motbot_intervention'; // Your notification name from message.php
         $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here
-        $message->userto = $user;
-        $message->subject = \get_string('message:' . $target_name . '_subject', 'motbot');
-        $message->fullmessage = 'message body';
-        $message->fullmessageformat = FORMAT_MARKDOWN;
-        $message->fullmessagehtml = \get_string('message:' . $target_name . '_fullmessagehtml', 'motbot', $user->firstname);
-        $message->smallmessage = 'small message';
+        $message->userto = $recipient;
+        $message->subject = $db_m ? $db_m->subject : \get_string('mod_form:' . $target_name . '_subject', 'motbot');
+        $message->subject = $this->replace_placeholders($message->subject);
+
+        $message->fullmessage = $db_m ? $db_m->fullmessage : 'message body';
+        $message->fullmessageformat = $db_m ? $db_m->fullmessageformat : FORMAT_MARKDOWN;
+
+        $context = $this->get_context();
+        $message->fullmessagehtml = $db_m ? $db_m->fullmessagehtml : \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot');
+        $message->fullmessagehtml = file_rewrite_pluginfile_urls($message->fullmessagehtml, 'pluginfile.php', $context->id, 'mod_motbot', 'attachment', 0);
+        $message->fullmessagehtml = $this->replace_placeholders($message->fullmessagehtml);
+
+        $message->smallmessage = $db_m ? $db_m->smallmessage : 'small message';
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
-        $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->course))->out(false); // A relevant URL for the notification
+
+
+        $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification
         $message->contexturlname = 'To Course'; // Link title explaining where users get to for the contexturl
         // $content = array('*' => array('header' => ' test ', 'footer' => ' test ')); // Extra content for specific processor
         // $message->set_additional_content('email', $content);
 
-        // Actually send the message
-        $this->message = message_send($message);
+        return $message;
+    }
 
-        $this->update_record();
+    private function replace_placeholders($subject) {
+        $recipient = $this->get_recipient();
+        $motbot = $this->get_motbot();
+        $course = $this->get_course();
 
-        echo('Message ' . $this->message . ' sent to User ' . $this->user);
+        $result = $subject;
+        $result = str_replace('{firstname}', $recipient->firstname, $result);
+        $result = str_replace('{lastname}', $recipient->lastname, $result);
+        $result = str_replace('{motbot}', $motbot->name, $result);
+        $result = str_replace('{course_shortname}', $course->shortname, $result);
+        $result = str_replace('{course_fullname}', $course->fullname, $result);
+
+        return $result;
     }
 
     private function update_record() {
         global $DB;
 
-        if(!$DB->update_record('intervention', $this->get_db_data())) {
+        if(!$DB->update_record('motbot_intervention', $this->get_db_data())) {
             error_log('Couldnt update intervention.');
             return false;
         }
@@ -183,27 +342,68 @@ class intervention {
         return true;
     }
 
-    public function schedule() {
+    public function execute() {
         // TODO: Schedule..
-        $this->intervene();
+
+        if($this->target::always_intervene()) {
+            $this->intervene();
+        } else {
+            $this->set_state(self::STORED);
+        }
+
+
+        if($this->get_context()->contextlevel == 50) {
+            if($this->is_critical()) {
+                $this->inform_teachers();
+            }
+        }
+    }
+
+    public function inform_teachers() {
+        global $DB;
+
+        $role = $DB->get_record('role', array('shortname' => 'editingteacher'));
+        $context = \context_course::instance($this->get_context()->instanceid);
+        $teachers = get_role_users($role->id, $context);
+
+        if(!$teachers || empty($teachers)) {
+            return;
+        }
+
+
+        $this->teachers_informed = true;
+        $this->update_record();
+        $sent = false;
+
+        $message = $this->create_teacher_message();
+        foreach($teachers as $teacher) {
+            $userto = $DB->get_record('user', array('id' => $teacher->id), '*');
+            if($this->send_message($message, $userto)) {
+                $sent = true;
+            } else {
+                echo('Couldnt send message to ' . $teacher->id);
+            }
+        }
+        if(!$sent) {
+            $this->teachers_informed = true;
+        }
+
+        $this->update_record();
     }
 
     private function intervene() {
-
-        switch($this->desired_event) {
+        switch($this->target) {
             default:
-                $this->send_intervention_message();
+                $message = $this->create_intervention_message();
         }
 
-        $this->state = self::INTERVENED;
-
-        $this->update_record();
-
-        return;
+        if($this->send_message($message)) {
+            $this->set_state(self::INTERVENED);
+        }
     }
 
-    public function on_success() {
-        $this->state = self::SUCCESSFUL;
+    public function set_state($state) {
+        $this->state = $state;
         $this->update_record();
     }
 }

@@ -25,7 +25,7 @@
 //moodleform is defined in formslib.php
 require_once("$CFG->libdir/formslib.php");
 
-class mod_motbot_course_user_settings_form extends moodleform {
+class mod_motbot_cm_info_form extends moodleform {
 
     //Add elements to form
     public function definition() {
@@ -33,19 +33,9 @@ class mod_motbot_course_user_settings_form extends moodleform {
 
         $mform = $this->_form;
 
-        $ynoptions = array(0 => get_string('user_settings_form:prohibit', 'motbot'),
-                           1 => get_string('user_settings_form:authorize', 'motbot'));
-        $mform->addElement('select', 'authorized', get_string('user_settings_form:authorized', 'motbot'), $ynoptions);
-        $mform->setDefault('authorized', 0);
-        $mform->addHelpButton('authorized', 'user_settings_form:authorized', 'motbot');
-
-        $mform->addElement('selectyesno', 'allow_teacher_involvement', get_string('user_settings_form:allow_teacher_involvement', 'motbot'));
-        $mform->addHelpButton('allow_teacher_involvement', 'user_settings_form:allow_teacher_involvement', 'motbot');
-
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
-
-        $this->add_action_buttons();
+        $mform->addElement('submit', 'authorized', get_string('user_settings_form:authorized', 'motbot'));
     }
 
     //Custom validation

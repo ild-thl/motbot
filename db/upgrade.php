@@ -26,39 +26,24 @@ function xmldb_motbot_upgrade($oldversion) {
     global $DB;
     $dbman = $DB->get_manager();
 
-    if ($oldversion < 2021072021) {
+    // if ($oldversion < 2021081815) {
 
-        // Define field usecode to be added to motbot.
-        $table = new xmldb_table('motbot');
-        $field = new xmldb_field('usecode', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 0, 'introformat');
+    //     // Define field usecode to be added to motbot.
+    //     $table = new xmldb_table('intervention');
+    //     $field1 = new xmldb_field('message', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'state');
+    //     $field2 = new xmldb_field('target', XMLDB_TYPE_CHAR, '128', null, null, null, null, 'state');
 
-        // Conditionally launch add field usecode.
-        if (!$dbman->field_exists($table, $field)) {
-            $dbman->add_field($table, $field);
-        }
+    //     // Conditionally launch add field usecode.
+    //     if (!$dbman->field_exists($table, $field1)) {
+    //         $dbman->add_field($table, $field1);
+    //     }
+    //     if (!$dbman->field_exists($table, $field2)) {
+    //         $dbman->add_field($table, $field2);
+    //     }
 
-        // Motbot savepoint reached.
-        upgrade_mod_savepoint(true, 2021072021, 'motbot');
-    }
-
-    if ($oldversion < 2021072611) {
-
-        // Define field usecode to be added to motbot.
-        $table = new xmldb_table('intervention');
-        $field1 = new xmldb_field('message', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'state');
-        $field2 = new xmldb_field('target', XMLDB_TYPE_CHAR, '128', null, null, null, null, 'state');
-
-        // Conditionally launch add field usecode.
-        if (!$dbman->field_exists($table, $field1)) {
-            $dbman->add_field($table, $field1);
-        }
-        if (!$dbman->field_exists($table, $field2)) {
-            $dbman->add_field($table, $field2);
-        }
-
-        // Motbot savepoint reached.
-        upgrade_mod_savepoint(true, 2021072611, 'motbot');
-    }
+    //     // Motbot savepoint reached.
+    //     upgrade_mod_savepoint(true, 2021081815, 'motbot');
+    // }
 
     return true;
 }

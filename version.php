@@ -22,7 +22,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2021072614;
+$plugin->version = 2021082117;
 $plugin->requires = 2021051700;
 $plugin->component = 'mod_motbot';
 $plugin->maturity = MATURITY_ALPHA;

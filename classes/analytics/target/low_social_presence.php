@@ -17,8 +17,8 @@
 /**
  * Drop out course target.
  *
- * @package   mod_motbot
- * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @package   core_course
+ * @copyright 2016 David Monllao {@link http://www.davidmonllao.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,14 +26,17 @@ namespace mod_motbot\analytics\target;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+
 /**
  * Drop out course target.
  *
- * @package   mod_motbot
- * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @package   core_course
+ * @copyright 2016 David Monllao {@link http://www.davidmonllao.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_dropout extends \core_course\analytics\target\course_dropout {
+class low_social_presence extends \core_course\analytics\target\course_enrolments {
+
     /**
      * Machine learning backends are not required to predict.
      *
@@ -51,8 +54,30 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
      * @return \lang_string
      */
     public static function get_name() : \lang_string {
-        return new \lang_string('target:coursedropout', 'motbot', null, 'en');
+        return new \lang_string('target:lowsocialpresence', 'motbot');
     }
+
+    /**
+     * Only past stuff whose start matches the course start.
+     *
+     * @param  \core_analytics\local\time_splitting\base $timesplitting
+     * @return bool
+     */
+    public function can_use_timesplitting(\core_analytics\local\time_splitting\base $timesplitting): bool {
+        return ($timesplitting instanceof \core_analytics\local\time_splitting\past_periodic);
+    }
+
+    /**
+     * classes_description
+     *
+     * @return string[]
+     */
+    // protected static function classes_description() {
+    //     return array(
+    //         get_string('targetlabellowsocialpresenceno', 'motbot'),
+    //         get_string('targetlabellowsocialpresenceyes', 'motbot')
+    //     );
+    // }
 
     /**
      * Discards courses that are not yet ready to be used for prediction.
@@ -100,24 +125,77 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
         $userid = \mod_motbot\manager::get_prediction_subject($sampleid);
         $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
-        if($motbot) {
-            if(!$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
-                // echo('motbot not authorized for user: ' . $userid);
-                return false;
+        if($motbot && !$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
+            return false;
+        }
+
+        return parent::is_valid_sample($sampleid, $course, $fortraining);
+    }
+
+    /**
+     * calculate_sample
+     *
+     * The meaning of a drop out changes depending on the settings enabled in the course. Following these priorities order:
+     * 1.- Course completion
+     * 2.- No logs during the last quarter of the course
+     *
+     * @param int $sampleid
+     * @param \core_analytics\analysable $course
+     * @param int $starttime
+     * @param int $endtime
+     * @return float|null 0 -> enough social presence, 1 -> low social presence
+     */
+    protected function calculate_sample($sampleid, \core_analytics\analysable $course, $starttime = false, $endtime = false) {
+        if (!$this->enrolment_active_during_analysis_time($sampleid, $starttime, $endtime)) {
+            // We should not use this sample as the analysis results could be misleading.
+            return null;
+        }
+
+        echo('Samplid: ' . $sampleid);
+
+        $potential = 0;
+        $score = 0;
+
+        if(mod_motbot_get_mod_count('forum', $course->get_id()) > 0) {
+            $potential++;
+            $forumscore = $this->retrieve('\mod_motbot\analytics\indicator\social_presence_in_course_forum', $sampleid);
+            if ($forumscore) {
+                $score += $forumscore;
             }
         }
 
+        if(mod_motbot_get_mod_count('chat', $course->get_id()) > 0) {
+            $potential++;
+            $chatscore = $this->retrieve('\mod_motbot\analytics\indicator\social_presence_in_course_chat', $sampleid);
+            if ($chatscore) {
+                $score += $chatscore;
+            }
+        } else {
+            echo('no chat in course: ' . $course->get_id());
+        }
 
-        $return = parent::is_valid_sample($sampleid, $course, $fortraining);
-        // if($return) {
-        //     echo('Valid sample: ' . $userid);
-        // } else {
-        //     echo('Inalid sample: ' . $userid);
+
+        // if(mod_motbot_get_mod_count('feedback', $course->get_id()) > 0) {
+        //     $potential++;
+        //     $feedbackscore = $this->retrieve('\mod_motbot\analytics\indicator\any_write_action_in_course_feedback_yet', $sampleid);
+        //     if ($feedbackscore > 0) {
+        //         $score += $feedbackscore;
+        //     }
         // }
 
-        return $return;
-    }
+        echo('potential: ' . $potential . ' and score: ' . $score . '_____');
 
+        // $normalized = $score / $potential;
+
+        // if($potential < 1) {
+        //     return null;
+        // }
+
+        if($score < 0) {
+            return 1;
+        }
+        return 0;
+    }
 
     /**
      * Callback to execute once a prediction has been returned from the predictions processor.
@@ -136,69 +214,6 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
         \mod_motbot\retention\bot::log_prediction($modelid, $sampleid, $rangeindex, $samplecontext, $scalar_prediction, $predictionscore);
         return;
     }
-
-
-    /**
-     * calculate_sample
-     *
-     * The meaning of a drop out changes depending on the settings enabled in the course. Following these priorities order:
-     * 1.- Course completion
-     * 2.- No logs during the last quarter of the course
-     *
-     * @param int $sampleid
-     * @param \core_analytics\analysable $course
-     * @param int $starttime
-     * @param int $endtime
-     * @return float|null 0 -> not at risk, 1 -> at risk
-     */
-    protected function calculate_sample($sampleid, \core_analytics\analysable $course, $starttime = false, $endtime = false) {
-        echo('Calculate sample: ' . $sampleid);
-
-        $potential_cognitive_depth = $this->retrieve('\core_course\analytics\indicator\potential_cognitive_depth', $sampleid);
-        print_r('Cognitive Depth: ' . $potential_cognitive_depth);
-        $potential_social_breadth = $this->retrieve('\core_course\analytics\indicator\potential_social_breadth', $sampleid);
-        print_r('Social Breadth: ' . $potential_social_breadth);
-        return 0;
-
-        // ----------------
-
-        if (!$this->enrolment_active_during_analysis_time($sampleid, $starttime, $endtime)) {
-            // We should not use this sample as the analysis results could be misleading.
-            echo("no active erol during analysis time");
-            return null;
-        }
-
-        $userenrol = $this->retrieve('user_enrolments', $sampleid);
-
-        // We use completion as a success metric only when it is enabled.
-        $completion = new \completion_info($course->get_course_data());
-        if ($completion->is_enabled() && $completion->has_criteria()) {
-            $ccompletion = new \completion_completion(array('userid' => $userenrol->userid, 'course' => $course->get_id()));
-            if ($ccompletion->is_complete()) {
-                echo('comletion complete');
-                return 0;
-            } else {
-                return 1;
-            }
-        }
-
-        if (!$logstore = \core_analytics\manager::get_analytics_logstore()) {
-            throw new \coding_exception('No available log stores');
-        }
-
-        // No logs during the last quarter of the course.
-        $courseduration = $course->get_end() - $course->get_start();
-        $limit = intval($course->get_end() - ($courseduration / 4));
-        $select = "courseid = :courseid AND userid = :userid AND timecreated > :limit";
-        $params = array('userid' => $userenrol->userid, 'courseid' => $course->get_id(), 'limit' => $limit);
-        $nlogs = $logstore->get_events_select_count($select, $params);
-        if ($nlogs == 0) {
-            return 1;
-        }
-        echo('logs during last quarter');
-        return 0;
-    }
-
 
     /**
      * Is this target generating insights?
@@ -221,6 +236,6 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
 
 
     public static function get_desired_events() {
-        return null;
+        return array_merge(\mod_motbot\analytics\indicator\social_presence_in_course_forum::post_events(), \mod_motbot\analytics\indicator\social_presence_in_course_chat::post_events());
     }
 }

@@ -36,4 +36,13 @@ $messageproviders = array (
         'capability'  => 'mod/motbot:receiveintervention',
     ),
 
+    'motbot_teacher_intervention' => array (
+        'defaults' => array(
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDOFF,
+            'airnotifier' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+        ),
+        'capability'  => 'mod/motbot:addinstance',
+    ),
+
 );

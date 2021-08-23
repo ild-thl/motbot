@@ -25,7 +25,7 @@
 //moodleform is defined in formslib.php
 require_once("$CFG->libdir/formslib.php");
 
-class mod_motbot_course_user_settings_form extends moodleform {
+class mod_motbot_overview_form extends moodleform {
 
     //Add elements to form
     public function definition() {

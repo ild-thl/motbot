@@ -44,18 +44,21 @@ class observer {
     public static function course_viewed(\core\event\course_viewed $event) {
         global $DB;
 
+        $context = \context_course::instance($event->courseid);
+
         $conditions_array = array(
-            'user' => $event->userid,
-            'course' => $event->courseid,
-            'desired_event' => $event->eventname,
+            'recipient' => $event->userid,
+            'contextid' => $context->id,
             'state' => \mod_motbot\retention\intervention::INTERVENED,
         );
 
-        $record = $DB->get_record('intervention', $conditions_array);
-
-        if($record) {
-            $intervention = \mod_motbot\retention\intervention::from_db($record);
-            $intervention->on_success();
+        $records = $DB->get_records('motbot_intervention', $conditions_array);
+        foreach($records as $record) {
+            print_r($record);
+            if(in_array($event->name, $record->desired_events)) {
+                $intervention = \mod_motbot\retention\intervention::from_db($record);
+                $intervention->set_state(\mod_motbot\retention\intervention::SUCCESSFUL);
+            }
         }
     }
 }

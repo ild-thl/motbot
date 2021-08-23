@@ -22,6 +22,25 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die;
+
+require_once($CFG->dirroot.'/mod/motbot/cm_info_form.php');
+require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+
+/**
+ * Return if the plugin supports $feature.
+ *
+ * @param string $feature Constant representing the feature.
+ * @return true | null True if the feature is supported, null otherwise.
+ */
+function motbot_supports($feature) {
+    switch ($feature) {
+        case FEATURE_MOD_INTRO:
+            return true;
+        default:
+            return null;
+    }
+}
 
 /**
  * Saves a new instance of the mod_motbot into the database.
@@ -30,16 +49,35 @@
  * in mod_form.php) this function will create a new instance and return the id
  * number of the instance.
  *
- * @param object $moduleinstance An object from the form.
+ * @param object $data An object from the form.
  * @param mod_motbot_mod_form $mform The form.
  * @return int The id of the newly inserted record.
  */
-function motbot_add_instance($moduleinstance, $mform = null) {
-    global $DB;
+function motbot_add_instance($data, $mform = null) {
+    global $DB, $USER;
 
-    $moduleinstance->timecreated = time();
+    $data->timecreated = time();
 
-    $id = $DB->insert_record('motbot', $moduleinstance);
+    $id = $DB->insert_record('motbot', $data);
+
+    foreach($data->messages as $message) {
+        $message->motbot = $id;
+        $message->timecreated = $data->timecreated;
+        $message->usermodified = $USER->id;
+        $message->id = $DB->insert_record('motbot_message', $message);
+
+        $target_name = $message->targetname;
+
+        if ($mform and !empty($data->{$target_name.'_fullmessagehtml'}['itemid'])) {
+
+            $draftitemid = $data->{$target_name.'_fullmessagehtml'}['itemid'];
+            $cmid = $data->coursemodule;
+            $context = context_module::instance($cmid);
+
+            $message->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $message->fullmessagehtml);
+            $DB->update_record('motbot_message', $message);
+        }
+    }
 
     return $id;
 }
@@ -50,17 +88,38 @@ function motbot_add_instance($moduleinstance, $mform = null) {
  * Given an object containing all the necessary data (defined in mod_form.php),
  * this function will update an existing instance with new data.
  *
- * @param object $moduleinstance An object from the form in mod_form.php.
+ * @param object $data An object from the form in mod_form.php.
  * @param mod_motbot_mod_form $mform The form.
  * @return bool True if successful, false otherwise.
  */
-function motbot_update_instance($moduleinstance, $mform = null) {
-    global $DB;
+function motbot_update_instance($data, $mform = null) {
+    global $DB, $USER;
 
-    $moduleinstance->timemodified = time();
-    $moduleinstance->id = $moduleinstance->instance;
+    $data->timemodified = time();
+    $data->id = $data->instance;
 
-    return $DB->update_record('motbot', $moduleinstance);
+    foreach($data->messages as $message) {
+        $message->timemodified = $data->timemodified;
+        $message->usermodified = $USER->id;
+        if(!$message->id) {
+            $message->motbot = $data->id;
+            $message->timecreated = $data->timemodified;
+            $message->id = $DB->insert_record('motbot_message', $message);
+        } else {
+            $DB->update_record('motbot_message', $message);
+        }
+        $target_name = $message->targetname;
+
+        $draftitemid = $data->{$target_name . '_fullmessagehtml'}['itemid'];
+        $cmid = $data->coursemodule;
+        $context = context_module::instance($cmid);
+        if ($draftitemid) {
+            $message->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $message->fullmessagehtml);
+            $DB->update_record('motbot_message', $message);
+        }
+    }
+
+    return $DB->update_record('motbot', $data);
 }
 
 /**
@@ -77,6 +136,131 @@ function motbot_delete_instance($id) {
         return false;
     }
 
+    $exists = $DB->get_records('motbot_message', array('motbot' => $id));
+    foreach($exists as $ex) {
+        $DB->delete_records('motbot_message', array('id' => $ex->id));
+    }
+
     $DB->delete_records('motbot', array('id' => $id));
     return true;
+}
+
+/**
+ * Serves motbot files and messages.
+ *
+ * @package  mod_motbot
+ * @param stdClass $course course object
+ * @param stdClass $cm course module object
+ * @param stdClass $context context object
+ * @param string $filearea file area
+ * @param array $args extra arguments
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if file not found, does not return if found - just send the file
+ */
+function motbot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+    global $CFG, $DB;
+
+    // if ($context->contextlevel != CONTEXT_MODULE) {
+    //     return false;
+    // }
+
+    // require_course_login($course, true, $cm);
+    // if (!has_capability('mod/motbot:view', $context)) {
+    //     return false;
+    // }
+
+    if ($filearea !== 'attachment') {
+        // intro is handled automatically in pluginfile.php
+        return false;
+    }
+
+    // Leave this line out if you set the itemid to null in make_pluginfile_url (set $itemid to 0 instead).
+    $itemid = array_shift($args); // The first item in the $args array.
+
+    // Use the itemid to retrieve any relevant data records and perform any security checks to see if the
+    // user really does have access to the file in question.
+
+    // Extract the filename / filepath from the $args array.
+    $filename = array_pop($args); // The last item in the $args array.
+
+    if (!$args) {
+        $filepath = '/'; // $args is empty => the path is '/'
+    } else {
+        $filepath = '/'.implode('/', $args).'/'; // $args contains elements of the filepath
+    }
+
+    // Retrieve the file from the Files API.
+    $fs = get_file_storage();
+    $file = $fs->get_file($context->id, 'mod_motbot', $filearea, $itemid, $filepath, $filename);
+    if (!$file) {
+        return false; // The file does not exist.
+    }
+
+    // We can now send the file back to the browser - in this case with a cache lifetime of 1 day and no filtering.
+    send_stored_file($file, 86400, 0, $forcedownload, $options);
+}
+
+
+function motbot_cm_info_view(cm_info $cm) {
+    global $USER, $CFG, $DB;
+
+    // $content = '<div class="activityinstance">
+    //                 <a class="aalink" onclick="" href="' . $CFG->wwwroot . '/mod/motbot/view.php?id=' . $cm->id . '">
+    //                     <img src="' . $CFG->wwwroot . '/theme/image.php/boost/motbot/1628783905/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">
+    //                     <span class="instancename">Motbot</span>
+    //                 </a>
+    //             </div>';
+
+    $modulecontext = context_module::instance($cm->id);
+
+    $courseid = required_param('id', PARAM_INT);
+
+    $motbot = $DB->get_record('motbot', array('id'=> $cm->instance), '*', MUST_EXIST);
+    $motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $USER->id), '*');
+
+    if(!$motbot_course_user) {
+        $motbot_course_user = (object) [
+            'id' => null,
+            'motbot' => $motbot->id,
+            'user' => $USER->id,
+            'authorized' => 0,
+            'allow_teacher_involvement' => 0,
+        ];
+    }
+
+    if(!$motbot_course_user->authorized && !has_capability('mod/motbot:addinstance', $modulecontext)) {
+        // $content = mod_motbot_info_form($motbot_course_user, $courseid, $cm);
+        // $content = str_replace('class="mform"', 'class="mform overflow-hidden"', $content);
+        // $cm->set_content($content);
+
+
+        $content = mod_motbot_info_form($motbot_course_user, $courseid, $cm);
+        $content = str_replace('class="mform"', 'class="mform float-right"', $content);
+        $cm->set_name($motbot->name);
+    } else {
+        $content = '<div style="font-style: italic; padding-left: 2em">' . \get_string('quote:0', 'motbot') . '</div>';
+    }
+
+    $cm->set_after_link($content);
+}
+
+
+function motbot_cm_info_dynamic(cm_info $cm) {
+    global $USER, $DB;
+
+    $modulecontext = context_module::instance($cm->id);
+    // $active = true;
+    // if(!has_capability('mod/motbot:addinstance', $modulecontext)) {
+        $active = $DB->get_record('motbot_course_user', array('motbot' => $cm->instance, 'user' => $USER->id, 'authorized' => 1));
+    // }
+
+    // $cm->set_extra_classes('w-100');
+
+    if(!$active && !has_capability('mod/motbot:addinstance', $modulecontext)) {
+        $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-inactive.svg'));
+        $cm->set_name('Motbot disabled');
+    }
+
+    // $cm->set_no_view_link();
 }

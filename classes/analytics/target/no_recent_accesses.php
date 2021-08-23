@@ -94,7 +94,7 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
         $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
         if($motbot) {
-            if(!$DB->get_record('motbot_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
+            if(!$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
                 return false;
             }
         }
@@ -139,5 +139,29 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
         return 1;
     }
 
+
+    /**
+     * Is this target generating insights?
+     *
+     * Defaults to true.
+     *
+     * @return bool
+     */
+    public static function uses_insights() {
+        return false;
+    }
+
+    public static function is_critical() {
+        return true;
+    }
+
+    public static function always_intervene() {
+        return true;
+    }
+
+
+    public static function get_desired_events() {
+        return array('\core\event\course_viewed');
+    }
 
 }

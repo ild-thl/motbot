@@ -34,18 +34,24 @@ defined('MOODLE_INTERNAL') || die();
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class manager {
-    public static function get_prediction_subject($sampleid) {
+    public static function get_prediction_subject($sampleid, $target = null) {
         global $DB;
+        if($target == '\mod_motbot\analytics\target\upcoming_activities_due') {
+            $sql = "SELECT id as userid
+                FROM mdl_user
+                WHERE id = :sampleid;";
 
-        $sql = "SELECT u.id as userid
-                FROM mdl_user u
-                JOIN mdl_user_enrolments ue ON ue.userid = u.id
-                WHERE ue.id = :sampleid;";
+        } else {
+            $sql = "SELECT u.id as userid
+                    FROM mdl_user u
+                    JOIN mdl_user_enrolments ue ON ue.userid = u.id
+                    WHERE ue.id = :sampleid;";
+        }
 
         $result = $DB->get_record_sql($sql, array('sampleid' => $sampleid));
 
         if(!$result) {
-            echo('No user found!');
+            echo('No user found! ' . $sampleid);
             return null;
         }
 
