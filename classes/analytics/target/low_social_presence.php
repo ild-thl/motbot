@@ -99,8 +99,14 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
             return get_string('tomanyinstances', 'motbot');
         }
 
-        if(reset($instances)->usecode == 0) {
+        $motbot = reset($instances);
+        if($motbot->usecode == 0) {
             return get_string('motbotpaused', 'motbot');
+        }
+
+        $message = $DB->get_record('motbot_message', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\low_social_presence'));
+        if(!$message || !$message->active) {
+            return get_string('motbotmodelinactive', 'motbot');
         }
 
         return parent::is_valid_analysable($course, $fortraining);
@@ -236,6 +242,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
 
 
     public static function get_desired_events() {
-        return array_merge(\mod_motbot\analytics\indicator\social_presence_in_course_forum::post_events(), \mod_motbot\analytics\indicator\social_presence_in_course_chat::post_events());
+        return array('\mod_chat\event\message_sent','\mod_forum\event\assessable_uploaded', '\mod_forum\event\discussion_created',
+        '\mod_forum\event\post_created');
     }
 }

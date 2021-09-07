@@ -25,13 +25,28 @@
 $observers = array(
 
     array(
-        'eventname'   => '\core\event\course_information_viewed',
+        'eventname'   => '\core\event\course_viewed',
         'callback'    => '\mod_motbot\observer::course_viewed',
     ),
 
     array(
-        'eventname'   => '\core\event\course_viewed',
-        'callback'    => '\mod_motbot\observer::course_viewed',
+        'eventname'   => '\mod_chat\event\message_sent',
+        'callback'    => '\mod_motbot\observer::check_intervention_success',
+    ),
+
+    array(
+        'eventname'   => '\mod_forum\event\assessable_uploaded',
+        'callback'    => '\mod_motbot\observer::discussion_or_post_created',
+    ),
+
+    array(
+        'eventname'   => '\mod_forum\event\discussion_created',
+        'callback'    => '\mod_motbot\observer::discussion_or_post_created',
+    ),
+
+    array(
+        'eventname'   => '\mod_forum\event\post_created',
+        'callback'    => '\mod_motbot\observer::discussion_or_post_created',
     ),
 
 );

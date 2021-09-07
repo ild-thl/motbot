@@ -72,6 +72,8 @@ class mod_motbot_mod_form extends moodleform_mod {
 
         $target_name = \mod_motbot_get_name_of_target($message->target);
 
+        $mform->addElement('header', $target_name.'_header', get_string('mod_form:' . $target_name . '_header', 'motbot'));
+
         $mform->addElement('hidden', $target_name.'_id');
         $mform->setType($target_name.'_id', PARAM_INT);
 
@@ -81,7 +83,9 @@ class mod_motbot_mod_form extends moodleform_mod {
         $mform->addElement('hidden', $target_name.'_target');
         $mform->setType($target_name.'_target', PARAM_TEXT);
 
-        $mform->addElement('header', $target_name.'_header', get_string('mod_form:' . $target_name . '_header', 'motbot'));
+        $mform->addElement('selectyesno', $target_name.'_active', get_string('mod_form:active', 'motbot'));
+        $mform->addHelpButton($target_name.'_active', 'mod_form:active', 'motbot');
+
         $mform->addElement('text', $target_name.'_subject', get_string('mod_form:subject', 'motbot'), array('size'=>'64'));
         $mform->setType($target_name.'_subject', PARAM_TEXT);
         $mform->addElement('textarea', $target_name.'_fullmessage', get_string('mod_form:fullmessage', 'motbot'), 'wrap="virtual" rows="10" cols="150"');
@@ -93,14 +97,6 @@ class mod_motbot_mod_form extends moodleform_mod {
 
         $mform->addElement('textarea', $target_name.'_smallmessage', get_string('mod_form:smallmessage', 'motbot'), 'wrap="virtual" rows="5" cols="150"');
         $mform->setType($target_name.'_smallmessage', PARAM_TEXT);
-        // $ynoptions = array(FORMAT_MOODLE => 'FORMAT_MOODLE',
-        //                     FORMAT_HTML => 'FORMAT_HTML',
-        //                     FORMAT_PLAIN => 'FORMAT_PLAIN',
-        //                     FORMAT_MARKDOWN => 'FORMAT_MARKDOWN');
-        // $mform->addElement('select', $target_name.'_fullmessageformat', get_string('mod_form:fullmessageformat', 'motbot'), $ynoptions);
-        // $mform->setDefault($target_name.'_fullmessageformat', 1);
-        // $mform->addHelpButton($target_name.'_fullmessageformat', 'mod_form:fullmessageformat', 'motbot');
-
 
         $mform->addElement('hidden', $target_name.'_usermodified');
         $mform->setType($target_name.'_usermodified', PARAM_INT);
@@ -110,50 +106,6 @@ class mod_motbot_mod_form extends moodleform_mod {
 
         $mform->addElement('hidden', $target_name.'_timecreated');
         $mform->setType($target_name.'_timecreated', PARAM_INT);
-
-        if($message->id) {
-            $mform->setDefault($target_name.'_id', $message->id);
-        }
-
-        if($message->motbot) {
-            $mform->setDefault($target_name.'_motbot', $message->motbot);
-        }
-
-        if($message->target) {
-            $mform->setDefault($target_name.'_target', $message->target);
-        }
-
-        if($message->subject) {
-            $mform->setDefault($target_name.'_subject', $message->subject);
-        }
-
-        if($message->fullmessage) {
-            $mform->setDefault($target_name.'_fullmessage', $message->fullmessage);
-        }
-
-        // if($message->fullmessagehtml) {
-        //     $mform->setDefault($target_name.'_fullmessagehtml', array('text' => $message->fullmessagehtml, 'format' => $message->fullmessageformat));
-        // }
-
-        if($message->smallmessage) {
-            $mform->setDefault($target_name.'_smallmessage', $message->smallmessage);
-        }
-
-        // if($message->fullmessageformat) {
-        //     $mform->setDefault($target_name.'_fullmessageformat', $message->fullmessageformat);
-        // }
-
-        if($message->usermodified) {
-            $mform->setDefault($target_name.'_usermodified', $message->usermodified);
-        }
-
-        if($message->timemodified) {
-            $mform->setDefault($target_name.'_timemodified', $message->timemodified);
-        }
-
-        if($message->timecreated) {
-            $mform->setDefault($target_name.'_timecreated', $message->timecreated);
-        }
     }
 
     private function get_messages() {
@@ -185,10 +137,11 @@ class mod_motbot_mod_form extends moodleform_mod {
             $this->messages[] = (object) [
                 'id' => null,
                 'motbot' => $this->current->instance,
+                'active' => 1,
                 'target' => $model->target,
                 'targetname' => null,
                 'subject' => \get_string('mod_form:' . $target_name . '_subject', 'motbot'),
-                'fullmessage' => null,
+                'fullmessage' => \get_string('mod_form:' . $target_name . '_fullmessage', 'motbot'),
                 'fullmessageformat' => FORMAT_HTML,
                 'fullmessagehtml' => \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot'),
                 'smallmessage' => null,
@@ -225,10 +178,21 @@ class mod_motbot_mod_form extends moodleform_mod {
         foreach($this->messages as $message) {
             $target_name = $message->targetname;
             $draftitemid = file_get_submitted_draft_itemid($target_name . '_fullmessagehtml');
+            $defaultvalues[$target_name . '_id'] = $message->id;
+            $defaultvalues[$target_name . '_motbot'] = $message->motbot;
+            $defaultvalues[$target_name . '_active'] = $message->active;
+            $defaultvalues[$target_name . '_target'] = $message->target;
+            $defaultvalues[$target_name . '_subject'] = $message->subject;
+            $defaultvalues[$target_name . '_fullmessage'] = $message->fullmessage;
             $defaultvalues[$target_name . '_fullmessagehtml']['format'] = $message->fullmessageformat;
             $defaultvalues[$target_name . '_fullmessagehtml']['text']   = file_prepare_draft_area($draftitemid, $this->context->id, 'mod_motbot',
                 'attachment', 0, mod_motbot_get_editor_options($this->context), $message->fullmessagehtml);
             $defaultvalues[$target_name . '_fullmessagehtml']['itemid'] = $draftitemid;
+            $defaultvalues[$target_name . '_fullmessageformat'] = $message->fullmessageformat;
+            $defaultvalues[$target_name . '_smallmessage'] = $message->smallmessage;
+            $defaultvalues[$target_name . '_usermodified'] = $message->usermodified;
+            $defaultvalues[$target_name . '_timemodified'] = $message->timemodified;
+            $defaultvalues[$target_name . '_timecreated'] = $message->timecreated;
         }
     }
 
@@ -252,6 +216,7 @@ class mod_motbot_mod_form extends moodleform_mod {
         return (object) [
             'id' => $data->{$target_name . '_id'},
             'motbot' => $data->{$target_name . '_motbot'},
+            'active' => $data->{$target_name . '_active'},
             'target' => $data->{$target_name . '_target'},
             'targetname' => $target_name,
             'subject' => $data->{$target_name . '_subject'},
