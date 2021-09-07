@@ -72,7 +72,7 @@ class social_presence_in_course_forum extends \mod_motbot\analytics\indicator\so
      *
      * @return string[]
      */
-    public static function view_events() {
+    protected function view_events() {
         // We could add any forum event, but it will make feedback_post_action slower.
         return array('\mod_forum\event\course_module_viewed', '\mod_forum\event\discussion_viewed');
     }
@@ -83,7 +83,7 @@ class social_presence_in_course_forum extends \mod_motbot\analytics\indicator\so
      *
      * @return string[]
      */
-    public static function post_events() {
+    protected function post_events() {
         // We could add any forum event, but it will make feedback_post_action slower.
         return array('\mod_forum\event\assessable_uploaded', '\mod_forum\event\discussion_created',
             '\mod_forum\event\post_created');
@@ -94,7 +94,7 @@ class social_presence_in_course_forum extends \mod_motbot\analytics\indicator\so
         $volleylogs = array();
         // Filter out events that arent declared as post_events.
         foreach($this->useractivity as $id => $log) {
-            if($log->crud == 'c' && in_array($log->eventname, self::post_events())) {
+            if($log->crud == 'c' && in_array($log->eventname, $this->post_events())) {
                 $volleylogs[] = $log;
             }
         }

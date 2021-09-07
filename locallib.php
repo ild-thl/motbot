@@ -30,31 +30,48 @@ function mod_motbot_get_editor_options($context) {
     return array('maxfiles' => EDITOR_UNLIMITED_FILES, 'noclean' => true, 'context' => $context, 'subdirs' => true);
 }
 
-function mod_motbot_get_interventions_table($userid, $contextid = null) {
+function mod_motbot_get_interventions_table($userid, $contextid = null, $include_messages = false) {
     global $DB;
 
     if($contextid) {
-        $conitionsarray = array('recipient' => $userid, 'contextid' => $contextid);
+        $conditionsarray = array('recipient' => $userid, 'contextid' => $contextid);
     } else {
-        $conitionsarray = array('recipient' => $userid);
+        $conditionsarray = array('recipient' => $userid);
     }
 
-    $interventions = $DB->get_records('motbot_intervention', $conitionsarray , '', 'timecreated, state, teachers_informed, message');
+    $select = 'id, target, timecreated, state, teachers_informed';
+    if ($include_messages) {
+        $select .= ', message';
+    }
+    $content = array();
+    $interventions = $DB->get_records('motbot_intervention', $conditionsarray , 'timecreated DESC', $select);
     foreach($interventions as $intervention) {
-        $intervention->state = \get_string('state:' . $intervention->state, 'motbot');
-        $intervention->teachers_informed = $intervention->teachers_informed ? 'Yes' : 'No';
-        $intervention->message =  '<a href="' . (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message))->out(false) . '">View</a>';
-        $intervention->timecreated = userdate($intervention->timecreated);
+        $row = array();
+        $targetname = mod_motbot_get_name_of_target($intervention->target);
+        $row[] = \get_string('target:' . $targetname . '_short', 'motbot');
+        $row[] =  userdate($intervention->timecreated);
+        $row[] =  \get_string('state:' . $intervention->state, 'motbot');
+        $row[] =  $intervention->teachers_informed ? 'Yes' : 'No';
+        if ($include_messages) {
+            $row[] =   '<a href="' . (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message))->out(false) . '">View</a>';
+        }
+        $content[] = $row;
     }
 
     $table = new html_table();
     $table->attributes['class'] = 'generaltable';
 
-    $table->head  = array('date', 'state', 'teachers_informed', 'message',);
-    $table->align = array('left', 'left', 'left', 'left');
+    $head = array('Reason', 'Date', 'State', 'Were teachers informed');
+    $align = array('left ', 'left', 'left', 'left', 'left');
+    if ($include_messages) {
+        $head[] = 'message';
+        $align[] = 'left';
+    }
+    $table->head  = $head;
+    $table->align = $align;
 
-    foreach ($interventions as $intervention) {
-        $table->data[] = $intervention;
+    foreach ($content as $row) {
+        $table->data[] = $row;
     }
 
     return html_writer::table($table);
@@ -115,4 +132,17 @@ function mod_motbot_get_mod_count($name, $course) {
             WHERE cm.course = :course
             AND m.name = :name;';
     return $DB->get_record_sql($sql, array('course' => $course, 'name' => $name))->modcount;
+}
+
+
+function mod_motbot_has_completed_feedback($userid, $courseid) {
+    global $DB;
+
+    $sql = 'SELECT COUNT(fc.id) as count
+        FROM mdl_feedback_completed fc
+        JOIN mdl_feedback f ON f.id = fc.feedback
+        WHERE f.course = :courseid
+        AND fc.userid = :userid;';
+
+    return $DB->get_record_sql($sql, array('courseid' => $courseid, 'userid' => $userid))->count;
 }

@@ -91,7 +91,7 @@ abstract class social_presence_in_course_activity extends \core_analytics\local\
      *
      * @return string[]
      */
-    public static function view_events() {
+    protected function view_events() {
         throw new \coding_exception('Overwrite post_events method to set the events that should be considered as a view activity');
     }
 
@@ -101,7 +101,7 @@ abstract class social_presence_in_course_activity extends \core_analytics\local\
      *
      * @return string[]
      */
-    public static function post_events() {
+    protected function post_events() {
         throw new \coding_exception('Overwrite post_events method to set the events that should be considered as a post activity');
     }
 
@@ -225,7 +225,7 @@ abstract class social_presence_in_course_activity extends \core_analytics\local\
 
     private function any_post_log() {
         foreach($this->useractivity as $id => $log) {
-            if($log->crud == 'c' && in_array($log->eventname, self::post_events())) {
+            if($log->crud == 'c' && in_array($log->eventname, $this->post_events())) {
                 return true;
             }
         }

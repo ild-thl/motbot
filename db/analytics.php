@@ -128,6 +128,6 @@ $result = [];
 
 foreach ($models as $model) {
     if (!\core_analytics\model::exists(\core_analytics\manager::get_target($model['target']))) {
-        $result[] = static::create_declared_model($model);
+        $result[] = \core_analytics\manager::create_declared_model($model);
     }
 }

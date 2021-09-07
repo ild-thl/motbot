@@ -15,21 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Display information about all the mod_motbot modules in the requested course.
+ *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+require_once('../../config.php');
 
-defined('MOODLE_INTERNAL') || die();
+$id = required_param('id', PARAM_INT);           // Course ID
+$helpful = required_param('helpful', PARAM_INT);           // Course ID
 
-$plugin->version = 2021082820;
-$plugin->requires = 2018051701;
-// $plugin->requires = 2021051700;
-$plugin->component = 'mod_motbot';
-$plugin->maturity = MATURITY_ALPHA;
-// $plugin->release = 'TODO';
+$intervention = $DB->get_record('motbot_intervention', array('id' => $id));
+if($intervention) {
+    $intervention->helpful = $helpful;
+    $DB->update_record('motbot_intervention', $intervention);
+}
+$intervention = $DB->get_record('motbot_intervention', array('id' => $id));
 
-// $plugin->dependencies = [
-//     'mod_forum' => ANY_VERSION,
-//     'mod_data' => TODO
-// ];
+$url = $CFG->wwwroot . '/message/output/popup/notifications.php';
+redirect($url, 'Thank you for your feedback!', 1);

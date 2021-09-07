@@ -64,7 +64,7 @@ class social_presence_in_course_chat extends \mod_motbot\analytics\indicator\soc
      * @return int
      */
     public function get_potential_level() {
-        return SELF::POTENTIAL_LEVEL_3;
+        return SELF::POTENTIAL_LEVEL_4;
     }
 
 
@@ -73,7 +73,7 @@ class social_presence_in_course_chat extends \mod_motbot\analytics\indicator\soc
      *
      * @return string[]
      */
-    public static function view_events() {
+    protected function view_events() {
         // We could add any forum event, but it will make feedback_post_action slower.
         return array('\mod_chat\event\course_module_viewed');
     }
@@ -84,7 +84,7 @@ class social_presence_in_course_chat extends \mod_motbot\analytics\indicator\soc
      *
      * @return string[]
      */
-    public static function post_events() {
+    protected function post_events() {
         // We could add any forum event, but it will make feedback_post_action slower.
         return array('\mod_chat\event\message_sent');
     }
@@ -94,72 +94,81 @@ class social_presence_in_course_chat extends \mod_motbot\analytics\indicator\soc
         $volleylogs = array();
         // Filter out events that arent declared as post_events.
         foreach($this->useractivity as $id => $log) {
-            if($log->crud == 'c' && in_array($log->eventname, self::post_events())) {
+            if($log->crud == 'c' && in_array($log->eventname, $this->post_events())) {
                 $volleylogs[] = $log;
             }
         }
 
-        if(empty($volleylogs)) {
+        if(empty($volleylogs) || count($volleylogs) < 3) {
             return false;
         }
 
         // Count posts per discussion.
         $userid = $volleylogs[0]->userid;
+        $instanceid = $volleylogs[0]->contextinstanceid;
 
-        $object_count = array();
-        $known_discussionids = array();
-        $max_count = 0;
-        $max_discussion = 0;
-        foreach($volleylogs as $log) {
-            // Get the id of the discussion this log belongs to.
-            if(array_key_exists('discussionid', $log->other)) {
-                // Is a reply to a discussion post.
-                $discussionid = $log->other['discussionid'];
-            } else {
-                // Is the dicussion post itself
-                $discussionid = $log->objectid;
-            }
+        $count = 0;
+        // Max 15 Minuten zwischen zusammengehörenden Nachrichten.
+        $max_interval = 900;
 
-            // Go to next log, if this log belogs to a post we already counted.
-            if(in_array($discussionid, $known_discussionids)) {
-                continue;
-            }
-            $known_discussionids[] = $discussionid;
+        $firstlog = null;
+        $lastlog = null;
 
-            // Count posts per discussion.
-            if(array_key_exists($log->contextid, $object_count)) {
-                $object_count[$log->contextid] = $object_count[$log->contextid] + 1;
-            } else {
-                $object_count[$log->contextid] = 1;
-            }
+        $volleys = array();
 
-            // Get current max count.
-            if($object_count[$log->contextid] > $max_count) {
-                $max_count = $object_count[$log->contextid];
-                $max_discussion = $discussionid;
-                if($max_count >= 2) {
-                    // If the user has contributed more than one post to a single discussion we skip to the next step.
-                    break;
+        for($i = 1; $i < count($volleylogs); $i++) {
+            $log = $volleylogs[$i];
+            $prev = $volleylogs[$i-1];
+
+            if($log->timecreated - $prev->timecreated <= $max_interval) {
+                if($count == 0) {
+                    $firstlog = $prev;
                 }
+                $count++;
+                $lastlog = $log;
+
+                if($firstlog) {
+                    $volleys[$firstlog->objectid] = (object)[
+                        "count" => $count,
+                        "start" => $firstlog->timecreated,
+                        "end" => $lastlog->timecreated,
+                    ];
+                }
+            } else {
+                // Reset.
+                $count = 0;
+                $firstlog = null;
+                $lastlog = null;
             }
         }
 
-        // If there are more than 2 posts from this user in a single discussion,
-        //  check if there are more posts from other users.
-        if($max_count >= 2 && $this->has_discussion_posts_from_others($max_discussion, $userid)) {
-            return true;
+        if(empty($volleys)) {
+            return false;
         }
+
+        foreach($volleys as $volley) {
+            if($volley->count >=2 && $this->any_messages_inbetween($instanceid, $userid, $volley->start , $volley->end, $max_interval)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
 
-    private function has_discussion_posts_from_others($discussionid, $userid) {
+    private function any_messages_inbetween($instanceid, $userid, $starttime, $endtime, $margin) {
         global $DB;
-        $sql = 'SELECT COUNT(id) as postcount
-            FROM mdl_forum_posts
-            WHERE discussion = :discussionid
-            AND userid != :userid';
-        $count = $DB->get_record_sql($sql, array('discussionid' => $discussionid, 'userid' => $userid))->postcount;
+        $sql = 'SELECT COUNT(m.id) as count
+            FROM mdl_chat_messages m
+            JOIN mdl_course_modules cm ON cm.instance = m.chatid
+            WHERE cm.id = :instanceid
+            AND m.userid != :userid
+            AND m.message NOT LIKE "beep %"
+            AND m.message != "exit"
+            AND m.message != "enter"
+            AND timestamp >= :starttime
+            AND timestamp <= :endtime;';
+        $count = $DB->get_record_sql($sql, array('instanceid' => $instanceid, 'userid' => $userid, 'starttime' => $starttime - $margin, 'endtime' => $endtime + $margin))->count;
 
         if($count && $count > 0) {
             return true;

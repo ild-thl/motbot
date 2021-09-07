@@ -35,7 +35,7 @@ class mod_motbot_cm_info_form extends moodleform {
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
-        $mform->addElement('submit', 'authorized', get_string('user_settings_form:authorized', 'motbot'));
+        $mform->addElement('submit', 'authorized', get_string('course_settings_form:authorized', 'motbot'));
     }
 
     //Custom validation

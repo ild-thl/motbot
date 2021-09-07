@@ -65,8 +65,14 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
             return get_string('tomanyinstances', 'motbot');
         }
 
-        if(reset($instances)->usecode == 0) {
+        $motbot = reset($instances);
+        if($motbot->usecode == 0) {
             return get_string('motbotpaused', 'motbot');
+        }
+
+        $message = $DB->get_record('motbot_message', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\no_recent_accesses'));
+        if(!$message || !$message->active) {
+            return get_string('motbotmodelinactive', 'motbot');
         }
 
         return parent::is_valid_analysable($course, $fortraining);

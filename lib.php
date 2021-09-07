@@ -239,7 +239,9 @@ function motbot_cm_info_view(cm_info $cm) {
         $content = str_replace('class="mform"', 'class="mform float-right"', $content);
         $cm->set_name($motbot->name);
     } else {
-        $content = '<div style="font-style: italic; padding-left: 2em">' . \get_string('quote:0', 'motbot') . '</div>';
+        $now = new DateTime("now", core_date::get_user_timezone_object());
+        $dayofweek = $now->format('N');
+        $content = '<div style="font-style: italic; padding-left: 2em">' . \get_string('quote:' . $dayofweek % 6, 'motbot') . '</div>';
     }
 
     $cm->set_after_link($content);

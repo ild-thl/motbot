@@ -48,9 +48,11 @@ class intervention {
     private $state = self::SCHEDULED;
     private $teachers_informed = false;
     private $message = null;
+    private $helpful = null;
     private $usermodified = null;
     private $timecreated = null;
     private $timemodified = null;
+    private $suggestions = null;
 
 
     private function __construct() {
@@ -141,6 +143,8 @@ class intervention {
     private function is_critical() {
         global $DB;
 
+        $critical = false;
+
         if(!$this->target::is_critical()) {
             return false;
         }
@@ -154,7 +158,13 @@ class intervention {
         );
         $prevint_records = $DB->get_records('motbot_intervention', $prevints_conditions, 'id');
         foreach($prevint_records as $prevint_record) {
-            $prevint = self::from_db($prevint_record)->set_state(self::UNSUCCESSFUL);
+            if($prevint_record->id == $this->id) {
+                continue;
+            }
+            if($prevint_record->state != \mod_motbot\retention\intervention::SUCCESSFUL) {
+                $prevint = self::from_db($prevint_record)->set_state(self::UNSUCCESSFUL);
+                $critical = true;
+            }
         }
 
         $sql = "SELECT *
@@ -164,8 +174,8 @@ class intervention {
                 AND mu.allow_teacher_involvement = 1
                 AND mu.user = :user;";
         $allowed = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'user' => $this->recipient));
-
-        if(empty($prevint_records) || !$allowed) {
+        echo("_Teacher inv allowed_");
+        if(!$critical || !$allowed) {
             return false;
         }
         return true;
@@ -205,6 +215,7 @@ class intervention {
             'state' => $this->state,
             'teachers_informed' => $this->teachers_informed,
             'message' => $this->message,
+            'helpful' => $this->helpful,
             'usermodified' => $USER->id,
             'timecreated' => $this->timecreated,
             'timemodified' => time(),
@@ -212,13 +223,13 @@ class intervention {
     }
 
     private function get_desired_events() {
-        return $this->target::get_desired_events();
+        return json_encode($this->target::get_desired_events());
     }
 
 
     private function send_message($message, $userto = null) {
         if(!$message) {
-            return;
+            return null;
         }
 
         if(!$message->userto) {
@@ -227,15 +238,14 @@ class intervention {
 
 
         // Actually send the message
-        $this->message = message_send($message);
-        if(!$this->message) {
-            return false;
+        $messageid = message_send($message);
+        if(!$messageid) {
+            return null;
         }
 
-        $this->update_record();
         echo('Message ' . $this->message . ' sent to User ' . $message->userto->id);
 
-        return true;
+        return $messageid;
     }
 
 
@@ -269,7 +279,7 @@ class intervention {
 
 
     private function create_intervention_message() {
-        global $DB;
+        global $DB, $OUTPUT, $CFG;
         $target_name = \mod_motbot_get_name_of_target($this->target);
 
         if(!$target_name || empty($target_name)) {
@@ -295,31 +305,238 @@ class intervention {
         $message->userto = $recipient;
         $message->subject = $db_m ? $db_m->subject : \get_string('mod_form:' . $target_name . '_subject', 'motbot');
         $message->subject = $this->replace_placeholders($message->subject);
-
-        $message->fullmessage = $db_m ? $db_m->fullmessage : 'message body';
         $message->fullmessageformat = $db_m ? $db_m->fullmessageformat : FORMAT_MARKDOWN;
 
         $context = $this->get_context();
-        $message->fullmessagehtml = $db_m ? $db_m->fullmessagehtml : \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot');
-        $message->fullmessagehtml = file_rewrite_pluginfile_urls($message->fullmessagehtml, 'pluginfile.php', $context->id, 'mod_motbot', 'attachment', 0);
-        $message->fullmessagehtml = $this->replace_placeholders($message->fullmessagehtml);
+        $body = $db_m ? $db_m->fullmessagehtml : \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot');
+        $body = file_rewrite_pluginfile_urls($body, 'pluginfile.php', $context->id, 'mod_motbot', 'attachment', 0);
+        $body = $this->replace_placeholders($body);
+
+        $helpfulurl = $CFG->wwwroot.'/mod/motbot/intervention_helpful.php?id=' . $this->id . '&helpful=';
+        if(!$this->suggestions) {
+            $this->suggestions = $this->generate_suggestions();
+        }
+        $contextinfo = [
+            'usefulbuttons' => ['usefulurl' => $helpfulurl . '1', 'notusefulurl' => $helpfulurl . '0'],
+            'suggestions' => $this->suggestions ,
+            'hassuggestions' => !empty($this->suggestions ),
+            'body' => $body
+        ];
+        $message->fullmessagehtml = $OUTPUT->render_from_template('mod_motbot/intervention_message', $contextinfo);
+
+        $message->fullmessage = $db_m ? $this->replace_placeholders($db_m->fullmessage) : 'message body';
+
 
         $message->smallmessage = $db_m ? $db_m->smallmessage : 'small message';
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
 
 
         $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification
-        $message->contexturlname = 'To Course'; // Link title explaining where users get to for the contexturl
+        $message->contexturlname = 'To Course';
+        // Link title explaining where users get to for the contexturl
         // $content = array('*' => array('header' => ' test ', 'footer' => ' test ')); // Extra content for specific processor
         // $message->set_additional_content('email', $content);
 
         return $message;
     }
 
+    private function get_fullmessage_suggestions() {
+        if(!$this->suggestions) {
+            $this->suggestions = $this->generate_suggestions();
+        }
+        $message = 'Here are some suggestions:
+
+';
+
+        foreach($this->suggestions as $suggestion) {
+            if (array_key_exists('text' , $suggestion)) {
+                $message .= $suggestion['text'] . '
+' . $suggestion['url'];
+            } elseif (array_key_exists('heading' , $suggestion)) {
+                $message .= $suggestion['heading'] . '
+
+';
+                if (array_key_exists('suggestionlist' , $suggestion)) {
+                    foreach($suggestion['suggestionlist'] as $sug) {
+                        $message .= $sug['text'] . '
+' . $sug['url_text'] . ': ' . $sug['url'] . '
+
+';
+                    }
+                } elseif (array_key_exists('buttonrow' , $suggestion)) {
+                    foreach($suggestion['buttonrow'] as $button) {
+                        $message .= $button['url_text'] . ': ' . $button['url'] . '
+
+';
+                    }
+                }
+            }
+
+            $message .= '
+
+';
+        }
+
+        return $message;
+    }
+
+    private function generate_suggestions() {
+        $suggestions = array();
+
+        $recipient = $this->get_recipient();
+        $course = $this->get_course();
+
+        if($this->target == '\mod_motbot\analytics\target\low_social_presence') {
+            $suggestions = array_merge($suggestions, $this->get_new_forum_activity_suggestion($recipient, $course));
+            $suggestions = array_merge($suggestions, $this->get_feedback_suggestion($recipient, $course));
+        } else if($this->target == '\mod_motbot\analytics\target\no_recent_accesses') {
+            $suggestions = array_merge($suggestions, $this->get_visit_course_suggestion($recipient, $course));
+            $suggestions = array_merge($suggestions, $this->get_new_activities_suggestion($recipient, $course));
+            $suggestions = array_merge($suggestions, $this->get_feedback_suggestion($recipient, $course));
+        }
+
+        return $suggestions;
+    }
+
+    private function get_visit_course_suggestion($user, $course) {
+        global $DB, $CFG;
+
+        $suggestions = array();
+
+        $suggestions[] = [
+            'text' => 'Visit the course!',
+            'url' => $CFG->wwwroot . '/course/view.php?id=' . $course->id,
+            'url_text' => 'Go to ' . $course->shortname,
+        ];
+
+        return $suggestions;
+    }
+
+    private function get_feedback_suggestion($user, $course) {
+        global $DB, $CFG;
+
+        $suggestions = array();
+        if(!mod_motbot_has_completed_feedback($user->id, $course->id)) {
+            $sql = 'SELECT cm.id as id, f.name as name
+                FROM mdl_course_modules cm
+                JOIN mdl_modules m ON m.id = cm.module
+                JOIN mdl_feedback f ON f.id = cm.instance
+                WHERE cm.course = :courseid
+                AND m.name = "feedback";';
+            $activities = $DB->get_records_sql($sql, array('courseid' => $course->id));
+
+            if($activities && !empty($activities)) {
+                foreach($activities as $feedback) {
+                    $suggestions[] = [
+                        'text' => 'Please consider giving some feedback, so we can support you better!',
+                        'url' => $CFG->wwwroot . '/mod/feedback/view.php?id=' . $feedback->id,
+                        'url_text' => 'Go to ' . $feedback->name,
+                    ];
+                }
+            }
+        }
+
+        return $suggestions;
+    }
+
+    private function get_new_activities_suggestion($user, $course) {
+        global $DB, $CFG;
+
+        $suggestions = array();
+
+        if (!$logstore = \core_analytics\manager::get_analytics_logstore()) {
+            throw new \coding_exception('No available log stores');
+        }
+
+        $endtime = time();
+        // One week earlier.
+        $lastaccess = $DB->get_record('user_lastaccess', ['courseid' => $course->id, 'userid' => $user->id]);
+        $starttime = $lastaccess->timeaccess;
+        $select = "courseid = :courseid AND eventname = :eventname AND timecreated > :starttime AND timecreated <= :endtime";
+        $params = array('courseid' => $course->id, 'eventname' => '\core\event\course_module_created', 'starttime' => $starttime, 'endtime' => $endtime);
+        $new_activities = $logstore->get_events_select($select, $params, null, null, null);
+
+        if(!empty($new_activities)) {
+            $activities = array();
+            foreach($new_activities as $activity) {
+                print_r($activity);
+                $activities[] = [
+                    'text' => 'An activity or ressource of type ' . \get_string('modulename', 'mod_' . $activity->other['modulename']) . ' was added on ' . userdate($activity->timecreated),
+                    'url' => $CFG->wwwroot . '/mod/' . $activity->other['modulename'] . '/view.php?id=' . $activity->objectid,
+                    'url_text' => 'Go to ' . $activity->other['name'],
+                ];
+            }
+            $suggestions[] = [
+                'heading' => 'These new ressources might be worth checking out:',
+                'suggestionlist' => $activities,
+            ];
+        } else {
+            echo('no new activities');
+        }
+
+        return $suggestions;
+    }
+
+    private function get_new_forum_activity_suggestion($user, $course) {
+        global $DB, $CFG;
+
+
+        $suggestions = array();
+
+        $sql = 'SELECT cm.id as id, f.name as name
+        FROM mdl_course_modules cm
+        JOIN mdl_modules m ON m.id = cm.module
+        JOIN mdl_forum f ON f.id = cm.instance
+        WHERE cm.course = :courseid
+        AND m.name = "forum";';
+        $activities = $DB->get_records_sql($sql, array('courseid' => $course->id));
+        if(empty($activities)) {
+            return $suggestions;
+        }
+
+        $buttons = array();
+        foreach($activities as $activity) {
+            $buttons[] = [
+                'url' => $CFG->wwwroot . '/mod/forum/view.php?id=' . $activity->id,
+                'url_text' => 'Go to ' . $activity->name,
+            ];
+        }
+
+        if (!$logstore = \core_analytics\manager::get_analytics_logstore()) {
+            throw new \coding_exception('No available log stores');
+        }
+
+        $endtime = time();
+        // One week earlier.
+        $lastaccess = $DB->get_record('user_lastaccess', ['courseid' => $course->id, 'userid' => $user->id]);
+        $starttime = $lastaccess->timeaccess;
+        $select = "courseid = :courseid AND eventname = :eventname AND timecreated > :starttime AND timecreated <= :endtime";
+
+        $params = array('courseid' => $course->id, 'eventname' => '\mod_forum\event\post_created', 'starttime' => $starttime, 'endtime' => $endtime);
+        $any_new_forum_posts = $logstore->get_events_select_count($select, $params);
+
+        $params = array('courseid' => $course->id, 'eventname' => '\mod_forum\event\discussion_created', 'starttime' => $starttime, 'endtime' => $endtime);
+        $any_new_forum_dicussions = $logstore->get_events_select_count($select, $params);
+
+        if($any_new_forum_posts || $any_new_forum_dicussions) {
+            $heading = 'See what other people have written in a forum recently!';
+        } else {
+            $heading = 'Ask a question or reply to a post in a forum!';
+        }
+
+        $suggestions[] = [
+            'heading' => $heading,
+            'buttonrow' => $buttons,
+        ];
+
+        return $suggestions;
+    }
+
     private function replace_placeholders($subject) {
         $recipient = $this->get_recipient();
         $motbot = $this->get_motbot();
         $course = $this->get_course();
+        $courseurl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false);
 
         $result = $subject;
         $result = str_replace('{firstname}', $recipient->firstname, $result);
@@ -327,7 +544,10 @@ class intervention {
         $result = str_replace('{motbot}', $motbot->name, $result);
         $result = str_replace('{course_shortname}', $course->shortname, $result);
         $result = str_replace('{course_fullname}', $course->fullname, $result);
-
+        $result = str_replace('{course_url}', $courseurl, $result);
+        if(str_contains($result, '{suggestions}')) {
+            $result = str_replace('{suggestions}', $this->get_fullmessage_suggestions(), $result);
+        }
         return $result;
     }
 
@@ -385,7 +605,7 @@ class intervention {
             }
         }
         if(!$sent) {
-            $this->teachers_informed = true;
+            $this->teachers_informed = false;
         }
 
         $this->update_record();
@@ -397,7 +617,7 @@ class intervention {
                 $message = $this->create_intervention_message();
         }
 
-        if($this->send_message($message)) {
+        if($this->message = $this->send_message($message)) {
             $this->set_state(self::INTERVENED);
         }
     }
