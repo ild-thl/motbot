@@ -42,6 +42,14 @@ class mod_motbot_overview_form extends moodleform {
         $mform->addElement('selectyesno', 'allow_teacher_involvement', get_string('course_settings_form:allow_teacher_involvement', 'motbot'));
         $mform->addHelpButton('allow_teacher_involvement', 'course_settings_form:allow_teacher_involvement', 'motbot');
 
+        $mform->addElement('header', 'advice_settings', get_string('user_settings_form:advice_settings', 'motbot'), '', array('group' => 1, 'checked' => true), array(0, 1));
+        $mform->addElement('checkbox', 'allow_course_completion', get_string('user_settings_form:allow_course_completion', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_feedback', get_string('user_settings_form:allow_feedback', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_recent_activities', get_string('user_settings_form:allow_recent_activities', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_recent_forum_activity', get_string('user_settings_form:allow_recent_forum_activity', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_recommended_discussion', get_string('user_settings_form:allow_recommended_discussion', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_visit_course', get_string('user_settings_form:allow_visit_course', 'motbot'), '', array('group' => 1), array(0, 1));
+
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 

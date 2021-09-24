@@ -88,14 +88,14 @@ $models = [
     //     'timesplitting' => '\core\analytics\time_splitting\single_range',
     //     'enabled' => true,
     // ],
-    [
-        'target' => '\mod_motbot\analytics\target\upcoming_activities_due',
-        'indicators' => [
-            '\core_course\analytics\indicator\activities_due',
-        ],
-        'timesplitting' => '\core\analytics\time_splitting\upcoming_week',
-        'enabled' => true,
-    ],
+    // [
+    //     'target' => '\mod_motbot\analytics\target\upcoming_activities_due',
+    //     'indicators' => [
+    //         '\core_course\analytics\indicator\activities_due',
+    //     ],
+    //     'timesplitting' => '\core\analytics\time_splitting\upcoming_week',
+    //     'enabled' => true,
+    // ],
     // [
     //     'target' => '\core_course\analytics\target\no_access_since_course_start',
     //     'indicators' => [
@@ -122,6 +122,14 @@ $models = [
         'timesplitting' => '\core\analytics\time_splitting\past_week',
         'enabled' => true,
     ],
+    // [
+    //     'target' => '\mod_motbot\analytics\target\unhelpful_interventions',
+    //     'indicators' => [
+    //         '\core\analytics\indicator\any_course_access',
+    //     ],
+    //     'timesplitting' => '\core\analytics\time_splitting\past_week',
+    //     'enabled' => true,
+    // ],
 ];
 
 $result = [];

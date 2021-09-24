@@ -24,8 +24,9 @@
 
 require('../../config.php');
 require_once('lib.php');
-require_once(__DIR__. '/course_settings_form.php');
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once(__DIR__ . '/locallib.php');
+require_once(__DIR__ . '/user_view.php');
+require_once(__DIR__ . '/teacher_view.php');
 
 $id = required_param('id', PARAM_INT);
 list ($course, $cm) = get_course_and_cm_from_cmid($id, 'motbot');
@@ -35,23 +36,24 @@ require_login();
 $modulecontext = context_module::instance($cm->id);
 $coursecontext = context_course::instance($course->id);
 
-$motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
-$motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
 
-$settings_url = $CFG->wwwroot.'/mod/motbot/course_settings.php?id=' . $id;
-if(!$motbot_course_user || !$motbot_course_user->authorized) {
-    redirect($settings_url, 'Please activate your Motbot');
+if(has_capability('mod/motbot:addinstance', $coursecontext)) {
+    $view = new mod_motbot_teacher_view($id, $moduleinstance->id, $coursecontext->id, $USER->id);
+    if(!$DB->get_record('motbot', array('id' => $moduleinstance->id), 'usecode')->usecode) {
+        redirect($view->settings_url, 'Please activate Motbot first.');
+    }
+} else {
+    $motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
+    $motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
+
+    $view = new mod_motbot_user_view($id, $moduleinstance->id, $coursecontext->id, $USER->id);
+    if(!$motbot_course_user || !$motbot_course_user->authorized) {
+        redirect($view->settings_url, 'Please activate your Motbot.');
+    }
 }
 
-$messages = $DB->get_records('motbot_message', array('motbot' => $moduleinstance->id), '', 'target, active');
 
-$models = array();
 
-foreach($messages as $message) {
-    $models[] = mod_motbot_view_get_model_data($message, $coursecontext->id, $USER->id);
-}
-
-usort($models, "mod_motbot_sort_models_by_enable");
 // $sql = "SELECT DISTINCT p.id, p.prediction, p.predictionscore
 //         FROM mdl_user u
 //         JOIN mdl_user_enrolments ue ON ue.userid = u.id
@@ -76,23 +78,10 @@ $PAGE->set_heading(format_string($course->fullname));
 // $PAGE->set_context($modulecontext);
 
 
-if(has_capability('mod/motbot:addinstance', $coursecontext)) {
-    $url = $CFG->wwwroot.'/course/modedit.php?update=' . $id;
-    redirect($url);
-    die;
-}
-
-
-$contextinfo = [
-    'settings_url' => $settings_url,
-    'models' => $models,
-    'interventions_table' => mod_motbot_get_interventions_table($USER->id, $coursecontext->id, true),
-];
-
 echo $OUTPUT->header();
 // echo $OUTPUT->heading(get_string('pluginname', 'motbot'));
 
-echo $OUTPUT->render_from_template('mod_motbot/view', $contextinfo);
+echo $view->render();
 
 echo $OUTPUT->footer();
 
@@ -109,53 +98,4 @@ function mod_motbot_get_predictions_table($predictions) {
     }
 
     return html_writer::table($table);
-}
-
-function mod_motbot_sort_models_by_enable($a, $b) {
-    if($a["enabled"] == $b["enabled"]) return 0;
-    return (!$b["enabled"] && $b["enabled"]) ? -1 : 1;
-}
-
-function mod_motbot_view_get_model_data($message, $contextid, $userid) {
-    global $DB;
-
-    $target_name = mod_motbot_get_name_of_target($message->target);
-    $model = [
-        "name" => \get_string('target:' . $target_name . '_short', 'motbot'),
-        "enabled" => $message->active,
-        "hasdata" => false,
-        "state" => '',
-        "date" => null,
-        "image" => 'disabled_motbot',
-        "intervention_url" => null,
-    ];
-
-    if(!$message->active) {
-        return $model;
-    }
-
-    $sql = "SELECT *
-        FROM mdl_motbot_intervention
-        WHERE contextid = :contextid
-        AND recipient = :recipient
-        AND target = :target
-        ORDER BY timecreated DESC
-        LIMIT 1";
-    $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $userid, 'target' => $message->target), IGNORE_MISSING);
-
-    if(!$latest_intervention) {
-        $model["image"] = 'happy_motbot';
-        return $model;
-    }
-
-    $model["state"] = \get_string('state:' . $latest_intervention->state, 'motbot');
-    $model["hasdata"] = true;
-    $model["date"] = userdate($latest_intervention->timemodified);
-    if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
-        $model["intervention_url"] = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $latest_intervention->message))->out(false);
-        $model["image"] = 'unhappy_motbot';
-    } else {
-        $model["image"] = 'happy_motbot';
-    }
-    return $model;
 }

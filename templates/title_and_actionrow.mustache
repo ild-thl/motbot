@@ -16,7 +16,7 @@
     <http: //www.gnu.org/licenses />.
 }}
 {{!
-    @template mod_motbot/intervention_message
+    @template mod_motbot/title_and_actionrow
 
     HTML message for insights with one single prediction
 
@@ -28,29 +28,23 @@
 
     Example context (json):
     {
-        "body": "I am a <a href=\"#\">link</a> in a text body.",
-        "usefulbuttons": {
-            "usefulurl": "https://en.wikipedia.org/wiki/Noodle",
-            "notusefulurl": "https://en.wikipedia.org/wiki/Noodle"
-        }
+        "title": "Please visit the course!",
+        "actions" : [
+            [
+                "action_url": "https://en.wikipedia.org/wiki/Noodle",
+                "action": "Course Name"
+            ],
+            [
+                "action_url": "https://en.wikipedia.org/wiki/Noodle",
+                "action": "Course Name"
+            ],
+        ]
     }
 }}
 
-{{> mod_motbot/notification_styles}}
-{{#body}}
-<div class="motbot-message">
-    {{{.}}}
+<div class="suggestion">
+  <h5>{{ title }}</h5>
+  {{#actions}}
+  <a class="btn btn-primary" href="{{ action_url }}">{{ action }}</a>
+  {{/actions}}
 </div>
-<br />
-<br />
-{{/body}}
-{{#advice}}
-    {{{.}}}
-{{/advice}}
-{{#usefulbuttons}}
-    <div>
-        <strong>{{#str}} washelpful, analytics {{/str}}</strong>
-        <a href="{{usefulurl}}" target="_self" class="btn-insight btn btn-outline-primary">{{#str}}yes{{/str}}</a>
-        <a href="{{notusefulurl}}" target="_self" class="btn-insight btn btn-outline-primary">{{#str}}no{{/str}}</a>
-    </div>
-{{/usefulbuttons}}

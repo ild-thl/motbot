@@ -22,6 +22,17 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+//---- Advice
+$string['advice:course_completion'] = 'coursecompletion';
+$string['advice:feedback'] = 'feedback';
+$string['advice:recent_activities'] = 'recentactivities';
+$string['advice:recent_forum_activity'] = 'recentforumactivity';
+$string['advice:recommended_discussion'] = 'recommendeddiscussion';
+$string['advice:visit_course'] = 'visitcourse';
+
+//---- Bot
+$string['bot'] = 'Executes scheduled interventions';
+
 //----  Indicator
 $string['indicator:socialpresenceincourseforum'] = 'Any write action in a course forum';
 $string['indicator:socialpresenceincourseforum_help'] = 'TODO: Any write action in a course forum help text.';
@@ -40,6 +51,19 @@ $string['messageprovider:motbot_teacher_intervention'] = 'Motbot teacher interve
 
 $string['message:teacher_subject'] = 'Failed intervention: {$a}';
 $string['message:teacher_fullmessagehtml'] = '<p>Student {$a->fullname} might need your attention.</p><p>Previous automatic interventions by Motbot were unsuccessful.</p><p>Previous interventions:</p>{$a->interventions}';
+
+
+$string['message:unhelpfulinterventions_subject'] = 'Unhelpful interventions in: {course}';
+$string['message:unhelpfulinterventions_fullmessage'] = 'Hello {firstname} {lastname},
+Motbot detected undesirable intervention results.
+There are either an uncommon amount of negative interventions or students that received interventions found them unhelpful.
+Please check motbot settings and check wether the calculated model is appropriate.
+Kind regards Motbot {motbot}';
+$string['message:unhelpfulinterventions_fullmessagehtml'] = '<p>Hello {firstname} {lastname},</p><p>
+Motbot detected undesirable intervention results.</p><p>
+There are either an uncommon amount of negative interventions or students that received interventions found them unhelpful.</p><p>
+Please check motbot settings and check wether the calculated model is appropriate.</p><p>
+Kind regards Motbot {motbot}</p>';
 //----
 
 //----  Module
@@ -125,15 +149,23 @@ $string['state:3'] = 'Unsuccessful';
 $string['state:4'] = 'Stored';
 //----
 
-//----  Analytic Targets
+//----  Analytic Targetstarget:
 $string['target:norecentaccesses'] = 'Students who have not accessed the course recently (Motbot)';
 $string['target:norecentaccesses_help'] = 'This target identifies students who have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
 $string['target:norecentaccessesinfo'] = 'The following students have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
 $string['target:no_recent_accesses_short'] = 'No recent accesses';
+$string['target:no_recent_accesses_neutral'] = 'Attendance';
 
 $string['target:coursedropout'] = 'Students at risk of dropping out (Motbot)';
 $string['target:coursedropout_help'] = 'This target describes whether the student is considered at risk of dropping out.';
 $string['target:course_dropout_short'] = 'Possible course dropout';
+$string['target:course_dropout_neutral'] = 'Dropout risk';
+
+$string['target:unhelpfulinterventions'] = 'Motbot that sends unhelpful interventions (Motbot)';
+$string['target:unhelpfulinterventions_help'] = 'Motbot that sends unhelpful interventions (Motbot)';
+$string['target:unhelpfulinterventionsinfo'] = 'Motbot that sends unhelpful interventions (Motbot)';
+$string['target:unhelpfulinterventions_short'] = 'Unhelpful interventions';
+$string['target:unhelpfulinterventions_neutral'] = 'Interventions';
 
 $string['target:upcomingactivitiesdue'] = 'Upcoming activities due (Motbot)';
 $string['target:upcomingactivitiesdue_help'] = 'This target generates reminders for upcoming activities due.';
@@ -144,6 +176,7 @@ $string['target:lowsocialpresence'] = 'Students with low social presence (Motbot
 $string['target:lowsocialpresence_help'] = 'This target generates reminders for upcoming activities due.';
 $string['target:lowsocialpresenceinfo'] = 'All upcoming activities due insights are listed here. These students have received these insights directly.';
 $string['target:low_social_presence_short'] = 'Low social presence';
+$string['target:low_social_presence_neutral'] = 'Social presence';
 
 
 $string['targetlabellowsocialpresenceno'] = 'Student has low social presence.';
@@ -152,11 +185,21 @@ $string['targetlabellowsocialpresenceyes'] = 'Student has enough social presence
 
 $string['tomanyinstances'] = 'There should only be one Motbot activity in a course.';
 
-//----  User Settings Form
+//----  Course User Settings Form
 $string['course_settings_form:prohibit'] = 'Prohibit';
 $string['course_settings_form:authorize'] = 'Authorize';
 $string['course_settings_form:authorized'] = 'Enable Motbot';
 $string['course_settings_form:authorized_help'] = 'Allow the Motbot to analyze your user activity and intervene if needed.';
 $string['course_settings_form:allow_teacher_involvement'] = 'Allow teacher involvement?';
 $string['course_settings_form:allow_teacher_involvement_help'] = 'When "Yes" is checked, teachers will be informed of your situation in case other means of interventions fail.';
+//----
+
+//----  User Settings Form
+$string['user_settings_form:allow_visit_course'] = 'Allow advice to visit course?';
+$string['user_settings_form:allow_recommended_discussion'] = 'Allow advice to participate in recommended discussions?';
+$string['user_settings_form:allow_recent_forum_activity'] = 'Allow recommendations for recent forum posts?';
+$string['user_settings_form:allow_recent_activities'] = 'Allow recommendations for recently added activities?';
+$string['user_settings_form:allow_feedback'] = 'Allow suggestions to give feedback?';
+$string['user_settings_form:allow_course_completion'] = 'Allow advice about my course progress?';
+$string['user_settings_form:advice_settings'] = 'Available advice options';
 //----

@@ -128,7 +128,7 @@ class mod_motbot_mod_form extends moodleform_mod {
                 }
             }
 
-            if($exists || $model->target::uses_insights()) {
+            if($exists || !$model->target::custom_intervention()) {
                 continue;
             }
 

@@ -16,7 +16,7 @@
     <http: //www.gnu.org/licenses />.
 }}
 {{!
-    @template mod_motbot/view
+    @template mod_motbot/user_view
 
     HTML message for insights with one single prediction
 
@@ -33,10 +33,11 @@
             {
              "name" : "Attendance",
              "enabled": true,
-             "hasdata": true
-             "state" : "Successful",
+             "count": 11
+             "helpful" : 5,
+             "unhelpful" : 3,
+             "last_intervention": "2. April 2020 19:45",
              "image": "happy_motbot",
-             "date": "2. April 2020 19:45",
             },
         ]
         "interventions_table": "some html",
@@ -58,23 +59,44 @@
     <div class="column">
       {{#pix}} {{{image}}}, motbot, {{{image}}} motbot {{/pix}}
       <h5>{{{name}}}</h5>
-      {{#date}}
-      <p>Last update on:</p>
-      <p>{{{date}}}</p>
-      {{/date}}
-      <p>
-        {{#enabled}}
-        {{#hasdata}}
-        {{{state}}}
-        {{/hasdata}}
-        {{^hasdata}}
-        All good
-        {{/hasdata}}
-        {{/enabled}}
-        {{^enabled}}
-        Model paused by course manager
-        {{/enabled}}
-      </p>
+
+      {{#count}}
+      <br />
+      <table class="generaltable">
+        <thead>
+          <tr>
+            <th class="header c0">Helpful</th>
+            <th class="header c1">Unhelpful</th>
+            <th class="header c2">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="cell c0">{{{helpful}}}</td>
+            <td class="cell c1">{{{unhelpful}}}</td>
+            <td class="cell c2">
+              <strong>{{{count}}}</strong>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <!-- <td class="footer">Total interventions</td>
+          <td class="footer">
+            <strong>{{{count}}}</strong>
+          </td> -->
+        </tfoot>
+      </table>
+
+      <br />
+      <p>Last intervention on:</p>
+      <p>{{{last_intervention}}}</p>
+      {{/count}}
+      {{^count}}
+      <p>No Interventions yet.</p>
+      {{/count}}
+      {{^enabled}}
+      <p>Model paused by course manager</p>
+      {{/enabled}}
       {{#intervention_url}}
       <a class="btn btn-primary" href="{{{.}}}">Show intervention</a>
       {{/intervention_url}}
@@ -82,10 +104,3 @@
     {{/models}}
   </div>
 </div>
-
-{{#interventions_table}}
-<div>
-  <h2>Interventions</h2>
-  {{{.}}}
-</div>
-{{/interventions_table}}

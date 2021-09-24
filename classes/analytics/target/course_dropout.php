@@ -139,7 +139,7 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
      * @return void
      */
     public function prediction_callback($modelid, $sampleid, $rangeindex, \context $samplecontext, $scalar_prediction, $predictionscore) {
-        \mod_motbot\retention\bot::log_prediction($modelid, $sampleid, $rangeindex, $samplecontext, $scalar_prediction, $predictionscore);
+        \mod_motbot\manager::log_prediction($modelid, $sampleid, $rangeindex, $samplecontext, $scalar_prediction, $predictionscore);
         return;
     }
 

@@ -15,40 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Prints an instance of mod_motbot.
+ * Scheduled task definitions for the motbot module
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require('../../config.php');
-require_once('lib.php');
-require_once(__DIR__ . '/locallib.php');
-require_once(__DIR__ . '/user_overview.php');
+defined('MOODLE_INTERNAL') || die();
 
-require_login();
-$context = context_system::instance();
-$motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
-
-
-$view = new mod_motbot_overview($USER->id);
-if(!$motbot_user || !$motbot_user->authorized) {
-    redirect($view->settings_url, 'Please activate your Motbot.');
-}
-
-$PAGE->set_context($context);
-$PAGE->set_url('/mod/motbot/overview.php');
-$PAGE->set_pagelayout('admin');
-$PAGE->set_title(format_string(get_string('pluginname', 'motbot')));
-$PAGE->set_heading(get_string('pluginname', 'motbot'));
-
-if (isguestuser()) {
-    redirect($CFG->wwwroot.'/login/');
-}
-
-echo $OUTPUT->header();
-
-echo $view->render();
-
-echo $OUTPUT->footer();
+$tasks = [
+    [
+        'classname' => 'mod_motbot\retention\bot',
+        'blocking' => 0,
+        'minute' => '*/5',
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+];

@@ -62,6 +62,60 @@ is not applied in gmail.}}
       cursor: pointer;
     }
 
+    .motbot-comment {
+      display: flex;
+      align-items: end;
+    }
+
+    .motbot-message a,
+    .motbot-comment a {
+      color: white;
+    }
+
+    .motbot-message p,
+    .motbot-comment p {
+      position: relative;
+      background: #0f6fc5;
+      width: max-content;
+      max-width: 300px;
+      padding: 5px 15px;
+      border-radius: 5px 5px 5px 0px;
+      color: white;
+    }
+
+    .motbot-message p::before,
+    .motbot-comment p::before {
+      border-radius: 5px 5px 5px 0px;
+      border: 6px solid transparent;
+      border-top: 6px solid #0f6fc5;
+      border-bottom: 0;
+      height: 0;
+      width: 0;
+      border-top-width: 12px;
+      content: '';
+      display: block;
+      position: absolute;
+      left: -6px;
+      bottom: 0px;
+      transform-origin: center;
+      transform: rotate(180deg) skew(-25deg) translateY(0px);
+    }
+
+    .motbot-comment .image-container {
+      margin-right: 3em;
+    }
+
+    .motbot-comment .icon {
+      width: 25px;
+      height: auto;
+    }
+
+    .motbot-message img {
+      border-radius: 2px;
+      margin: 10px 10px;
+      box-shadow: 0px 2px 8px #12121266;
+    }
+
     .suggestion ul {
       margin: 0;
     }
@@ -75,6 +129,114 @@ is not applied in gmail.}}
       padding: 2em;
       background: #efefef;
       margin-bottom: 1em;
+    }
+
+    .suggestion .quote {
+      background: #dcdcdc;
+      margin: 0;
+      padding: 1em;
+      max-width: 800px;
+      margin-top: 1em;
+      font-family: monospace;
+    }
+
+    .suggestion .subject {
+      font-style: italic;
+      font-size: 1.2em;
+      margin-bottom: 0.3em;
+    }
+
+    .suggestion .message {
+      font-size: 1em;
+    }
+
+    .suggestion p {
+      margin: 0;
+    }
+
+    .suggestion .btn {
+      margin-top: 0.5em;
+    }
+
+    .progress-meter {
+      position: relative;
+      width: 70%;
+      max-width: 400px;
+      background: white;
+      border-radius: 10px;
+      height: 15px;
+      margin: 50px 0px 100px 40px;
+    }
+
+    .progress-meter + p {
+      max-width: 500px;
+      width: 70%;
+    }
+    .progress-stat {
+      position: absolute;
+      height: 100%;
+      border-radius: 10px 0px 0px 10px;
+      overflow: visible;
+    }
+
+    .progress-stat div {
+      right: 0px;
+      transform: translate(50%, 0%);
+      font-size: 1.2em;
+      position: absolute;
+      white-space: nowrap;
+      text-align: center;
+      line-height: 1.3em;
+      height: 80px;
+    }
+
+    .progress-stat-avg {
+      background: #3c88e6;
+    }
+
+    .progress-stat-avg div {
+      top: 0px;
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+    }
+
+    .progress-stat-user {
+      background: #9dcc0b;
+    }
+
+    .progress-stat-user div {
+      bottom: 0px;
+    }
+
+    .progress-value {
+      font-size: 0.9em;
+    }
+
+    .progress-stat::before {
+      content: '';
+      position: absolute;
+      background-color: #424242;
+      height: 200%;
+      width: 2px;
+      border-radius: 5px;
+      right: 0;
+    }
+
+    .progress-stat-user::before {
+      bottom: 0;
+    }
+
+    .progress-meter .legend {
+      position: absolute;
+    }
+
+    .progress-meter .legend:first-child {
+      right: 105%;
+    }
+
+    .progress-meter .legend:last-child {
+      left: 105%;
     }
   </style>
 </head>

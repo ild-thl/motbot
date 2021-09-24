@@ -161,15 +161,6 @@ function motbot_delete_instance($id) {
 function motbot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
     global $CFG, $DB;
 
-    // if ($context->contextlevel != CONTEXT_MODULE) {
-    //     return false;
-    // }
-
-    // require_course_login($course, true, $cm);
-    // if (!has_capability('mod/motbot:view', $context)) {
-    //     return false;
-    // }
-
     if ($filearea !== 'attachment') {
         // intro is handled automatically in pluginfile.php
         return false;
@@ -252,17 +243,49 @@ function motbot_cm_info_dynamic(cm_info $cm) {
     global $USER, $DB;
 
     $modulecontext = context_module::instance($cm->id);
+    $coursecontext = context_course::instance($cm->course);
     // $active = true;
     // if(!has_capability('mod/motbot:addinstance', $modulecontext)) {
         $active = $DB->get_record('motbot_course_user', array('motbot' => $cm->instance, 'user' => $USER->id, 'authorized' => 1));
     // }
 
     // $cm->set_extra_classes('w-100');
-
-    if(!$active && !has_capability('mod/motbot:addinstance', $modulecontext)) {
-        $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-inactive.svg'));
-        $cm->set_name('Motbot disabled');
+    if(!has_capability('mod/motbot:addinstance', $modulecontext)) {
+        if($active) {
+            if(!motbot_is_happy($cm->instance, $coursecontext->id)) {
+                $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-unhappy.svg'));
+            }
+        } else {
+            $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-inactive.svg'));
+            $cm->set_name('Motbot disabled');
+        }
     }
 
     // $cm->set_no_view_link();
+}
+
+function motbot_is_happy($motbotid, $contextid) {
+    global $DB, $USER;
+    $messages = $DB->get_records('motbot_message', array('motbot' => $motbotid), '', 'target, active');
+    foreach($messages as $message) {
+        if(!$message->active) {
+            continue;
+        }
+        $sql = "SELECT *
+                FROM mdl_motbot_intervention
+                WHERE contextid = :contextid
+                AND recipient = :recipient
+                AND target = :target
+                ORDER BY timecreated DESC
+                LIMIT 1";
+        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $USER->id, 'target' => $message->target), IGNORE_MISSING);
+        if(!$latest_intervention) {
+            continue;
+        }
+
+        if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
+            return false;
+        }
+    }
+    return true;
 }

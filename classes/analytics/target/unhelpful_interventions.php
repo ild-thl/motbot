@@ -33,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class no_recent_accesses extends \core_course\analytics\target\no_recent_accesses {
+class unhelpful_interventions extends \core_course\analytics\target\no_recent_accesses {
     /**
      * Returns the name.
      *
@@ -42,10 +42,20 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      * @return \lang_string
      */
     public static function get_name() : \lang_string {
-        return new \lang_string('target:norecentaccesses', 'motbot', null, 'en');
+        return new \lang_string('target:unhelpfulinterventions', 'motbot', null, 'en');
     }
 
-        /**
+
+    /**
+     * Returns the analyser class that should be used along with this target.
+     *
+     * @return string The full class name as a string
+     */
+    public function get_analyser_class() {
+        return '\mod_motbot\analytics\analyser\teacher_enrolments';
+    }
+
+    /**
      * Discards courses that are not yet ready to be used for prediction.
      *
      * @param \core_analytics\analysable $course
@@ -94,18 +104,30 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
     public function is_valid_sample($sampleid, \core_analytics\analysable $course, $fortraining = true) {
         global $DB;
 
-        $userenrol = $this->retrieve('user_enrolments', $sampleid);
+        // $userenrol = $this->retrieve('user_enrolments', $sampleid);
 
         $userid = \mod_motbot\manager::get_prediction_subject($sampleid);
-        $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
-        if($motbot) {
-            if(!$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
-                return false;
-            }
-        }
+        // $role = $DB->get_record('role', array('shortname' => 'editingteacher'));
+        // $context = \context_course::instance($course->get_id());
+        // echo('Context: ');
+        // print_r($context);
+        // $teachers = get_role_users($role->id, $context);
+        // echo('TEachers: ');
+        // print_r($teachers);
+        echo('Userid: ');
+        echo($userid);
+        echo('sampleid: ');
+        echo($sampleid);
 
-        return parent::is_valid_sample($sampleid, $course, $fortraining);
+        // foreach($teachers as $teacher) {
+        //     if($teacher->id == $userid) {
+        //         echo($userid);
+        //         return parent::is_valid_sample($sampleid, $course, $fortraining);
+        //     }
+        // }
+
+        return false;
     }
 
 
@@ -138,10 +160,10 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      * @return float|null 0 -> accesses, 1 -> no accesses.
      */
     protected function calculate_sample($sampleid, \core_analytics\analysable $analysable, $starttime = false, $endtime = false) {
-        $readactions = $this->retrieve('\core\analytics\indicator\any_course_access', $sampleid);
-        if ($readactions == \core\analytics\indicator\any_course_access::get_min_value()) {
-            return 1;
-        }
+        // $readactions = $this->retrieve('\core\analytics\indicator\any_course_access', $sampleid);
+        // if ($readactions == \core\analytics\indicator\any_course_access::get_min_value()) {
+        //     return 1;
+        // }
         return 1;
     }
 
@@ -157,10 +179,6 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
         return false;
     }
 
-    public static function custom_intervention() {
-        return true;
-    }
-
     public static function is_critical() {
         return true;
     }
@@ -169,9 +187,12 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
         return true;
     }
 
+    public static function custom_intervention() {
+        return false;
+    }
 
     public static function get_desired_events() {
-        return array('\core\event\course_viewed');
+        return null;
     }
 
 }

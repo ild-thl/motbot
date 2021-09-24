@@ -15,21 +15,41 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package   mod_motbot
- * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * Moodle course analysable
+ *
+ * @package   core_analytics
+ * @copyright 2016 David Monllao {@link http://www.davidmonllao.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace mod_motbot\analysable;
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2021091216;
-$plugin->requires = 2018051701;
-// $plugin->requires = 2021051700;
-$plugin->component = 'mod_motbot';
-$plugin->maturity = MATURITY_ALPHA;
-// $plugin->release = 'TODO';
+require_once($CFG->dirroot . '/course/lib.php');
+require_once($CFG->dirroot . '/lib/gradelib.php');
+require_once($CFG->dirroot . '/lib/enrollib.php');
 
-// $plugin->dependencies = [
-//     'mod_forum' => ANY_VERSION,
-//     'mod_data' => TODO
-// ];
+/**
+ * Moodle course analysable
+ *
+ * @package   core_analytics
+ * @copyright 2016 David Monllao {@link http://www.davidmonllao.com}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class course extends \core_analytics\course {
+
+    /**
+     * Returns the course students.
+     *
+     * @return int[]
+     */
+    public function get_teachers() {
+
+        if (!$this->loaded) {
+            $this->load();
+        }
+
+        return $this->teacherids;
+    }
+}

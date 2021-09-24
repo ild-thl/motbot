@@ -25,6 +25,7 @@
 require('../../config.php');
 require_once('lib.php');
 require_once(__DIR__. '/course_settings_form.php');
+require_once(__DIR__. '/delete_intervention_data_form.php');
 require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 
 $id = required_param('id', PARAM_INT);
@@ -70,6 +71,12 @@ $toform = (object) [
     'allow_teacher_involvement' => $motbot_course_user->allow_teacher_involvement,
 ];
 
+$todeleteform = (object) [
+    'id' => $id,
+    'recipient' => $USER->id,
+    'contextid' => $coursecontext->id,
+];
+
 // Wenn parameter $ueid aus overview.php übergeben ist kein kurslogin nötig um alte zertifikate auch zu sehen.
 require_login($course, true, $cm);
 
@@ -80,6 +87,7 @@ $PAGE->set_heading(format_string($course->fullname));
 
 //Instantiate simplehtml_form
 $mform = new mod_motbot_course_settings_form();
+$deletedataform = new mod_motbot_delete_intervention_data_form();
 
 //Form processing and displaying is done here
 if ($mform->is_cancelled()) {
@@ -127,6 +135,12 @@ if ($mform->is_cancelled()) {
         $url = $CFG->wwwroot.'/course/view.php?id=' . $course->id;
     }
     redirect($url);
+} else if ($fromform = $deletedataform->get_data()) {
+    // In this case you process validated data. $mform->get_data() returns data posted in form.
+    $DB->delete_records('motbot_intervention', array('recipient' => $USER->id, 'contextid' => $coursecontext->id));
+
+    $url = $CFG->wwwroot.'/mod/motbot/view.php?id=' . $id;
+    redirect($url);
 } else {
     // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
     // or on the first display of the form.
@@ -143,6 +157,12 @@ if ($mform->is_cancelled()) {
     $mform->set_data($toform);
     //displays the form
     $mform->display();
+
+
+    //Set default data (if any)
+    $deletedataform->set_data($todeleteform);
+    //displays the form
+    $deletedataform->display();
 
 
     echo $OUTPUT->footer();

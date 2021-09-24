@@ -197,6 +197,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
         //     return null;
         // }
 
+        return 1;
         if($score < 0) {
             return 1;
         }
@@ -217,7 +218,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
      * @return void
      */
     public function prediction_callback($modelid, $sampleid, $rangeindex, \context $samplecontext, $scalar_prediction, $predictionscore) {
-        \mod_motbot\retention\bot::log_prediction($modelid, $sampleid, $rangeindex, $samplecontext, $scalar_prediction, $predictionscore);
+        \mod_motbot\manager::log_prediction($modelid, $sampleid, $rangeindex, $samplecontext, $scalar_prediction, $predictionscore);
         return;
     }
 
@@ -230,6 +231,10 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
      */
     public static function uses_insights() {
         return false;
+    }
+
+    public static function custom_intervention() {
+        return true;
     }
 
     public static function is_critical() {

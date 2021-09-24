@@ -15,40 +15,37 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Prints an instance of mod_motbot.
+ * Interaction.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require('../../config.php');
-require_once('lib.php');
-require_once(__DIR__ . '/locallib.php');
-require_once(__DIR__ . '/user_overview.php');
+namespace mod_motbot\retention\advice;
 
-require_login();
-$context = context_system::instance();
-$motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
+defined('MOODLE_INTERNAL') || die();
 
+abstract class title_and_actionlist extends \mod_motbot\retention\advice\base {
+    protected $title = null;
+    protected $actions = null;
 
-$view = new mod_motbot_overview($USER->id);
-if(!$motbot_user || !$motbot_user->authorized) {
-    redirect($view->settings_url, 'Please activate your Motbot.');
+    public function render() {
+        $result = $this->title;
+        foreach($this->actions as $action) {
+            $result .= PHP_EOL . PHP_EOL . $action['action_title'] . PHP_EOL . '-> *' . $action['action'] . '*: _' . $action['action_url'] . '_';
+        }
+        return $result;
+    }
+
+    public function render_html() {
+        global $OUTPUT;
+
+        $context = [
+            "title" => $this->title,
+            "actions" => $this->actions
+        ];
+
+        return $OUTPUT->render_from_template('mod_motbot/title_and_actionlist', $context);
+    }
 }
-
-$PAGE->set_context($context);
-$PAGE->set_url('/mod/motbot/overview.php');
-$PAGE->set_pagelayout('admin');
-$PAGE->set_title(format_string(get_string('pluginname', 'motbot')));
-$PAGE->set_heading(get_string('pluginname', 'motbot'));
-
-if (isguestuser()) {
-    redirect($CFG->wwwroot.'/login/');
-}
-
-echo $OUTPUT->header();
-
-echo $view->render();
-
-echo $OUTPUT->footer();

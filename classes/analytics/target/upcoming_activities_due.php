@@ -90,7 +90,7 @@ class upcoming_activities_due extends \core_user\analytics\target\upcoming_activ
      * @return void
      */
     public function prediction_callback($modelid, $sampleid, $rangeindex, \context $samplecontext, $scalar_prediction, $predictionscore) {
-        \mod_motbot\retention\bot::log_prediction($modelid, $sampleid, $rangeindex, $samplecontext, $scalar_prediction, $predictionscore);
+        \mod_motbot\manager::log_prediction($modelid, $sampleid, $rangeindex, $samplecontext, $scalar_prediction, $predictionscore);
         return;
     }
 
@@ -130,6 +130,10 @@ class upcoming_activities_due extends \core_user\analytics\target\upcoming_activ
     }
 
     public static function always_intervene() {
+        return false;
+    }
+
+    public static function custom_intervention() {
         return false;
     }
 
