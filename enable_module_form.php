@@ -15,19 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Form that lets user choose their preffered motbot settings.
+ * Form that allows a user to enable a motbot module.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-//moodleform is defined in formslib.php
+// moodleform is defined in formslib.php.
 require_once("$CFG->libdir/formslib.php");
 
-class mod_motbot_cm_info_form extends moodleform {
+/**
+ * Form that allows a user to enable a motbot module.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class mod_motbot_enable_module_form extends moodleform {
 
-    //Add elements to form
+    // Add elements to form.
     public function definition() {
         global $CFG;
 
@@ -36,10 +43,5 @@ class mod_motbot_cm_info_form extends moodleform {
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
         $mform->addElement('submit', 'authorized', get_string('course_settings_form:authorized', 'motbot'));
-    }
-
-    //Custom validation
-    function validation($data, $files) {
-        return array();
     }
 }

@@ -29,9 +29,12 @@ require_once(__DIR__ . '/user_overview.php');
 
 require_login();
 $context = context_system::instance();
+
+if (isguestuser()) {
+    redirect($CFG->wwwroot.'/login/');
+}
+
 $motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
-
-
 $view = new mod_motbot_overview($USER->id);
 if(!$motbot_user || !$motbot_user->authorized) {
     redirect($view->settings_url, 'Please activate your Motbot.');
@@ -42,10 +45,6 @@ $PAGE->set_url('/mod/motbot/overview.php');
 $PAGE->set_pagelayout('admin');
 $PAGE->set_title(format_string(get_string('pluginname', 'motbot')));
 $PAGE->set_heading(get_string('pluginname', 'motbot'));
-
-if (isguestuser()) {
-    redirect($CFG->wwwroot.'/login/');
-}
 
 echo $OUTPUT->header();
 

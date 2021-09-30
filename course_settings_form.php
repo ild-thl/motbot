@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Form that lets user choose their preffered motbot settings.
+ * Form that lets user choose their preffered motbot settings for a specific course.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -25,31 +25,36 @@
 //moodleform is defined in formslib.php
 require_once("$CFG->libdir/formslib.php");
 
+/**
+ * Form that lets user choose their preffered motbot settings for a specific course.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_motbot_course_settings_form extends moodleform {
 
-    //Add elements to form
+    /**
+     * Add elements to form.
+     */
     public function definition() {
         global $CFG;
 
         $mform = $this->_form;
 
-        $ynoptions = array(0 => get_string('course_settings_form:prohibit', 'motbot'),
-                           1 => get_string('course_settings_form:authorize', 'motbot'));
-        $mform->addElement('select', 'authorized', get_string('course_settings_form:authorized', 'motbot'), $ynoptions);
+        // Yes, No selector to enable motbot, as default disabled.
+        $mform->addElement('selectyesno', 'authorized', get_string('course_settings_form:authorized', 'motbot'));
         $mform->setDefault('authorized', 0);
         $mform->addHelpButton('authorized', 'course_settings_form:authorized', 'motbot');
 
+        // Yes, No Selector to enable involvement of teachers if needed.
         $mform->addElement('selectyesno', 'allow_teacher_involvement', get_string('course_settings_form:allow_teacher_involvement', 'motbot'));
         $mform->addHelpButton('allow_teacher_involvement', 'course_settings_form:allow_teacher_involvement', 'motbot');
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
+        // Submit and cancel button.
         $this->add_action_buttons();
-    }
-
-    //Custom validation
-    function validation($data, $files) {
-        return array();
     }
 }

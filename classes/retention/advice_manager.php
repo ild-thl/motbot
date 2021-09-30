@@ -42,8 +42,10 @@ class advice_manager {
 
     private function generate_advice() {
         if($this->target == '\mod_motbot\analytics\target\low_social_presence') {
-            $this->advices[] = $this->get_advice_if_available('\mod_motbot\retention\advice\recent_forum_activity');
-            $this->advices[] = $this->get_advice_if_available('\mod_motbot\retention\advice\recommended_discussion');
+            if(!$advice = $this->get_advice_if_available('\mod_motbot\retention\advice\recommended_discussion')) {
+                $advice = $this->get_advice_if_available('\mod_motbot\retention\advice\recent_forum_activity');
+            }
+            $this->advices[] = $advice;
         } else if($this->target == '\mod_motbot\analytics\target\no_recent_accesses') {
             $this->advices[] = $this->get_advice_if_available('\mod_motbot\retention\advice\course_completion');
             $this->advices[] = $this->get_advice_if_available('\mod_motbot\retention\advice\visit_course');
@@ -68,7 +70,7 @@ class advice_manager {
         if($this->advices == null) {
             $this->generate_advice();
         }
-        $message = 'Here are some suggestions:';
+        $message = '';
 
         foreach($this->advices as $advice) {
             if($advice == null) {

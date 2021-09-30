@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Display information about all the mod_motbot modules in the requested course.
+ * Lets users give feedback wether an intervention was helpful or not.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -23,15 +23,16 @@
  */
 require_once('../../config.php');
 
-$id = required_param('id', PARAM_INT);           // Course ID
-$helpful = required_param('helpful', PARAM_INT);           // Course ID
+$id = required_param('id', PARAM_INT);           // Course ID.
+$helpful = required_param('helpful', PARAM_INT);           // User feedback.
 
 $intervention = $DB->get_record('motbot_intervention', array('id' => $id));
 if($intervention) {
+    // Update intervention with users feedback.
     $intervention->helpful = $helpful;
     $DB->update_record('motbot_intervention', $intervention);
 }
-$intervention = $DB->get_record('motbot_intervention', array('id' => $id));
 
+// Redirect back to notifications, where users
 $url = $CFG->wwwroot . '/message/output/popup/notifications.php';
 redirect($url, 'Thank you for your feedback!', 1);

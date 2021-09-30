@@ -68,18 +68,6 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
     }
 
     /**
-     * classes_description
-     *
-     * @return string[]
-     */
-    // protected static function classes_description() {
-    //     return array(
-    //         get_string('targetlabellowsocialpresenceno', 'motbot'),
-    //         get_string('targetlabellowsocialpresenceyes', 'motbot')
-    //     );
-    // }
-
-    /**
      * Discards courses that are not yet ready to be used for prediction.
      *
      * @param \core_analytics\analysable $course
@@ -233,19 +221,40 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
         return false;
     }
 
+
+    /**
+     * Does this target allow a custom intervention message?
+     *
+     * @return bool
+     */
     public static function custom_intervention() {
         return true;
     }
 
+    /**
+     * Is a prediction of this target considered critical?
+     *
+     * @return bool
+     */
     public static function is_critical() {
         return true;
     }
 
+    /**
+     * Should a motbot always intervene or only in certain circumstances?
+     *
+     * @return bool
+     */
     public static function always_intervene() {
         return true;
     }
 
-
+    /**
+     * Defines an array of events, that can help
+     * prevent another negative prediction.
+     *
+     * @return string[]
+     */
     public static function get_desired_events() {
         return array('\mod_chat\event\message_sent','\mod_forum\event\assessable_uploaded', '\mod_forum\event\discussion_created',
         '\mod_forum\event\post_created');

@@ -105,7 +105,7 @@ class manager {
         try{
             $messageid = message_send($message);
         } catch (\moodle_exception $e) {
-            print_r($e->get_Message());
+            print_r($e->getMessage());
         }
         if($messageid) {
             self::set_message_contexturl($messageid);

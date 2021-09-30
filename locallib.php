@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+require_once($CFG->dirroot.'/mod/motbot/enable_module_form.php');
 
 function mod_motbot_get_editor_options($context) {
     return array('maxfiles' => EDITOR_UNLIMITED_FILES, 'noclean' => true, 'context' => $context, 'subdirs' => true);
@@ -78,14 +79,14 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
 }
 
 
-function mod_motbot_info_form($motbot_course_user, $courseid, $cm) {
+function mod_motbot_view_enable_module_form($motbot_course_user, $courseid, $cm) {
     global $CFG, $DB;
 
     $toform = (object) [
         'id' => $courseid,
     ];
     //Instantiate form
-    $mform = new mod_motbot_cm_info_form();
+    $mform = new mod_motbot_enable_module_form();
 
     //Form processing and displaying is done here
     if ($mform->is_cancelled()) {

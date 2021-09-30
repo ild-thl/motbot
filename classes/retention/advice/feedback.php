@@ -54,7 +54,8 @@ class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
                 AND m.name = "feedback";';
             $activities = $DB->get_records_sql($sql, array('courseid' => $course->id));
 
-            $this->title = 'Please consider giving some feedback as well, so we can support you better! ' . "\xF0\x9F\x99\x8F";
+            $this->title = 'Please consider giving some feedback as well, so we can support you better!';
+            // $this->title .= " \xF0\x9F\x99\x8F";
 
             if(!$activities || empty($activities)) {
                 throw new \moodle_exception('No feedback activity available.');

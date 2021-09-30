@@ -24,7 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot.'/mod/motbot/cm_info_form.php');
 require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 
 /**
@@ -192,16 +191,13 @@ function motbot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownl
     send_stored_file($file, 86400, 0, $forcedownload, $options);
 }
 
-
+/**
+ * Sets how the module should be represented in the course overview.
+ *
+ * @param cm_info $cm Info about course_module.
+ */
 function motbot_cm_info_view(cm_info $cm) {
     global $USER, $CFG, $DB;
-
-    // $content = '<div class="activityinstance">
-    //                 <a class="aalink" onclick="" href="' . $CFG->wwwroot . '/mod/motbot/view.php?id=' . $cm->id . '">
-    //                     <img src="' . $CFG->wwwroot . '/theme/image.php/boost/motbot/1628783905/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">
-    //                     <span class="instancename">Motbot</span>
-    //                 </a>
-    //             </div>';
 
     $modulecontext = context_module::instance($cm->id);
 
@@ -220,37 +216,34 @@ function motbot_cm_info_view(cm_info $cm) {
         ];
     }
 
+    // Display a form that lets students enable the motbot, if they haven't already.
     if(!$motbot_course_user->authorized && !has_capability('mod/motbot:addinstance', $modulecontext)) {
-        // $content = mod_motbot_info_form($motbot_course_user, $courseid, $cm);
-        // $content = str_replace('class="mform"', 'class="mform overflow-hidden"', $content);
-        // $cm->set_content($content);
-
-
-        $content = mod_motbot_info_form($motbot_course_user, $courseid, $cm);
+        $content = mod_motbot_view_enable_module_form($motbot_course_user, $courseid, $cm);
         $content = str_replace('class="mform"', 'class="mform float-right"', $content);
         $cm->set_name($motbot->name);
     } else {
         $now = new DateTime("now", core_date::get_user_timezone_object());
         $dayofweek = $now->format('N');
         $content = '<div style="font-style: italic; padding-left: 2em">' . \get_string('quote:' . $dayofweek % 6, 'motbot') . '</div>';
-    }
+    } // If enabled or not a student show a motivational quote instead.
 
     $cm->set_after_link($content);
 }
 
-
+/**
+ * Sets dynamic cacheable parts of the modules representation in the course overview.
+ *
+ * @param cm_info $cm Info about course_module.
+ */
 function motbot_cm_info_dynamic(cm_info $cm) {
     global $USER, $DB;
 
     $modulecontext = context_module::instance($cm->id);
     $coursecontext = context_course::instance($cm->course);
-    // $active = true;
-    // if(!has_capability('mod/motbot:addinstance', $modulecontext)) {
-        $active = $DB->get_record('motbot_course_user', array('motbot' => $cm->instance, 'user' => $USER->id, 'authorized' => 1));
-    // }
 
-    // $cm->set_extra_classes('w-100');
     if(!has_capability('mod/motbot:addinstance', $modulecontext)) {
+        // Display a diffrent icon depending on wether the motbot is enabled for the loged in user.
+        $active = $DB->get_record('motbot_course_user', array('motbot' => $cm->instance, 'user' => $USER->id, 'authorized' => 1));
         if($active) {
             if(!motbot_is_happy($cm->instance, $coursecontext->id)) {
                 $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-unhappy.svg'));
@@ -259,9 +252,13 @@ function motbot_cm_info_dynamic(cm_info $cm) {
             $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-inactive.svg'));
             $cm->set_name('Motbot disabled');
         }
+    } else {
+        $paused = $DB->get_record('motbot', array('id' => $cm->instance, 'usecode' => 0));
+        if($paused) {
+            $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-inactive.svg'));
+            $cm->set_name('Motbot disabled');
+        }
     }
-
-    // $cm->set_no_view_link();
 }
 
 function motbot_is_happy($motbotid, $contextid) {

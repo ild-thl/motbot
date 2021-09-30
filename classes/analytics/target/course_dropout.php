@@ -217,15 +217,39 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
         return false;
     }
 
+    /**
+     * Does this target allow a custom intervention message?
+     *
+     * @return bool
+     */
+    public static function custom_intervention() {
+        return true;
+    }
+
+    /**
+     * Is a prediction of this target considered critical?
+     *
+     * @return bool
+     */
     public static function is_critical() {
         return true;
     }
 
+    /**
+     * Should a motbot always intervene or only in certain circumstances?
+     *
+     * @return bool
+     */
     public static function always_intervene() {
         return true;
     }
 
-
+    /**
+     * Defines an array of events, that can help
+     * prevent another negative prediction.
+     *
+     * @return string[]
+     */
     public static function get_desired_events() {
         return null;
     }

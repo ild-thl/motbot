@@ -129,7 +129,7 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
 
 
     /**
-     * Do the user has any read action in the course?
+     * Does the user have any read action in the course?
      *
      * @param int $sampleid
      * @param \core_analytics\analysable $analysable
@@ -138,8 +138,8 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      * @return float|null 0 -> accesses, 1 -> no accesses.
      */
     protected function calculate_sample($sampleid, \core_analytics\analysable $analysable, $starttime = false, $endtime = false) {
-        $readactions = $this->retrieve('\core\analytics\indicator\any_course_access', $sampleid);
-        if ($readactions == \core\analytics\indicator\any_course_access::get_min_value()) {
+        $no_recent_access = $this->retrieve('\core\analytics\indicator\any_course_access', $sampleid);
+        if ($no_recent_access == \core\analytics\indicator\any_course_access::get_min_value()) {
             return 1;
         }
         return 1;
@@ -157,19 +157,40 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
         return false;
     }
 
+    /**
+     * Does this target allow a custom intervention message?
+     *
+     * @return bool
+     */
     public static function custom_intervention() {
         return true;
     }
 
+    /**
+     * Is a prediction of this target considered critical?
+     *
+     * @return bool
+     */
     public static function is_critical() {
         return true;
     }
 
+    /**
+     * Should a motbot always intervene or only in certain circumstances?
+     *
+     * @return bool
+     */
     public static function always_intervene() {
         return true;
     }
 
 
+    /**
+     * Defines an array of events, that can help
+     * prevent another negative prediction.
+     *
+     * @return string[]
+     */
     public static function get_desired_events() {
         return array('\core\event\course_viewed');
     }

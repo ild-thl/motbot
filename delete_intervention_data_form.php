@@ -15,16 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Form that lets user choose their preffered motbot settings.
+ * Form that lets user decide to delete their intervention records.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-//moodleform is defined in formslib.php
 require_once("$CFG->libdir/formslib.php");
 
+/**
+ * Form that lets user decide to delete their intervention records.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_motbot_delete_intervention_data_form extends moodleform {
 
     //Add elements to form
@@ -43,10 +49,5 @@ class mod_motbot_delete_intervention_data_form extends moodleform {
         $mform->addElement('header', 'delete_header', 'Advanced_options');
         $mform->setExpanded('delete_header', false);
         $mform->addElement('submit', 'submitbutton', 'Delete intervention data');
-    }
-
-    //Custom validation
-    function validation($data, $files) {
-        return array();
     }
 }
