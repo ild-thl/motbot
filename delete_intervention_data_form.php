@@ -33,7 +33,10 @@ require_once("$CFG->libdir/formslib.php");
  */
 class mod_motbot_delete_intervention_data_form extends moodleform {
 
-    //Add elements to form
+    /**
+     * Form definition.
+     * @return void
+     */
     public function definition() {
         global $CFG;
 

@@ -15,11 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Prints an overview of all certificates a student has reached.
+ * Shows form to make general non course specific motbot settings.
  *
- * @package     mod_ilddigitalcert
- * @copyright   2020 ILD TH Lübeck <dev.ild@th-luebeck.de>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(__DIR__.'/../../config.php');
@@ -41,7 +41,7 @@ if (isguestuser()) {
     redirect($CFG->wwwroot.'/login/');
 }
 
-
+// Get db records.
 $motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
 
 if(!$motbot_user) {
@@ -56,6 +56,7 @@ if(!$motbot_user) {
     ];
 }
 
+// Create form default values.
 $toform = (object) [
     'authorized' => $motbot_user->authorized,
     'allow_teacher_involvement' => $motbot_user->allow_teacher_involvement,
@@ -71,17 +72,17 @@ $todeleteform = (object) [
     'recipient' => $USER->id,
 ];
 
-//Instantiate simplehtml_form
+// Instantiate simplehtml_form.
 $mform = new mod_motbot_overview_form();
 $deletedataform = new mod_motbot_delete_intervention_data_form();
 
-//Form processing and displaying is done here
+// Form processing and displaying is done here.
 if ($mform->is_cancelled()) {
-    //Handle form cancel operation, if cancel button is present on form
+    // Handle form cancel operation, if cancel button is present on form.
     $url = $CFG->wwwroot.'/mod/motbot/overview.php';
     redirect($url);
 } else if ($fromform = $mform->get_data()) {
-    //In this case you process validated data. $mform->get_data() returns data posted in form.
+    // In this case you process validated data. $mform->get_data() returns data posted in form.
     $time = time();
     $form_data = $mform->get_data();
     $motbot_user->authorized = $form_data->authorized;
@@ -93,12 +94,14 @@ if ($mform->is_cancelled()) {
         $motbot_user->timecreated = $time;
     }
 
+    // Update or insert new record.
     if(!$motbot_user->id) {
         $DB->insert_record('motbot_user', $motbot_user);
     } else {
         $DB->update_record('motbot_user', $motbot_user);
     }
 
+    // Update course specific user settings with global settings.
     $motbot_course_users = $DB->get_records('motbot_course_user', array('user' => $motbot_user->user));
     foreach ($motbot_course_users as $user) {
         $user->authorized = $motbot_user->authorized;
@@ -118,21 +121,21 @@ if ($mform->is_cancelled()) {
     $url = $CFG->wwwroot.'/mod/motbot/overview.php';
     redirect($url);
 } else {
-    // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
+    // This branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
     // or on the first display of the form.
 
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('pluginname', 'motbot'));
 
-    //Set default data (if any)
+    // Set default data (if any).
     $mform->set_data($toform);
-    //displays the form
+    // Displays the form.
     $mform->display();
 
 
-    //Set default data (if any)
+    // Set default data (if any).
     $deletedataform->set_data($todeleteform);
-    //displays the form
+    // Displays the form.
     $deletedataform->display();
 
     echo $OUTPUT->footer();

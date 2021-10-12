@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Manages predictions and creates interventions.
+ * Task that schedules and executes interventions.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -27,7 +27,7 @@ namespace mod_motbot\retention;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Manages predictions and creates interventions.
+ * Task that schedules and executes interventions.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * No recent accesses.
+ * No recent accesses target.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -27,7 +27,7 @@ namespace mod_motbot\analytics\target;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * No recent accesses.
+ * No recent accesses target.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>

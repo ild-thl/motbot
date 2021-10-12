@@ -16,36 +16,56 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Private page module utility functions
+ * MotBot module utility functions
  *
- * @package mod_page
- * @copyright  2009 Petr Skoda (http://skodak.org)
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/mod/motbot/enable_module_form.php');
 
+/**
+ * Returns default options for an html_editor.
+ *
+ * @param context $context
+ * @return array
+ */
 function mod_motbot_get_editor_options($context) {
     return array('maxfiles' => EDITOR_UNLIMITED_FILES, 'noclean' => true, 'context' => $context, 'subdirs' => true);
 }
 
+/**
+ * Returns a table of a users intervention data as a html string.
+ *
+ * @param int $userid
+ * @param int $contextid If set, the table includes only interventions from this context.
+ * @param bool $include_messages If true, also include links to the corresponding notifications.
+ * @return string HTML table, showing intervention data.
+ */
 function mod_motbot_get_interventions_table($userid, $contextid = null, $include_messages = false) {
     global $DB;
 
+    // Only get interventions of a speicif context, if $contextid is set.
     if($contextid) {
         $conditionsarray = array('recipient' => $userid, 'contextid' => $contextid);
     } else {
         $conditionsarray = array('recipient' => $userid);
     }
 
+    // Select columns. Include message column if $include_messages is set.
     $select = 'id, target, timecreated, state, teachers_informed';
     if ($include_messages) {
         $select .= ', message';
     }
     $content = array();
+
+    // Get interventions.
     $interventions = $DB->get_records('motbot_intervention', $conditionsarray , 'timecreated DESC', $select);
+
+    // Format intervention data.
     foreach($interventions as $intervention) {
         $row = array();
         $targetname = mod_motbot_get_name_of_target($intervention->target);
@@ -59,6 +79,7 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
         $content[] = $row;
     }
 
+    // Create Table.
     $table = new html_table();
     $table->attributes['class'] = 'generaltable';
 
@@ -71,6 +92,7 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
     $table->head  = $head;
     $table->align = $align;
 
+    // Fill table.
     foreach ($content as $row) {
         $table->data[] = $row;
     }
@@ -79,20 +101,27 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
 }
 
 
-function mod_motbot_view_enable_module_form($motbot_course_user, $courseid, $cm) {
+/**
+ * Returns a html form, that allows a user to enable a motbot in a specific course.
+ *
+ * @param object $motbot_course_user
+ * @param int $courseid
+ * @return string HTML form.
+ */
+function mod_motbot_view_enable_module_form($motbot_course_user, $courseid) {
     global $CFG, $DB;
 
     $toform = (object) [
         'id' => $courseid,
     ];
-    //Instantiate form
+    // Instantiate form.
     $mform = new mod_motbot_enable_module_form();
 
-    //Form processing and displaying is done here
+    // Form processing and displaying is done here.
     if ($mform->is_cancelled()) {
-        //Handle form cancel operation, if cancel button is present on form
+        // Handle form cancel operation, if cancel button is present on form.
     } else if ($fromform = $mform->get_data()) {
-        //In this case you process validated data. $mform->get_data() returns data posted in form.
+        // In this case you process validated data. $mform->get_data() returns data posted in form.
         $form_data = $mform->get_data();
         $motbot_course_user->authorized = true;
 
@@ -104,26 +133,36 @@ function mod_motbot_view_enable_module_form($motbot_course_user, $courseid, $cm)
 
         redirect($CFG->wwwroot.'/course/view.php?id=' . $courseid, 'Enabling Motbot', 1);
     } else {
-        // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
+        // This branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
         // or on the first display of the form.
 
-        //Set default data (if any)
+        // Set default data (if any).
         $mform->set_data($toform);
 
-        //displays the form
+        // Displays the form.
         return $mform->render();
     }
 
 }
 
-
+/**
+ * Returns only the name part of a analytics target.
+ *
+ * @param string $target
+ * @return string
+ */
 function mod_motbot_get_name_of_target($target) {
     preg_match('/.+\\\(.+)/m', $target, $matches);
     return $matches[1];
 }
 
-
-
+/**
+ * Returns the amount of a specific type of activity in a course.
+ *
+ * @param string $name Name of the activity type.
+ * @param int $course
+ * @return int
+ */
 function mod_motbot_get_mod_count($name, $course) {
     global $DB;
 
@@ -135,7 +174,13 @@ function mod_motbot_get_mod_count($name, $course) {
     return $DB->get_record_sql($sql, array('course' => $course, 'name' => $name))->modcount;
 }
 
-
+/**
+ * Returns the amount of feedbacks a user has given in a course.
+ *
+ * @param int $userid
+ * @param int $courseid
+ * @return int
+ */
 function mod_motbot_has_completed_feedback($userid, $courseid) {
     global $DB;
 

@@ -61,7 +61,7 @@ class observer {
     }
 
     /**
-     * Event processor - course summary viewed
+     * Event processor - discussion or post created
      *
      * @param $event
      * @return bool

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Prints an instance of mod_motbot.
+ * Shows an overview of a motbots activity meant for teachers.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -26,12 +26,43 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
+/**
+ * Shows an overview of a motbots activity meant for teachers.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_motbot_teacher_view {
+    /**
+     * @var int int $motbot Id of the motbot activity.
+     */
     private $motbotid;
+
+    /**
+     * @var int  Id of the motbot context.
+     */
     private $contextid;
+
+    /**
+     * @var int  Id of the current user.
+     */
     private $userid;
+
+    /**
+     * @var string URL to a settings page.
+     */
     public $settings_url;
 
+    /**
+     * Object definition.
+     *
+     * @param int $moduleid
+     * @param int $motbotid
+     * @param int $contextid
+     * @param int $userid
+     * @return void
+     */
     public function __construct($moduleid, $motbotid, $contextid, $userid) {
         global $DB, $CFG;
 
@@ -41,28 +72,37 @@ class mod_motbot_teacher_view {
         $this->userid = $userid;
     }
 
+    /**
+     * Returns html for this page.
+     *
+     * @return string
+     */
     public function render() {
         global $OUTPUT;
 
         return $OUTPUT->render_from_template('mod_motbot/teacher_view', $this->get_contextinfo());
     }
 
+    /**
+     * Gets placeholder information for a mustache template.
+     *
+     * @return array
+     */
     private function get_contextinfo() {
         global $DB;
 
         $models = array();
 
-        $messages = $DB->get_records('motbot_message', array('motbot' => $this->motbotid), '', 'target, active');
-        foreach($messages as $message) {
-            $models[] = $this->get_model_data($message);
+        $motbot_models = $DB->get_records('motbot_message', array('motbot' => $this->motbotid), '', 'target, active');
+        foreach($motbot_models as $motbot_model) {
+            $models[] = $this->get_model_data($motbot_model);
         }
 
-
+        // Sort models so inactive models come last.
         function sort_models_by_enable($a, $b) {
             if($a["enabled"] == $b["enabled"]) return 0;
             return (!$b["enabled"] && $b["enabled"]) ? -1 : 1;
         }
-
         usort($models, "sort_models_by_enable");
 
 
@@ -70,15 +110,20 @@ class mod_motbot_teacher_view {
             'settings_url' => $this->settings_url,
             'models' => $models,
         ];
-
         return $contextinfo;
     }
 
 
+    /**
+     * Gets data, that is supposed to be displayed per model.
+     *
+     * @return array
+     */
     public function get_model_data($message) {
         global $DB;
 
         $target_name = mod_motbot_get_name_of_target($message->target);
+        // Default values.
         $model = [
             "name" => \get_string('target:' . $target_name . '_short', 'motbot'),
             "enabled" => $message->active,

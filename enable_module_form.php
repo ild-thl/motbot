@@ -34,7 +34,10 @@ require_once("$CFG->libdir/formslib.php");
  */
 class mod_motbot_enable_module_form extends moodleform {
 
-    // Add elements to form.
+    /**
+     * Form definition.
+     * @return void
+     */
     public function definition() {
         global $CFG;
 

@@ -195,6 +195,7 @@ function motbot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownl
  * Sets how the module should be represented in the course overview.
  *
  * @param cm_info $cm Info about course_module.
+ * @return void
  */
 function motbot_cm_info_view(cm_info $cm) {
     global $USER, $CFG, $DB;
@@ -218,7 +219,7 @@ function motbot_cm_info_view(cm_info $cm) {
 
     // Display a form that lets students enable the motbot, if they haven't already.
     if(!$motbot_course_user->authorized && !has_capability('mod/motbot:addinstance', $modulecontext)) {
-        $content = mod_motbot_view_enable_module_form($motbot_course_user, $courseid, $cm);
+        $content = mod_motbot_view_enable_module_form($motbot_course_user, $courseid);
         $content = str_replace('class="mform"', 'class="mform float-right"', $content);
         $cm->set_name($motbot->name);
     } else {
@@ -234,6 +235,7 @@ function motbot_cm_info_view(cm_info $cm) {
  * Sets dynamic cacheable parts of the modules representation in the course overview.
  *
  * @param cm_info $cm Info about course_module.
+ * @return void
  */
 function motbot_cm_info_dynamic(cm_info $cm) {
     global $USER, $DB;
@@ -261,6 +263,13 @@ function motbot_cm_info_dynamic(cm_info $cm) {
     }
 }
 
+/**
+ * Checks if a Motbot is happy. A Motbot is unhappy, when there are any ongoing interventions.
+ *
+ * @param int $motbotid
+ * @param int $contextid
+ * @return bool
+ */
 function motbot_is_happy($motbotid, $contextid) {
     global $DB, $USER;
     $messages = $DB->get_records('motbot_message', array('motbot' => $motbotid), '', 'target, active');

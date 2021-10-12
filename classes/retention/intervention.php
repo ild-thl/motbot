@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Interaction.
+ * Intervention.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -28,6 +28,13 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 
+/**
+ * Intervention.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class intervention {
     const SCHEDULED = 0;
     const INTERVENED = 1;
@@ -55,7 +62,6 @@ class intervention {
 
 
     private function __construct() {
-
     }
 
     public static function get_state_name($state) {

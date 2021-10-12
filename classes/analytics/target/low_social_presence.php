@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Drop out course target.
+ * Low social presence target.
  *
- * @package   core_course
- * @copyright 2016 David Monllao {@link http://www.davidmonllao.com}
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,10 +29,10 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 
 /**
- * Drop out course target.
+ * Low social presence target.
  *
- * @package   core_course
- * @copyright 2016 David Monllao {@link http://www.davidmonllao.com}
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class low_social_presence extends \core_course\analytics\target\course_enrolments {

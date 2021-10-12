@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library of interface functions and constants.
+ * Form definition, used to create and update a motbot activity.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -31,10 +31,24 @@ require_once($CFG->dirroot.'/mod/motbot/lib.php');
 require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 require_once($CFG->dirroot.'/mod/motbot/db/analytics.php');
 
+/**
+ * Form definition, used to create and update a motbot activity.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_motbot_mod_form extends moodleform_mod {
 
-    private $messages = array();
+    /**
+     * @var array Array of motbot models, for which there are supposed to be individual setting sections in the form.
+     */
+    private $motbot_models = array();
 
+    /**
+     * Form definition.
+     * @return void
+     */
     public function definition() {
         global $CFG, $DB, $OUTPUT;
 
@@ -54,12 +68,12 @@ class mod_motbot_mod_form extends moodleform_mod {
         $this->standard_intro_elements();
         $mform->setDefault('intro', array('text' => \get_string('mod_form:intro', 'motbot'), 'format' => FORMAT_HTML));
 
-        if(!$this->messages || empty($this->messages)) {
-            $this->get_messages();
+        if(!$this->motbot_models || empty($this->motbot_models)) {
+            $this->get_motbot_models();
         }
 
-        foreach ($this->messages as $message) {
-            $this->add_intervention_settings($message);
+        foreach ($this->motbot_models as $motbot_model) {
+            $this->add_intervention_settings($motbot_model);
         }
 
         $this->standard_coursemodule_elements();
@@ -67,10 +81,16 @@ class mod_motbot_mod_form extends moodleform_mod {
         $this->add_action_buttons();
     }
 
-    private function add_intervention_settings($message) {
+    /**
+     * Adds a new section to the form. This section allows the use of specific analytics models in a course and to edit the message templates of corresponding interventions.
+     *
+     * @param object $model
+     * @return void
+     */
+    private function add_intervention_settings($model) {
         $mform =& $this->_form;
 
-        $target_name = \mod_motbot_get_name_of_target($message->target);
+        $target_name = \mod_motbot_get_name_of_target($model->target);
 
         $mform->addElement('header', $target_name.'_header', get_string('mod_form:' . $target_name . '_header', 'motbot'));
 
@@ -108,21 +128,32 @@ class mod_motbot_mod_form extends moodleform_mod {
         $mform->setType($target_name.'_timecreated', PARAM_INT);
     }
 
-    private function get_messages() {
+
+
+    /**
+     * Creates default values for valid motbot models or gets prevoius settings, if they exist.
+     *
+     * @return array
+     */
+    private function get_motbot_models() {
         global $DB;
 
-        $this->messages = $DB->get_records('motbot_message', array('motbot' => $this->current->instance));
+        // Get previous model settings for this specific motbot.
+        $this->motbot_models = $DB->get_records('motbot_message', array('motbot' => $this->current->instance));
 
+        // Get all available motbot models.
         $sql = "SELECT *
                 FROM mdl_analytics_models
                 WHERE enabled = 1
                 AND target LIKE '%mod_motbot%';";
         $models = $DB->get_records_sql($sql);
 
+        // Create deault values for models, that are valid for this course.
         foreach ($models as $model) {
+            // Skip models, for which there are already previous records.
             $exists = false;
-            foreach ($this->messages as $message) {
-                if($model->target == $message->target) {
+            foreach ($this->motbot_models as $motbot_model) {
+                if($model->target == $motbot_model->target) {
                     $exists = true;
                     break;
                 }
@@ -134,7 +165,8 @@ class mod_motbot_mod_form extends moodleform_mod {
 
             $target_name = \mod_motbot_get_name_of_target($model->target);
 
-            $this->messages[] = (object) [
+            // Set default values.
+            $this->motbot_models[] = (object) [
                 'id' => null,
                 'motbot' => $this->current->instance,
                 'active' => 1,
@@ -154,48 +186,53 @@ class mod_motbot_mod_form extends moodleform_mod {
         }
 
 
-        foreach($this->messages as $message) {
-            if(property_exists($message, 'targetname') && $message->targetname) {
+        foreach($this->motbot_models as $motbot_model) {
+            if(property_exists($motbot_model, 'targetname') && $motbot_model->targetname) {
                 continue;
             }
 
-            $target_name = \mod_motbot_get_name_of_target($message->target);
-            $message->targetname = $target_name;
+            $target_name = \mod_motbot_get_name_of_target($motbot_model->target);
+            $motbot_model->targetname = $target_name;
         }
 
-        return $this->messages;
+        return $this->motbot_models;
     }
 
-        /**
+    /**
      * Enforce defaults here.
      *
      * @param array $defaultvalues Form defaults
      * @return void
      **/
     public function data_preprocessing(&$defaultvalues) {
-        $this->get_messages();
+        $this->get_motbot_models();
 
-        foreach($this->messages as $message) {
-            $target_name = $message->targetname;
+        foreach($this->motbot_models as $motbot_model) {
+            $target_name = $motbot_model->targetname;
             $draftitemid = file_get_submitted_draft_itemid($target_name . '_fullmessagehtml');
-            $defaultvalues[$target_name . '_id'] = $message->id;
-            $defaultvalues[$target_name . '_motbot'] = $message->motbot;
-            $defaultvalues[$target_name . '_active'] = $message->active;
-            $defaultvalues[$target_name . '_target'] = $message->target;
-            $defaultvalues[$target_name . '_subject'] = $message->subject;
-            $defaultvalues[$target_name . '_fullmessage'] = $message->fullmessage;
-            $defaultvalues[$target_name . '_fullmessagehtml']['format'] = $message->fullmessageformat;
+            $defaultvalues[$target_name . '_id'] = $motbot_model->id;
+            $defaultvalues[$target_name . '_motbot'] = $motbot_model->motbot;
+            $defaultvalues[$target_name . '_active'] = $motbot_model->active;
+            $defaultvalues[$target_name . '_target'] = $motbot_model->target;
+            $defaultvalues[$target_name . '_subject'] = $motbot_model->subject;
+            $defaultvalues[$target_name . '_fullmessage'] = $motbot_model->fullmessage;
+            $defaultvalues[$target_name . '_fullmessagehtml']['format'] = $motbot_model->fullmessageformat;
             $defaultvalues[$target_name . '_fullmessagehtml']['text']   = file_prepare_draft_area($draftitemid, $this->context->id, 'mod_motbot',
-                'attachment', 0, mod_motbot_get_editor_options($this->context), $message->fullmessagehtml);
+                'attachment', 0, mod_motbot_get_editor_options($this->context), $motbot_model->fullmessagehtml);
             $defaultvalues[$target_name . '_fullmessagehtml']['itemid'] = $draftitemid;
-            $defaultvalues[$target_name . '_fullmessageformat'] = $message->fullmessageformat;
-            $defaultvalues[$target_name . '_smallmessage'] = $message->smallmessage;
-            $defaultvalues[$target_name . '_usermodified'] = $message->usermodified;
-            $defaultvalues[$target_name . '_timemodified'] = $message->timemodified;
-            $defaultvalues[$target_name . '_timecreated'] = $message->timecreated;
+            $defaultvalues[$target_name . '_fullmessageformat'] = $motbot_model->fullmessageformat;
+            $defaultvalues[$target_name . '_smallmessage'] = $motbot_model->smallmessage;
+            $defaultvalues[$target_name . '_usermodified'] = $motbot_model->usermodified;
+            $defaultvalues[$target_name . '_timemodified'] = $motbot_model->timemodified;
+            $defaultvalues[$target_name . '_timecreated'] = $motbot_model->timecreated;
         }
     }
 
+    /**
+     * Gets input data of submitted form.
+     *
+     * @return object
+     **/
     public function get_data() {
         $data = parent::get_data();
 
@@ -203,15 +240,22 @@ class mod_motbot_mod_form extends moodleform_mod {
             return false;
         }
 
-        $data->messages = array();
+        $data->motbot_models = array();
 
-        foreach($this->messages as $message) {
-            $data->messages[] = $this->get_message_data($message->targetname, $data);
+        foreach($this->motbot_models as $motbot_model) {
+            $data->motbot_models[] = $this->get_message_data($motbot_model->targetname, $data);
         }
 
         return $data;
     }
 
+    /**
+     * Get input data of a submitted motbot_model section.
+     *
+     * @param string $target_name Name of corresponfing model target.
+     * @param object $data Form input data.
+     * @return object
+     **/
     private function get_message_data($target_name, $data) {
         return (object) [
             'id' => $data->{$target_name . '_id'},

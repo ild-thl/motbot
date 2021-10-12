@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Form that lets user choose their preffered motbot settings.
+ * Form that lets user choose their preffered global motbot settings.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -25,9 +25,19 @@
 //moodleform is defined in formslib.php
 require_once("$CFG->libdir/formslib.php");
 
+/**
+ * Form that lets user choose their preffered global motbot settings.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_motbot_overview_form extends moodleform {
 
-    //Add elements to form
+    /**
+     * Form definition.
+     * @return void
+     */
     public function definition() {
         global $CFG;
 
@@ -54,10 +64,5 @@ class mod_motbot_overview_form extends moodleform {
         $mform->setType('id', PARAM_INT);
 
         $this->add_action_buttons();
-    }
-
-    //Custom validation
-    function validation($data, $files) {
-        return array();
     }
 }

@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Prints an instance of mod_motbot.
+ * Show either a motbot overview for users that have activated the motbot
+ * or redirect to a settingspage for users or redirect to a view for teachers.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -38,6 +39,7 @@ $coursecontext = context_course::instance($course->id);
 
 
 if(has_capability('mod/motbot:addinstance', $coursecontext)) {
+    // If teacher or admin, redirect.
     $view = new mod_motbot_teacher_view($id, $moduleinstance->id, $coursecontext->id, $USER->id);
     if(!$DB->get_record('motbot', array('id' => $moduleinstance->id), 'usecode')->usecode) {
         redirect($view->settings_url, 'Please activate Motbot first.');
@@ -48,54 +50,20 @@ if(has_capability('mod/motbot:addinstance', $coursecontext)) {
 
     $view = new mod_motbot_user_view($id, $moduleinstance->id, $coursecontext->id, $USER->id);
     if(!$motbot_course_user || !$motbot_course_user->authorized) {
+        // If motbot inactive redirect to motbot settings.
         redirect($view->settings_url, 'Please activate your Motbot.');
     }
 }
 
-
-
-// $sql = "SELECT DISTINCT p.id, p.prediction, p.predictionscore
-//         FROM mdl_user u
-//         JOIN mdl_user_enrolments ue ON ue.userid = u.id
-//         JOIN mdl_enrol e ON e.id = ue.enrolid
-//         JOIN mdl_role_assignments ra ON ra.userid = u.id
-//         JOIN mdl_context ct ON ct.id = ra.contextid AND ct.contextlevel = 50
-//         JOIN mdl_course c ON c.id = ct.instanceid AND e.courseid = c.id
-//         JOIN mdl_role r ON r.id = ra.roleid AND r.shortname = 'student'
-//         JOIN mdl_analytics_predictions p ON p.sampleid = ue.id
-//         WHERE e.status = 0 AND u.suspended = 0 AND u.deleted = 0
-//         AND (ue.timeend = 0 OR ue.timeend > UNIX_TIMESTAMP(NOW())) AND ue.status = 0 AND u.id = :userid AND c.id = :courseid;";
-// $params_array = array('userid' => $USER->id, 'courseid' => $course->id);
-// $predicitons = $DB->get_records_sql($sql, $params_array);
-
-
-// Wenn parameter $ueid aus overview.php übergeben ist kein kurslogin nötig um alte zertifikate auch zu sehen.
 require_login($course, true, $cm);
 
 $PAGE->set_url('/mod/motbot/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($moduleinstance->name));
 $PAGE->set_heading(format_string($course->fullname));
-// $PAGE->set_context($modulecontext);
 
 
 echo $OUTPUT->header();
-// echo $OUTPUT->heading(get_string('pluginname', 'motbot'));
 
 echo $view->render();
 
 echo $OUTPUT->footer();
-
-
-function mod_motbot_get_predictions_table($predictions) {
-    $table = new html_table();
-    $table->attributes['class'] = 'generaltable';
-
-    $table->head  = array('id', 'prediction', 'predictionscore');
-    $table->align = array('center', 'left', 'left');
-
-    foreach ($predictions as $prediction) {
-        $table->data[] = $prediction;
-    }
-
-    return html_writer::table($table);
-}

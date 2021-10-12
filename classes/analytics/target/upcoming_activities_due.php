@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Upcoming activities due.
+ * Upcoming activities due target.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -31,8 +31,8 @@ require_once($CFG->dirroot . '/lib/enrollib.php');
 /**
  * Upcoming activities due target.
  *
- * @package   core
- * @copyright 2019 David Monllao {@link http://www.davidmonllao.com}
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class upcoming_activities_due extends \core_user\analytics\target\upcoming_activities_due {

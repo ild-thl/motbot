@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Write actions in a course forum indicator.
+ * Socail presence in course indicator.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -27,10 +27,10 @@ namespace mod_motbot\analytics\indicator;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Write actions in a course indicator.
+ * Socail presence in course indicator.
  *
- * @package   core
- * @copyright 2016 David Monllao {@link http://www.davidmonllao.com}
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class social_presence_in_course_activity extends \core_analytics\local\indicator\linear {

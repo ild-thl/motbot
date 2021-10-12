@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Prints an instance of mod_motbot.
+ * Shows an overview of all motbot activity of a user.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -27,10 +27,30 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 require_once($CFG->dirroot . '/mod/motbot/db/analytics.php');
 
+/**
+ * Shows an overview of all motbot activity of a user.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_motbot_overview {
+    /**
+     * @var int Id of current user.
+     */
     private $userid;
+
+    /**
+     * @var string URL for a settings page.
+     */
     public $settings_url;
 
+    /**
+     * Object definition.
+     *
+     * @param int $userid
+     * @return void
+     */
     public function __construct($userid) {
         global $DB, $CFG;
 
@@ -38,12 +58,22 @@ class mod_motbot_overview {
         $this->userid = $userid;
     }
 
+    /**
+     * Returns html of this page.
+     *
+     * @return string
+     */
     public function render() {
         global $OUTPUT;
 
         return $OUTPUT->render_from_template('mod_motbot/user_view', $this->get_contextinfo());
     }
 
+    /**
+     * Gets placeholder information for a mustache template.
+     *
+     * @return array
+     */
     private function get_contextinfo() {
         global $DB;
 
@@ -77,6 +107,11 @@ class mod_motbot_overview {
     }
 
 
+    /**
+     * Gets data, that is supposed to be displayed per model.
+     *
+     * @return array
+     */
     public function get_model_data($target) {
         global $DB;
 
