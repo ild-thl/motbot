@@ -5,7 +5,8 @@ At this point following usecases are fully supported:
 - No recent accesses
 - Low social activity
 
-Installation:
+
+**Installation:**
 1. Install Moodle 3.5 or later.
 2. Clone this repo to /<your_moodle_installation>/mod/.
 3. As an admin follow the upgrade steps prompted to you by moodle.
