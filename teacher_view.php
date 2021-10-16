@@ -93,7 +93,7 @@ class mod_motbot_teacher_view {
 
         $models = array();
 
-        $motbot_models = $DB->get_records('motbot_message', array('motbot' => $this->motbotid), '', 'target, active');
+        $motbot_models = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'target, active');
         foreach($motbot_models as $motbot_model) {
             $models[] = $this->get_model_data($motbot_model);
         }

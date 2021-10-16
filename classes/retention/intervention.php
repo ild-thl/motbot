@@ -249,7 +249,6 @@ class intervention {
         $message->fullmessage = 'message body';
         $message->fullmessageformat = FORMAT_HTML;
         $message->fullmessagehtml = \get_string('message:teacher_fullmessagehtml', 'motbot', (object)['fullname' => $recipient->firstname . ' ' . $recipient->lastname, 'interventions' => mod_motbot_get_interventions_table($this->recipient, $this->contextid)]);
-        $message->smallmessage = 'small message';
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
         $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification
         $message->contexturlname = 'To Course'; // Link title explaining where users get to for the contexturl
@@ -268,8 +267,8 @@ class intervention {
         }
 
         $recipient = $this->get_recipient();
-        $sql = "SELECT m.subject, m.fullmessage, m.fullmessageformat, m.fullmessagehtml, m.smallmessage, m.attachementuri
-                FROM mdl_motbot_message m
+        $sql = "SELECT m.subject, m.fullmessage, m.fullmessageformat, m.fullmessagehtml, m.attachementuri
+                FROM mdl_motbot_model m
                 JOIN mdl_motbot motbot ON m.motbot = motbot.id
                 WHERE motbot.course = :course AND m.target = :target;";
         $db_m = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'target' => $this->target));
@@ -309,10 +308,7 @@ class intervention {
 
         $message->fullmessage = $db_m ? \mod_motbot\manager::replace_intervention_placeholders($db_m->fullmessage, $this) : 'message body';
 
-
-        $message->smallmessage = $db_m ? $db_m->smallmessage : 'small message';
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
-
 
         $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification
         $message->contexturlname = 'To Course';

@@ -75,7 +75,7 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
         }
 
         $motbot = reset($instances);
-        if($motbot->usecode == 0) {
+        if($motbot->active == 0) {
             return get_string('motbotpaused', 'motbot');
         }
 

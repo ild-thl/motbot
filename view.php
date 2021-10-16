@@ -41,7 +41,7 @@ $coursecontext = context_course::instance($course->id);
 if(has_capability('mod/motbot:addinstance', $coursecontext)) {
     // If teacher or admin, redirect.
     $view = new mod_motbot_teacher_view($id, $moduleinstance->id, $coursecontext->id, $USER->id);
-    if(!$DB->get_record('motbot', array('id' => $moduleinstance->id), 'usecode')->usecode) {
+    if(!$DB->get_record('motbot', array('id' => $moduleinstance->id), 'active')->active) {
         redirect($view->settings_url, 'Please activate Motbot first.');
     }
 } else {

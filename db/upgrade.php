@@ -28,12 +28,12 @@ function xmldb_motbot_upgrade($oldversion) {
 
     // if ($oldversion < 2021081815) {
 
-    //     // Define field usecode to be added to motbot.
+    //     // Define field active to be added to motbot.
     //     $table = new xmldb_table('intervention');
     //     $field1 = new xmldb_field('message', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'state');
     //     $field2 = new xmldb_field('target', XMLDB_TYPE_CHAR, '128', null, null, null, null, 'state');
 
-    //     // Conditionally launch add field usecode.
+    //     // Conditionally launch add field active.
     //     if (!$dbman->field_exists($table, $field1)) {
     //         $dbman->add_field($table, $field1);
     //     }

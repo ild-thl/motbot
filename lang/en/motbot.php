@@ -76,8 +76,8 @@ $string['modulenameplural'] = 'Motbot';
 $string['mod_form:active'] = 'active';
 $string['mod_form:motbot_name'] = 'Name of the bot';
 $string['mod_form:paused'] = 'paused';
-$string['mod_form:usecode'] = 'State';
-$string['mod_form:usecode_help'] = 'Defines wether the bot is supposed to be active or paused. When paused the bot will not analyse user activity and intervene when students are in need.';
+$string['mod_form:active'] = 'State';
+$string['mod_form:active_help'] = 'Defines wether the bot is supposed to be active or paused. When paused the bot will not analyse user activity and intervene when students are in need.';
 $string['mod_form:intro'] = '<p>This is a motivational bot. It will analyse user activity and will intervene when it detects users that seem to have difficulties with the course content and motivation.</p>';
 
 $string['mod_form:active'] = 'Active';
@@ -85,7 +85,6 @@ $string['mod_form:active_help'] = 'Select wether this model should analyze usera
 $string['mod_form:subject'] = 'Subject';
 $string['mod_form:fullmessage'] = 'Full Message';
 $string['mod_form:fullmessagehtml'] = 'Full Message HTML';
-$string['mod_form:smallmessage'] = 'Small message';
 $string['mod_form:fullmessageformat'] = 'Full message format';
 $string['mod_form:fullmessageformat_help'] = 'Format of the full message';
 

@@ -88,11 +88,11 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
         }
 
         $motbot = reset($instances);
-        if($motbot->usecode == 0) {
+        if($motbot->active == 0) {
             return get_string('motbotpaused', 'motbot');
         }
 
-        $message = $DB->get_record('motbot_message', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\low_social_presence'));
+        $message = $DB->get_record('motbot_model', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\low_social_presence'));
         if(!$message || !$message->active) {
             return get_string('motbotmodelinactive', 'motbot');
         }

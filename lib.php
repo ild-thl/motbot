@@ -59,13 +59,13 @@ function motbot_add_instance($data, $mform = null) {
 
     $id = $DB->insert_record('motbot', $data);
 
-    foreach($data->messages as $message) {
-        $message->motbot = $id;
-        $message->timecreated = $data->timecreated;
-        $message->usermodified = $USER->id;
-        $message->id = $DB->insert_record('motbot_message', $message);
+    foreach($data->motbot_models as $motbot_model) {
+        $motbot_model->motbot = $id;
+        $motbot_model->timecreated = $data->timecreated;
+        $motbot_model->usermodified = $USER->id;
+        $motbot_model->id = $DB->insert_record('motbot_model', $motbot_model);
 
-        $target_name = $message->targetname;
+        $target_name = $motbot_model->targetname;
 
         if ($mform and !empty($data->{$target_name.'_fullmessagehtml'}['itemid'])) {
 
@@ -73,8 +73,8 @@ function motbot_add_instance($data, $mform = null) {
             $cmid = $data->coursemodule;
             $context = context_module::instance($cmid);
 
-            $message->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $message->fullmessagehtml);
-            $DB->update_record('motbot_message', $message);
+            $motbot_model->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $motbot_model->fullmessagehtml);
+            $DB->update_record('motbot_model', $motbot_model);
         }
     }
 
@@ -97,24 +97,24 @@ function motbot_update_instance($data, $mform = null) {
     $data->timemodified = time();
     $data->id = $data->instance;
 
-    foreach($data->messages as $message) {
-        $message->timemodified = $data->timemodified;
-        $message->usermodified = $USER->id;
-        if(!$message->id) {
-            $message->motbot = $data->id;
-            $message->timecreated = $data->timemodified;
-            $message->id = $DB->insert_record('motbot_message', $message);
+    foreach($data->motbot_models as $motbot_model) {
+        $motbot_model->timemodified = $data->timemodified;
+        $motbot_model->usermodified = $USER->id;
+        if(!$motbot_model->id) {
+            $motbot_model->motbot = $data->id;
+            $motbot_model->timecreated = $data->timemodified;
+            $motbot_model->id = $DB->insert_record('motbot_model', $motbot_model);
         } else {
-            $DB->update_record('motbot_message', $message);
+            $DB->update_record('motbot_model', $motbot_model);
         }
-        $target_name = $message->targetname;
+        $target_name = $motbot_model->targetname;
 
         $draftitemid = $data->{$target_name . '_fullmessagehtml'}['itemid'];
         $cmid = $data->coursemodule;
         $context = context_module::instance($cmid);
         if ($draftitemid) {
-            $message->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $message->fullmessagehtml);
-            $DB->update_record('motbot_message', $message);
+            $motbot_model->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $motbot_model->fullmessagehtml);
+            $DB->update_record('motbot_model', $motbot_model);
         }
     }
 
@@ -135,9 +135,9 @@ function motbot_delete_instance($id) {
         return false;
     }
 
-    $exists = $DB->get_records('motbot_message', array('motbot' => $id));
+    $exists = $DB->get_records('motbot_model', array('motbot' => $id));
     foreach($exists as $ex) {
-        $DB->delete_records('motbot_message', array('id' => $ex->id));
+        $DB->delete_records('motbot_model', array('id' => $ex->id));
     }
 
     $DB->delete_records('motbot', array('id' => $id));
@@ -255,7 +255,7 @@ function motbot_cm_info_dynamic(cm_info $cm) {
             $cm->set_name('Motbot disabled');
         }
     } else {
-        $paused = $DB->get_record('motbot', array('id' => $cm->instance, 'usecode' => 0));
+        $paused = $DB->get_record('motbot', array('id' => $cm->instance, 'active' => 0));
         if($paused) {
             $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-inactive.svg'));
             $cm->set_name('Motbot disabled');
@@ -272,9 +272,9 @@ function motbot_cm_info_dynamic(cm_info $cm) {
  */
 function motbot_is_happy($motbotid, $contextid) {
     global $DB, $USER;
-    $messages = $DB->get_records('motbot_message', array('motbot' => $motbotid), '', 'target, active');
-    foreach($messages as $message) {
-        if(!$message->active) {
+    $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'target, active');
+    foreach($motbot_models as $motbot_model) {
+        if(!$motbot_model->active) {
             continue;
         }
         $sql = "SELECT *
@@ -284,7 +284,7 @@ function motbot_is_happy($motbotid, $contextid) {
                 AND target = :target
                 ORDER BY timecreated DESC
                 LIMIT 1";
-        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $USER->id, 'target' => $message->target), IGNORE_MISSING);
+        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $USER->id, 'target' => $motbot_model->target), IGNORE_MISSING);
         if(!$latest_intervention) {
             continue;
         }

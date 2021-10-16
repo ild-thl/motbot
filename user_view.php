@@ -90,7 +90,7 @@ class mod_motbot_user_view {
 
         $models = array();
 
-        $messages = $DB->get_records('motbot_message', array('motbot' => $this->motbotid), '', 'target, active');
+        $messages = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'target, active');
         foreach($messages as $message) {
             $models[] = $this->get_model_data($message);
         }

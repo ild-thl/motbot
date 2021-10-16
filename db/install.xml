@@ -9,22 +9,25 @@
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="false" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="usecode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Describes wether the motbot should be active in the corresponding course."/>
+        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Describes wether the motbot should be active in the corresponding course."/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for motbot"/>
-        <KEY NAME="course" TYPE="foreign-unique" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
     <TABLE NAME="motbot_course_user" COMMENT="Defines motbot_course_user relationship">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="motbot" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="motbot" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="user" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="authorized" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="allow_teacher_involvement" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="disabled_models" TYPE="char" LENGTH="1024" NOTNULL="true" DEFAULT="[]" SEQUENCE="false"/>
+        <FIELD NAME="disabled_advice" TYPE="char" LENGTH="1024" NOTNULL="true" DEFAULT="[]" SEQUENCE="false"/>
+        <FIELD NAME="pref_time" TYPE="int" LENGTH="2" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="only_weekdays" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -47,6 +50,7 @@
         <FIELD NAME="teachers_informed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="message" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="helpful" TYPE="int" LENGTH="1" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="schedule" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -58,17 +62,16 @@
         <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="motbot_message" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="motbot_model" COMMENT="Default comment for the table, please edit me">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="motbot" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="target" TYPE="char" LENGTH="128" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="subject" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="fullmessage" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="fullmessageformat" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="fullmessagehtml" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="smallmessage" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="attachementuri" TYPE="char" LENGTH="256" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
