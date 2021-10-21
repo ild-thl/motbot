@@ -77,15 +77,18 @@ class mod_motbot_overview {
     private function get_contextinfo() {
         global $DB;
 
-        $amodels = [
-            '\mod_motbot\analytics\target\no_recent_accesses',
-            '\mod_motbot\analytics\target\low_social_presence',
-            '\mod_motbot\analytics\target\course_dropout',
-            ];
+        $sql = "SELECT *
+            FROM mdl_analytics_models
+            WHERE enabled = 1
+            AND target LIKE '%mod_motbot%';";
+        $amodels = $DB->get_records_sql($sql);
         $models = array();
 
-        foreach($amodels as $target) {
-            $models[] = $this->get_model_data($target);
+        foreach($amodels as $amodel) {
+            if(!\core_analytics\manager::get_target($amodel->target)::custom_intervention()) {
+                continue;
+            }
+            $models[] = $this->get_model_data($amodel);
         }
 
 
@@ -112,10 +115,10 @@ class mod_motbot_overview {
      *
      * @return array
      */
-    public function get_model_data($target) {
+    public function get_model_data($amodel) {
         global $DB;
 
-        $target_name = mod_motbot_get_name_of_target($target);
+        $target_name = mod_motbot_get_name_of_target($amodel->target);
         $model = [
             "name" => \get_string('target:' . $target_name . '_neutral', 'motbot'),
             "enabled" => true,
@@ -132,7 +135,7 @@ class mod_motbot_overview {
             AND target = :target
             ORDER BY timecreated DESC
             LIMIT 1";
-        $latest_intervention = $DB->get_record_sql($sql, array('recipient' => $this->userid, 'target' => $target), IGNORE_MISSING);
+        $latest_intervention = $DB->get_record_sql($sql, array('recipient' => $this->userid, 'target' => $amodel->target), IGNORE_MISSING);
 
         if(!$latest_intervention) {
             $model["image"] = 'happy_motbot';
@@ -144,6 +147,8 @@ class mod_motbot_overview {
         $model["date"] = userdate($latest_intervention->timemodified);
         if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
             $model["intervention_url"] = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $latest_intervention->message))->out(false);
+            $model["image"] = 'unhappy_motbot';
+        } else if ($latest_intervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
             $model["image"] = 'unhappy_motbot';
         } else {
             $model["image"] = 'happy_motbot';

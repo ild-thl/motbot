@@ -56,13 +56,11 @@ class mod_motbot_mod_form extends moodleform_mod {
 
         $mform->addElement('text', 'name', get_string('mod_form:motbot_name', 'motbot'), array('size'=>'64'));
         $mform->setType('name', PARAM_TEXT);
-        $mform->setDefault('name', 'Motbot');
+        $mform->setDefault('name', 'MotBot');
         $mform->addRule('name', null, 'required', null, 'client');
 
-        $ynoptions = array(0 => get_string('mod_form:paused', 'motbot'),
-                           1 => get_string('mod_form:active', 'motbot'));
-        $mform->addElement('select', 'active', get_string('mod_form:active', 'motbot'), $ynoptions);
-        $mform->setDefault('active', 0);
+        $mform->addElement('selectyesno', 'active', get_string('mod_form:active', 'motbot'));
+        $mform->setDefault('active', 1);
         $mform->addHelpButton('active', 'mod_form:active', 'motbot');
 
         $this->standard_intro_elements();
@@ -99,6 +97,9 @@ class mod_motbot_mod_form extends moodleform_mod {
 
         $mform->addElement('hidden', $target_name.'_motbot');
         $mform->setType($target_name.'_motbot', PARAM_INT);
+
+        $mform->addElement('hidden', $target_name.'_model');
+        $mform->setType($target_name.'_model', PARAM_INT);
 
         $mform->addElement('hidden', $target_name.'_target');
         $mform->setType($target_name.'_target', PARAM_TEXT);
@@ -166,6 +167,7 @@ class mod_motbot_mod_form extends moodleform_mod {
             $this->motbot_models[] = (object) [
                 'id' => null,
                 'motbot' => $this->current->instance,
+                'model' => $model->id,
                 'active' => 1,
                 'target' => $model->target,
                 'targetname' => null,
@@ -208,6 +210,7 @@ class mod_motbot_mod_form extends moodleform_mod {
             $draftitemid = file_get_submitted_draft_itemid($target_name . '_fullmessagehtml');
             $defaultvalues[$target_name . '_id'] = $motbot_model->id;
             $defaultvalues[$target_name . '_motbot'] = $motbot_model->motbot;
+            $defaultvalues[$target_name . '_model'] = $motbot_model->model;
             $defaultvalues[$target_name . '_active'] = $motbot_model->active;
             $defaultvalues[$target_name . '_target'] = $motbot_model->target;
             $defaultvalues[$target_name . '_subject'] = $motbot_model->subject;
@@ -252,16 +255,22 @@ class mod_motbot_mod_form extends moodleform_mod {
      * @return object
      **/
     private function get_message_data($target_name, $data) {
+        // Filter out badly formatted break lines.
+        $fullmessagehtml = $data->{$target_name . '_fullmessagehtml'}['text'];
+        $fullmessagehtml = str_replace("<p><br></p>", "<br>", $fullmessagehtml);
+        $fullmessagehtml = str_replace("<p></p>", "<br>", $fullmessagehtml);
+
         return (object) [
             'id' => $data->{$target_name . '_id'},
             'motbot' => $data->{$target_name . '_motbot'},
+            'model' => $data->{$target_name . '_model'},
             'active' => $data->{$target_name . '_active'},
             'target' => $data->{$target_name . '_target'},
             'targetname' => $target_name,
             'subject' => $data->{$target_name . '_subject'},
             'fullmessage' => $data->{$target_name . '_fullmessage'},
             'fullmessageformat' => $data->{$target_name . '_fullmessagehtml'}['format'],
-            'fullmessagehtml' => $data->{$target_name . '_fullmessagehtml'}['text'],
+            'fullmessagehtml' => $fullmessagehtml,
             'attachementuri' => null,
             'usermodified' => $data->{$target_name . '_usermodified'},
             'timemodified' => $data->{$target_name . '_timemodified'},

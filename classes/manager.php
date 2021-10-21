@@ -47,7 +47,7 @@ class manager {
 
         $intervention = \mod_motbot\retention\intervention::from_prediction($prediction);
 
-        self::intervene($intervention);
+        // self::intervene($intervention);
     }
 
 

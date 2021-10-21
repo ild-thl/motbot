@@ -272,7 +272,7 @@ function motbot_cm_info_dynamic(cm_info $cm) {
  */
 function motbot_is_happy($motbotid, $contextid) {
     global $DB, $USER;
-    $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'target, active');
+    $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'id, active');
     foreach($motbot_models as $motbot_model) {
         if(!$motbot_model->active) {
             continue;
@@ -281,15 +281,15 @@ function motbot_is_happy($motbotid, $contextid) {
                 FROM mdl_motbot_intervention
                 WHERE contextid = :contextid
                 AND recipient = :recipient
-                AND target = :target
+                AND model = :model
                 ORDER BY timecreated DESC
                 LIMIT 1";
-        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $USER->id, 'target' => $motbot_model->target), IGNORE_MISSING);
+        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $USER->id, 'model' => $motbot_model->id), IGNORE_MISSING);
         if(!$latest_intervention) {
             continue;
         }
 
-        if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
+        if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL || $latest_intervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
             return false;
         }
     }

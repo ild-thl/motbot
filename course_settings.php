@@ -73,6 +73,10 @@ if(!$motbot_course_user) {
         'user' => $USER->id,
         'authorized' => 0,
         'allow_teacher_involvement' => 0,
+        'disabled_models' => [],
+        'disabled_advice' => [],
+        'pref_time' => -1,
+        'only_weekdays' => 0,
         'usermodified' => null,
         'timecreated' => null,
         'timemodified' => null,
@@ -84,7 +88,27 @@ $toform = (object) [
     'id' => $id,
     'authorized' => $motbot_course_user->authorized,
     'allow_teacher_involvement' => $motbot_course_user->allow_teacher_involvement,
+    'disabled_models' => $motbot_course_user->disabled_models,
+    'disabled_advice' => $motbot_course_user->disabled_advice,
+    'pref_time' => $motbot_course_user->pref_time,
+    'only_weekdays' => $motbot_course_user->only_weekdays,
+    'allow_course_completion' => true,
+    'allow_feedback' => true,
+    'allow_recent_activities' => true,
+    'allow_recent_forum_activity' => true,
+    'allow_recommended_discussion' => true,
+    'allow_visit_course' => true,
 ];
+
+$disabled_models = json_decode($motbot_course_user->disabled_models);
+foreach($disabled_models as $d) {
+    $targetname = mod_motbot_get_name_of_target($d);
+    $toform->$targetname = 0;
+}
+$disabled_advice = json_decode($motbot_course_user->disabled_advice);
+foreach($disabled_advice as $d) {
+    $toform->$d = 0;
+}
 
 // Set default values delete_intervention_records_form.
 $todeleteform = (object) [
@@ -97,7 +121,7 @@ $todeleteform = (object) [
 require_login($course, true, $cm);
 
 $PAGE->set_url('/mod/motbot/course_settings.php', array('id' => $cm->id));
-$PAGE->set_title(format_string($moduleinstance->name));
+$PAGE->set_title(format_string($moduleinstance->name . ': ' . $course->fullname));
 $PAGE->set_heading(format_string($course->fullname));
 
 // Instantiate forms.
@@ -120,6 +144,14 @@ if ($mform->is_cancelled()) {
     $form_data = $mform->get_data();
     $motbot_course_user->authorized = $form_data->authorized;
     $motbot_course_user->allow_teacher_involvement = $form_data->allow_teacher_involvement;
+    $motbot_course_user->disabled_models = $form_data->disabled_models;
+    $motbot_course_user->disabled_advice = $form_data->disabled_advice;
+    $motbot_course_user->pref_time = $form_data->pref_time;
+    if($motbot_course_user->pref_time == -1) {
+        $auto_period = motbot_calc_user_active_period($motbot_course_user->user);
+        $motbot_course_user->pref_time = $auto_period;
+    }
+    $motbot_course_user->only_weekdays = $form_data->only_weekdays;
     $motbot_course_user->usermodified = $USER->id;
     $motbot_course_user->timemodified = $time;
     if(!$motbot_course_user->timecreated) {
@@ -162,7 +194,7 @@ if ($mform->is_cancelled()) {
     // or on the first display of the form.
 
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('pluginname', 'motbot'));
+    echo $OUTPUT->heading(get_string('pluginname', 'motbot') . ' preferences for ' . $course->fullname);
 
     // Set default data (if any).
     $mform->set_data($toform);
@@ -177,5 +209,4 @@ if ($mform->is_cancelled()) {
 
 
     echo $OUTPUT->footer();
-
 }

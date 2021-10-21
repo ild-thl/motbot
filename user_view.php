@@ -90,9 +90,9 @@ class mod_motbot_user_view {
 
         $models = array();
 
-        $messages = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'target, active');
-        foreach($messages as $message) {
-            $models[] = $this->get_model_data($message);
+        $motbot_models = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'id, target, active');
+        foreach($motbot_models as $motbot_model) {
+            $models[] = $this->get_model_data($motbot_model);
         }
 
 
@@ -119,13 +119,13 @@ class mod_motbot_user_view {
      *
      * @return array
      */
-    public function get_model_data($message) {
+    public function get_model_data($motbot_model) {
         global $DB;
 
-        $target_name = mod_motbot_get_name_of_target($message->target);
+        $target_name = mod_motbot_get_name_of_target($motbot_model->target);
         $model = [
             "name" => \get_string('target:' . $target_name . '_neutral', 'motbot'),
-            "enabled" => $message->active,
+            "enabled" => $motbot_model->active,
             "hasdata" => false,
             "state" => '',
             "date" => null,
@@ -133,7 +133,7 @@ class mod_motbot_user_view {
             "intervention_url" => null,
         ];
 
-        if(!$message->active) {
+        if(!$motbot_model->active) {
             return $model;
         }
 
@@ -141,10 +141,10 @@ class mod_motbot_user_view {
             FROM mdl_motbot_intervention
             WHERE contextid = :contextid
             AND recipient = :recipient
-            AND target = :target
+            AND model = :model
             ORDER BY timecreated DESC
             LIMIT 1";
-        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $this->contextid, 'recipient' => $this->userid, 'target' => $message->target), IGNORE_MISSING);
+        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $this->contextid, 'recipient' => $this->userid, 'model' => $motbot_model->id), IGNORE_MISSING);
 
         if(!$latest_intervention) {
             $model["image"] = 'happy_motbot';
@@ -156,6 +156,8 @@ class mod_motbot_user_view {
         $model["date"] = userdate($latest_intervention->timemodified);
         if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
             $model["intervention_url"] = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $latest_intervention->message))->out(false);
+            $model["image"] = 'unhappy_motbot';
+        } else if ($latest_intervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
             $model["image"] = 'unhappy_motbot';
         } else {
             $model["image"] = 'happy_motbot';

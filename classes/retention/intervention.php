@@ -46,6 +46,7 @@ class intervention {
     private $recipient = null;
     private $recipientuser = null;
     private $motbot = null;
+    private $model = null;
     private $contextid = null;
     private $context = null;
     private $course = null;
@@ -112,14 +113,11 @@ class intervention {
 
         $intervention = new self();
 
-        // Get target of ananlytics model.
-        $model = $DB->get_record('analytics_models', array('id'=> $prediction->modelid), 'target');
-        if(!$model) {
-            error_log('Model not found.');
-            return;
-        }
-        $intervention->target = $model->target;
-
+        $intervention->contextid = $prediction->samplecontext->id;
+        $motbot = $intervention->get_motbot();
+        $motbot_model = $DB->get_record('motbot_model', array('motbot' => $motbot->id, 'model' => $prediction->modelid), 'id, target', IGNORE_MISSING);
+        $intervention->model = $motbot_model->id;
+        $intervention->target = $motbot_model->target;
         // Get recipient id.
         $recipientid = \mod_motbot\manager::get_prediction_subject($prediction->sampleid, $intervention->target);
         if(!$recipientid) {
@@ -128,7 +126,6 @@ class intervention {
         }
         $intervention->recipient = $recipientid;
 
-        $intervention->contextid = $prediction->samplecontext->id;
         $intervention->desired_events = $intervention->get_desired_events();
 
         // Create DB entry.
@@ -187,6 +184,7 @@ class intervention {
 
         $intervention->id = $record->id;
         $intervention->recipient = $record->recipient;
+        $intervention->model = $record->model;
         $intervention->contextid = $record->contextid;
         $intervention->desired_events = $record->desired_events;
         $intervention->target = $record->target;
@@ -212,6 +210,7 @@ class intervention {
             'id' => $this->id,
             'recipient' => $this->recipient,
             'contextid' => $this->contextid,
+            'model' => $this->model,
             'desired_events' => $this->desired_events,
             'target' => $this->target,
             'state' => $this->state,
@@ -225,6 +224,7 @@ class intervention {
     }
 
     private function get_desired_events() {
+        print_r($this->target);
         return json_encode($this->target::get_desired_events());
     }
 
@@ -294,7 +294,6 @@ class intervention {
         $body = $db_m ? $db_m->fullmessagehtml : \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot');
         $body = file_rewrite_pluginfile_urls($body, 'pluginfile.php', $module_context->id, 'mod_motbot', 'attachment', 0);
         $body = \mod_motbot\manager::replace_intervention_placeholders($body, $this);
-        $body = str_replace("<p><br></p>", "<br>", $body);
 
         $helpfulurl = $CFG->wwwroot.'/mod/motbot/intervention_helpful.php?id=' . $this->id . '&helpful=';
 

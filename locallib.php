@@ -49,36 +49,44 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
     global $DB;
 
     // Only get interventions of a speicif context, if $contextid is set.
+    $condition = 'WHERE i.recipient = :userid';
+    $params_array = array('userid' => $userid);
     if($contextid) {
-        $conditionsarray = array('recipient' => $userid, 'contextid' => $contextid);
-    } else {
-        $conditionsarray = array('recipient' => $userid);
+        $condition .= 'AND i.contextid = :contextid';
+        $params_array = array_merge($params_array, array('contextid' => $contextid));
     }
 
     // Select columns. Include message column if $include_messages is set.
-    $select = 'id, target, timecreated, state, teachers_informed';
+    $select = 'i.id, i.model, i.timecreated, i.state, i.teachers_informed, m.target';
     if ($include_messages) {
-        $select .= ', message';
+        $select .= ', i.message';
     }
-    $content = array();
+
+    $sql = "SELECT $select FROM mdl_motbot_intervention i
+        JOIN mdl_motbot_model m ON m.id = i.model
+        $condition
+        ORDER BY timecreated DESC;";
 
     // Get interventions.
-    $interventions = $DB->get_records('motbot_intervention', $conditionsarray , 'timecreated DESC', $select);
+    $interventions = $DB->get_records_sql($sql, $params_array, IGNORE_MISSING);
 
     // Format intervention data.
-    foreach($interventions as $intervention) {
-        $row = array();
-        $targetname = mod_motbot_get_name_of_target($intervention->target);
-        $row[] = \get_string('target:' . $targetname . '_short', 'motbot');
-        $row[] =  userdate($intervention->timecreated);
-        $row[] =  \get_string('state:' . $intervention->state, 'motbot');
-        $row[] =  $intervention->teachers_informed ? 'Yes' : 'No';
-        if ($include_messages) {
-            $row[] =   '<a href="' . (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message))->out(false) . '">View</a>';
-        }
-        $content[] = $row;
-    }
 
+    $content = array();
+    if(!empty($interventions)) {
+        foreach($interventions as $intervention) {
+            $row = array();
+            $targetname = mod_motbot_get_name_of_target($intervention->target);
+            $row[] = \get_string('target:' . $targetname . '_short', 'motbot');
+            $row[] =  userdate($intervention->timecreated);
+            $row[] =  \get_string('state:' . $intervention->state, 'motbot');
+            $row[] =  $intervention->teachers_informed ? 'Yes' : 'No';
+            if ($include_messages) {
+                $row[] =   '<a href="' . (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message))->out(false) . '">View</a>';
+            }
+            $content[] = $row;
+        }
+    }
     // Create Table.
     $table = new html_table();
     $table->attributes['class'] = 'generaltable';
@@ -191,4 +199,52 @@ function mod_motbot_has_completed_feedback($userid, $courseid) {
         AND fc.userid = :userid;';
 
     return $DB->get_record_sql($sql, array('courseid' => $courseid, 'userid' => $userid))->count;
+}
+
+/**
+ * Calculates the time period during which a specific user is active the most.
+ *
+ * @param int $user
+ * @return int Time period during which the user is active the most.
+ */
+function motbot_calc_user_active_period($user) {
+    if (!$logstore = core_analytics\manager::get_analytics_logstore()) {
+        throw new coding_exception('No available log stores');
+    }
+
+    $select = "userid = :userid AND timecreated <= :endtime";
+    $params = array('userid' => $user, 'endtime' => time());
+    $events = $logstore->get_events_select($select, $params, null, null, null);
+
+    $hours = 24;
+    $interval = $hours/8;
+    $steps = array();
+    for($i = $interval; $i <= $hours; $i+=$interval) {
+        $steps[$i] = 0;
+    }
+
+    foreach($events as $event) {
+        $time = new DateTime("now", core_date::get_user_timezone_object());
+        $time->setTimestamp($event->timecreated);
+        $hour = $time->format('H');
+
+        foreach($steps as $step => $count) {
+            if($hour < $step) {
+                $steps[$step] = ++$count;
+                break;
+            }
+        }
+    }
+
+    $active_period = 0;
+    $highest_count = 0;
+
+    foreach($steps as $step => $count) {
+        if($count > $highest_count) {
+            $highest_count = $count;
+            $active_period = $step;
+        }
+    }
+
+    return $active_period - $interval;
 }

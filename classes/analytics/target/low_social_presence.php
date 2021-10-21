@@ -185,8 +185,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
         //     return null;
         // }
 
-        return 1;
-        if($score < 0) {
+        if($score <= 0) {
             return 1;
         }
         return 0;

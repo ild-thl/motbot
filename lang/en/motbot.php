@@ -23,12 +23,13 @@
  */
 
 //---- Advice
-$string['advice:course_completion'] = 'coursecompletion';
-$string['advice:feedback'] = 'feedback';
-$string['advice:recent_activities'] = 'recentactivities';
-$string['advice:recent_forum_activity'] = 'recentforumactivity';
-$string['advice:recommended_discussion'] = 'recommendeddiscussion';
-$string['advice:visit_course'] = 'visitcourse';
+$string['advice:course_completion'] = 'Advice regarding current course progress';
+$string['advice:feedback'] = 'Suggestion to give feedback';
+$string['advice:recent_activities'] = 'Recommendation for recently added activities';
+$string['advice:recent_forum_activity'] = 'Recommendation for recent forum posts';
+$string['advice:recommended_discussion'] = 'Recomemnded discussion';
+$string['advice:visit_course'] = 'Advice to visit course';
+
 
 //---- Bot
 $string['bot'] = 'Executes scheduled interventions';
@@ -73,52 +74,55 @@ $string['modulenameplural'] = 'Motbot';
 
 
 //----  Mod Form
-$string['mod_form:active'] = 'active';
-$string['mod_form:motbot_name'] = 'Name of the bot';
-$string['mod_form:paused'] = 'paused';
-$string['mod_form:active'] = 'State';
-$string['mod_form:active_help'] = 'Defines wether the bot is supposed to be active or paused. When paused the bot will not analyse user activity and intervene when students are in need.';
-$string['mod_form:intro'] = '<p>This is a motivational bot. It will analyse user activity and will intervene when it detects users that seem to have difficulties with the course content and motivation.</p>';
-
 $string['mod_form:active'] = 'Active';
 $string['mod_form:active_help'] = 'Select wether this model should analyze useractivity in this course and try to send interventions to users.';
-$string['mod_form:subject'] = 'Subject';
-$string['mod_form:fullmessage'] = 'Full Message';
-$string['mod_form:fullmessagehtml'] = 'Full Message HTML';
-$string['mod_form:fullmessageformat'] = 'Full message format';
-$string['mod_form:fullmessageformat_help'] = 'Format of the full message';
-
-$string['mod_form:no_recent_accesses_header'] = 'No Recent Accesses Settings';
-$string['mod_form:no_recent_accesses_subject'] = 'We miss you, {firstname}!';
-$string['mod_form:no_recent_accesses_fullmessage'] = 'Hi {firstname} {lastname},
-
-it seems like you haven´t accessed the course {course_shortname} recently.
-We´d be happy to welcome you back!
-Go to course: {course_url}
-
-Your {motbot}';
-$string['mod_form:no_recent_accesses_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you haven´t accessed the course <strong>{course_shortname}</strong> recently.</p><p>We´d be happy to welcome you back!</p></br><p>Your {motbot}</p>';
 
 $string['mod_form:course_dropout_header'] = 'Course Dropout Settings';
 $string['mod_form:course_dropout_subject'] = 'Do you have trouble with {course_shortname}?';
 $string['mod_form:course_dropout_fullmessage'] = 'Hi {firstname} {lastname},
 
 it seems like you´re haveing difficulties keeping up. Would you like to ask a teacher for help?
-Go to course: {course_url}
+
+{suggestions}
 
 Kind regards, your {motbot}.';
 $string['mod_form:course_dropout_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you´re haveing difficulties keeping up.</p><p>Would you like to ask a teacher for help?</p></br><p>Kind regards, your {motbot}.</p>';
 
-$string['mod_form:low_social_presence_header'] = 'Low Social Presence Settings';
-$string['mod_form:low_social_presence_subject'] = 'Detected low social activity in {course_shortname}.';
-$string['mod_form:low_social_presence_fullmessage'] = 'Hi {firstname} {lastname},
+$string['mod_form:fullmessage'] = 'Full Message';
+$string['mod_form:fullmessageformat'] = 'Full message format';
+$string['mod_form:fullmessageformat_help'] = 'Format of the full message';
+$string['mod_form:fullmessagehtml'] = 'Full Message HTML';
 
+$string['mod_form:intro'] = '<p>This is a motivational bot. It will analyse user activity and will intervene when it detects users that seem to have difficulties with the course content and motivation.</p>';
+
+$string['mod_form:low_social_presence_fullmessage'] = 'Hi {firstname} {lastname},
 it seems like you´re not using the forum a lot.
+
+{suggestions}
+
 Try it out? There might be people that have useful information to share with you.
-Go to course: {course_url}
 
 Kind regards, your {motbot}.';
 $string['mod_form:low_social_presence_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you´re not using the forum a lot.</p><p>Try it out? There might be people that have useful information to share with you.</p></br><p>Kind regards, your {motbot}.</p>';
+$string['mod_form:low_social_presence_header'] = 'Low Social Presence Settings';
+$string['mod_form:low_social_presence_subject'] = 'Detected low social activity in {course_shortname}.';
+
+$string['mod_form:motbot_name'] = 'Name of the bot';
+
+$string['mod_form:no_recent_accesses_fullmessage'] = 'Hi {firstname} {lastname},
+it seems like you haven´t accessed the course {course_shortname} recently.
+
+{suggestions}
+
+We´d be happy to welcome you back!
+
+Your {motbot}';
+$string['mod_form:no_recent_accesses_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you haven´t accessed the course <strong>{course_shortname}</strong> recently.</p><p>We´d be happy to welcome you back!</p></br><p>Your {motbot}</p>';
+$string['mod_form:no_recent_accesses_header'] = 'No Recent Accesses Settings';
+$string['mod_form:no_recent_accesses_subject'] = 'We miss you, {firstname}!';
+
+$string['mod_form:subject'] = 'Subject';
+
 //----
 
 $string['motbotpaused'] = 'Motbot is paused for this course.';
@@ -185,20 +189,14 @@ $string['targetlabellowsocialpresenceyes'] = 'Student has enough social presence
 $string['tomanyinstances'] = 'There should only be one Motbot activity in a course.';
 
 //----  Course User Settings Form
-$string['course_settings_form:prohibit'] = 'Prohibit';
-$string['course_settings_form:authorize'] = 'Authorize';
-$string['course_settings_form:authorized'] = 'Enable Motbot';
-$string['course_settings_form:authorized_help'] = 'Allow the Motbot to analyze your user activity and intervene if needed.';
+$string['course_settings_form:advice_settings'] = 'Enabled advice options';
 $string['course_settings_form:allow_teacher_involvement'] = 'Allow teacher involvement?';
 $string['course_settings_form:allow_teacher_involvement_help'] = 'When "Yes" is checked, teachers will be informed of your situation in case other means of interventions fail.';
-//----
+$string['course_settings_form:authorized'] = 'Enable Motbot';
+$string['course_settings_form:authorized_help'] = 'Allow the Motbot to analyze your user activity and intervene if needed.';
+$string['course_settings_form:model_settings'] = 'Enabled models';
+$string['course_settings_form:only_weekdays'] = 'Only send interventions on weekdays';
+$string['course_settings_form:pref_time'] = 'Prefered time of day for receiveing messages:';
+$string['course_settings_form:pref_time_help'] = 'Here you can set a time of day. The MotBot will try to send you messages at this time. If you select auto, the motbot will use a time calculated by your usual active hours.';
 
-//----  User Settings Form
-$string['user_settings_form:allow_visit_course'] = 'Allow advice to visit course?';
-$string['user_settings_form:allow_recommended_discussion'] = 'Allow advice to participate in recommended discussions?';
-$string['user_settings_form:allow_recent_forum_activity'] = 'Allow recommendations for recent forum posts?';
-$string['user_settings_form:allow_recent_activities'] = 'Allow recommendations for recently added activities?';
-$string['user_settings_form:allow_feedback'] = 'Allow suggestions to give feedback?';
-$string['user_settings_form:allow_course_completion'] = 'Allow advice about my course progress?';
-$string['user_settings_form:advice_settings'] = 'Available advice options';
 //----

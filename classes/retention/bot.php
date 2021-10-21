@@ -49,74 +49,45 @@ class bot extends \core\task\scheduled_task {
      */
     public function execute() {
         global $DB;
-        $motbot_users = $DB->get_records('motbot_user');
-        foreach($motbot_users as $mbuser) {
-            $scheduled_interventions = $DB->get_records('motbot_intervention', array('recipient' => $mbuser->user, 'state' => \mod_motbot\retention\intervention::SCHEDULED), '', '*');
+        $scheduled_interventions = $DB->get_records('motbot_intervention', array('state' => \mod_motbot\retention\intervention::SCHEDULED), '', '*');
 
-            $this->execute_interventions_individually($scheduled_interventions);
-        }
-    }
+        $now = new \DateTime("now", \core_date::get_user_timezone_object());
+        $dayofweek = intval($now->format('N'));
+        $hour = intval($now->format('H'));
+        echo('hour: ' . $hour);
+        echo('dayofweek: ' . $dayofweek);
 
-    private function execute_interventions_individually($scheduled_interventions) {
         foreach($scheduled_interventions as $i) {
-            $intervention = \mod_motbot\retention\intervention::from_db($i);
-
-            if($intervention->get_target()::always_intervene()) {
-                $this->intervene($intervention);
-            } else {
-                $intervention->set_state(\mod_motbot\retention\intervention::STORED);
-            }
-
-            if($intervention->get_context()->contextlevel == 50) {
-                if($intervention->is_critical()) {
-                    $this->inform_teachers($intervention);
-                }
-            }
-        }
-    }
-
-
-    private function execute_interventions_altogether($scheduled_interventions) {
-        $message = null;
-        foreach($scheduled_interventions as $i) {
-            $intervention = \mod_motbot\retention\intervention::from_db($i);
-
-            if($intervention->get_target()::always_intervene()) {
-                $m = $intervention->get_intervention_message();
-                if($message) {
-                    $message->fullmessagehtml .= '</br></br> -------- </br></br>' . $m->fullmessagehtml;
-
-                    $message->fullmessage .= '
-
-
- --------
-
-
-' . $m->fullmessage;
-
+            $sql = "SELECT u.pref_time, u.only_weekdays FROM mdl_motbot_course_user u
+                JOIN mdl_motbot m ON u.motbot = m.id
+                JOIN mdl_context c ON m.course = c.instanceid
+                WHERE c.id = :contextid
+                AND u.user = :recipient;";
+            $user_pref = $DB->get_record_sql($sql, array('contextid' => $i->contextid, 'recipient' => $i->recipient), IGNORE_MISSING);
+            if(!$user_pref->only_weekdays || ($user_pref->only_weekdays && $dayofweek < 6)) {
+                if($user_pref->pref_time > -1 && $hour >= $user_pref->pref_time) {
+                    $this->execute_interventions_individually($i);
                 } else {
-                    $message = $m;
+                    echo('later...');
                 }
             } else {
-                $intervention->set_state(\mod_motbot\retention\intervention::STORED);
-            }
-
-            if($intervention->get_context()->contextlevel == 50) {
-                if($intervention->is_critical()) {
-                    $this->inform_teachers($intervention);
-                }
+                echo('only during weekdays, later...');
             }
         }
+    }
 
+    private function execute_interventions_individually($scheduled_intervention) {
+        $intervention = \mod_motbot\retention\intervention::from_db($scheduled_intervention);
 
-        $message->subject = 'You can do better!';
+        if($intervention->get_target()::always_intervene()) {
+            $this->intervene($intervention);
+        } else {
+            $intervention->set_state(\mod_motbot\retention\intervention::STORED);
+        }
 
-        $messageid = \mod_motbot\manager::send_message($message);
-        if($messageid) {
-            foreach($scheduled_interventions as $i) {
-                $intervention = \mod_motbot\retention\intervention::from_db($i);
-                $intervention->set_messageid($messageid);
-                $intervention->set_state(\mod_motbot\retention\intervention::INTERVENED);
+        if($intervention->get_context()->contextlevel == 50) {
+            if($intervention->is_critical()) {
+                $this->inform_teachers($intervention);
             }
         }
     }

@@ -24,6 +24,7 @@
 
 //moodleform is defined in formslib.php
 require_once("$CFG->libdir/formslib.php");
+require_once("locallib.php");
 
 /**
  * Form that lets user choose their preffered motbot settings for a specific course.
@@ -33,6 +34,8 @@ require_once("$CFG->libdir/formslib.php");
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_motbot_course_settings_form extends moodleform {
+    private $id = null;
+    private $models = null;
 
     /**
      * Form definition.
@@ -52,10 +55,81 @@ class mod_motbot_course_settings_form extends moodleform {
         $mform->addElement('selectyesno', 'allow_teacher_involvement', get_string('course_settings_form:allow_teacher_involvement', 'motbot'));
         $mform->addHelpButton('allow_teacher_involvement', 'course_settings_form:allow_teacher_involvement', 'motbot');
 
+        // Pefered time selector.
+        $mform->addElement('select', 'pref_time', get_string('course_settings_form:pref_time', 'motbot'), [-1 => 'auto', 0 => '0', 1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5', 6 => '6', 7 => '7', 8 => '8', 9 => '9', 10 => '10', 11 => '11', 12 => '12', 13 => '13', 14 => '14', 15 => '15', 16 => '16', 17 => '17', 18 => '18', 19 => '19', 20 => '20', 21 => '21', 22 => '22', 23 => '23']);
+        $mform->addHelpButton('pref_time', 'course_settings_form:pref_time', 'motbot');
+
+        // $mform->addElement('selectyesno', 'only_weekdays', get_string('course_settings_form:only_weekdays', 'motbot'));
+        $mform->addElement('hidden', 'only_weekdays');
+        $mform->setType('only_weekdays', PARAM_INT);
+
+        $mform->addElement('header', 'advice_settings', get_string('course_settings_form:model_settings', 'motbot'), '', array('group' => 1, 'checked' => true), array(0, 1));
+        $this->add_model_settings($mform);
+
+        $mform->addElement('header', 'advice_settings', get_string('course_settings_form:advice_settings', 'motbot'), '', array('group' => 1, 'checked' => true), array(0, 1));
+        $mform->addElement('checkbox', 'allow_course_completion', get_string('advice:course_completion', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_feedback', get_string('advice:feedback', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_recent_activities', get_string('advice:recent_activities', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_recent_forum_activity', get_string('advice:recent_forum_activity', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_recommended_discussion', get_string('advice:recommended_discussion', 'motbot'), '', array('group' => 1), array(0, 1));
+        $mform->addElement('checkbox', 'allow_visit_course', get_string('advice:visit_course', 'motbot'), '', array('group' => 1), array(0, 1));
+
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
         // Submit and cancel button.
         $this->add_action_buttons();
+    }
+
+    private function add_model_settings($mform) {
+        $models = $this->get_models();
+        foreach($models as $model) {
+            $targetname = mod_motbot_get_name_of_target($model->target);
+            $mform->addElement('checkbox', $targetname, get_string('target:' . $targetname . '_short', 'motbot'), '', array('group' => 1), array(0, 1));
+            $mform->setDefault($targetname, 1);
+        }
+    }
+
+    private function get_disabled_models($data) {
+        $disabled_models = array();
+        $models = $this->get_models();
+        foreach($models as $model) {
+            $targetname = mod_motbot_get_name_of_target($model->target);
+            if(!property_exists($data, $targetname)) {
+                $disabled_models[] = $model->target;
+            }
+        }
+        return json_encode($disabled_models);
+    }
+
+    private function get_models() {
+        global $DB;
+        if(!$this->models) {
+            $sql = "SELECT *
+                FROM mdl_analytics_models
+                WHERE enabled = 1
+                AND target LIKE '%mod_motbot%';";
+            $this->models = $DB->get_records_sql($sql);
+        }
+        return $this->models;
+    }
+
+
+    /**
+     * Gets input data of submitted form.
+     *
+     * @return object
+     **/
+    public function get_data() {
+        $data = parent::get_data();
+
+        if (empty($data)) {
+            return false;
+        }
+
+        $data->disabled_models = $this->get_disabled_models($data);
+        $data->disabled_advice = '[]';
+
+        return $data;
     }
 }
