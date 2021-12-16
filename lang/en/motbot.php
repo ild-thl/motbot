@@ -29,21 +29,42 @@ $string['advice:recent_activities'] = 'Recommendation for recently added activit
 $string['advice:recent_forum_activity'] = 'Recommendation for recent forum posts';
 $string['advice:recommended_discussion'] = 'Recomemnded discussion';
 $string['advice:visit_course'] = 'Advice to visit course';
-
+//----
 
 //---- Bot
 $string['bot'] = 'Executes scheduled interventions';
+//----
+
+//----  Course User Settings Form
+$string['course_settings_form:advice_settings'] = 'Enabled advice options';
+$string['course_settings_form:allow_teacher_involvement'] = 'Allow teacher involvement?';
+$string['course_settings_form:allow_teacher_involvement_help'] = 'When "Yes" is checked, teachers will be informed of your situation in case other means of interventions fail.';
+$string['course_settings_form:authorized'] = 'Enable Motbot';
+$string['course_settings_form:authorized_help'] = 'Allow the Motbot to analyze your user activity and intervene if needed.';
+$string['course_settings_form:model_settings'] = 'Enabled models';
+$string['course_settings_form:only_weekdays'] = 'Only send interventions on weekdays';
+$string['course_settings_form:pref_time'] = 'Prefered time of day for receiveing messages:';
+$string['course_settings_form:pref_time_help'] = 'Here you can set a time of day. The MotBot will try to send you messages at this time. If you select auto, the motbot will use a time calculated by your usual active hours.';
+//----
 
 //----  Indicator
-$string['indicator:socialpresenceincourseforum'] = 'Any write action in a course forum';
-$string['indicator:socialpresenceincourseforum_help'] = 'TODO: Any write action in a course forum help text.';
+$string['indicator:anyaccess'] = 'Any recent access';
+$string['indicator:anyaccess_help'] = 'TODO: Any recent access help text.';
+
+$string['indicator:anywriteaction'] = 'Any recent write action';
+$string['indicator:anywriteaction_help'] = 'TODO: Any recent write action help text.';
+
+$string['indicator:anywriteincoursefeedbackyet'] = 'Any write action in a course feedback yet';
+$string['indicator:anywriteincoursefeedbackyet_help'] = 'TODO: Any write action in a course feedback yet help text.';
 
 $string['indicator:socialpresenceincoursechat'] = 'Any write action in a course chat';
 $string['indicator:socialpresenceincoursechat_help'] = 'TODO: Any write action in a course chat help text.';
 
-$string['indicator:anywriteincoursefeedbackyet'] = 'Any write action in a course feedback yet';
-$string['indicator:anywriteincoursefeedbackyet_help'] = 'TODO: Any write action in a course feedback yet help text.';
+$string['indicator:socialpresenceincourseforum'] = 'Any write action in a course forum';
+$string['indicator:socialpresenceincourseforum_help'] = 'TODO: Any write action in a course forum help text.';
 //----
+
+$string['load_default_advice'] = 'Successfully loaded {$a->count} advice definitions for component \'{$a->component}\'';
 
 //----  Message
 $string['messageprovider:motbot_intervention'] = 'New prediction avaialble';
@@ -121,15 +142,26 @@ $string['mod_form:no_recent_accesses_fullmessagehtml'] = '<p>Hi {firstname} {las
 $string['mod_form:no_recent_accesses_header'] = 'No Recent Accesses Settings';
 $string['mod_form:no_recent_accesses_subject'] = 'We miss you, {firstname}!';
 
-$string['mod_form:subject'] = 'Subject';
+$string['mod_form:recent_cognitive_presence_fullmessage'] = 'Hi {firstname} {lastname},
+it seems like you haven\'t been around lately.
 
+{suggestions}
+
+Enjoy learning!
+
+Kind regards, your {motbot}.';
+$string['mod_form:recent_cognitive_presence_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you haven´t been around lately.</p><p>We´d be happy to welcome you back!</p></br><p>Your {motbot}</p>';
+$string['mod_form:recent_cognitive_presence_subject'] = 'You hav\'nt been around lately!';
+
+
+$string['mod_form:subject'] = 'Subject';
 //----
 
 $string['motbotpaused'] = 'Motbot is paused for this course.';
 $string['nomotbotinstance'] = 'No Motbot activity found in course.';
 $string['motbotmodelinactive'] = 'This model is deactivated or has no motbot message information associated with it in course.';
 
-//----  General Plugin
+//----  Plugin General
 $string['pluginadministration'] = 'Plugin Administration';
 $string['pluginname'] = 'Motbot';
 //----
@@ -144,7 +176,16 @@ $string['quote:4'] = 'With the new day comes new  strength and new thoughts. - E
 $string['quote:5'] = 'Step by step and the thing is done. - Charles Atlas';
 //----
 
-//----  Intervention States
+//---- Event reactions
+$string['reaction:coreeventcourse_viewed'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>It\'s good to have you back!</p>&nbsp;{$a}</div>';
+$string['reaction:coreeventuser_loggedin'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>It\'s good to have you back!</p>&nbsp;{$a}</div>';
+$string['reaction:mod_forumeventdiscussion_created'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for participating in the forums!</p></div>';
+$string['reaction:mod_forumeventpost_created'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for participating in the forums!</p></div>';
+$string['reaction:mod_forumeventassessable_uploaded'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for participating in the forums!</p></div>';
+$string['reaction:mod_chateventmessage_sent'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for participating in the chat!</p></div>';
+//----
+
+//----  State of Intervention
 $string['state:0'] = 'Scheduled';
 $string['state:1'] = 'Intervened';
 $string['state:2'] = 'Successful';
@@ -152,17 +193,32 @@ $string['state:3'] = 'Unsuccessful';
 $string['state:4'] = 'Stored';
 //----
 
-//----  Analytic Targetstarget:
-$string['target:norecentaccesses'] = 'Students who have not accessed the course recently (Motbot)';
-$string['target:norecentaccesses_help'] = 'This target identifies students who have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
-$string['target:norecentaccessesinfo'] = 'The following students have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
-$string['target:no_recent_accesses_short'] = 'No recent accesses';
-$string['target:no_recent_accesses_neutral'] = 'Attendance';
+//----  Settings
+$string['settings:edit_motbot'] = 'Motbot Settings';
+//----
+
+//----  Analytic Targets
+$string['target:recentcognitivepresence'] = 'Students recent cognitive presence (Motbot)';
+$string['target:recentcognitivepresence_help'] = 'This target describes how much the student has interacted with moodle content recently.';
+$string['target:recent_cognitive_presence_short'] = 'Recent cognitive presence';
+$string['target:recent_cognitive_presence_neutral'] = 'Recent cognitive presence';
 
 $string['target:coursedropout'] = 'Students at risk of dropping out (Motbot)';
 $string['target:coursedropout_help'] = 'This target describes whether the student is considered at risk of dropping out.';
 $string['target:course_dropout_short'] = 'Possible course dropout';
 $string['target:course_dropout_neutral'] = 'Dropout risk';
+
+$string['target:lowsocialpresence'] = 'Students with low social presence (Motbot)';
+$string['target:lowsocialpresence_help'] = 'This target generates reminders for upcoming activities due.';
+$string['target:lowsocialpresenceinfo'] = 'All upcoming activities due insights are listed here. These students have received these insights directly.';
+$string['target:low_social_presence_short'] = 'Low social presence';
+$string['target:low_social_presence_neutral'] = 'Social presence';
+
+$string['target:norecentaccesses'] = 'Students who have not accessed the course recently (Motbot)';
+$string['target:norecentaccesses_help'] = 'This target identifies students who have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
+$string['target:norecentaccessesinfo'] = 'The following students have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
+$string['target:no_recent_accesses_short'] = 'No recent accesses';
+$string['target:no_recent_accesses_neutral'] = 'Attendance';
 
 $string['target:unhelpfulinterventions'] = 'Motbot that sends unhelpful interventions (Motbot)';
 $string['target:unhelpfulinterventions_help'] = 'Motbot that sends unhelpful interventions (Motbot)';
@@ -175,12 +231,6 @@ $string['target:upcomingactivitiesdue_help'] = 'This target generates reminders 
 $string['target:upcomingactivitiesdueinfo'] = 'All upcoming activities due insights are listed here. These students have received these insights directly.';
 $string['target:upcoming_activities_due_short'] = 'Upcoming activities due';
 
-$string['target:lowsocialpresence'] = 'Students with low social presence (Motbot)';
-$string['target:lowsocialpresence_help'] = 'This target generates reminders for upcoming activities due.';
-$string['target:lowsocialpresenceinfo'] = 'All upcoming activities due insights are listed here. These students have received these insights directly.';
-$string['target:low_social_presence_short'] = 'Low social presence';
-$string['target:low_social_presence_neutral'] = 'Social presence';
-
 
 $string['targetlabellowsocialpresenceno'] = 'Student has low social presence.';
 $string['targetlabellowsocialpresenceyes'] = 'Student has enough social presence.';
@@ -188,15 +238,4 @@ $string['targetlabellowsocialpresenceyes'] = 'Student has enough social presence
 
 $string['tomanyinstances'] = 'There should only be one Motbot activity in a course.';
 
-//----  Course User Settings Form
-$string['course_settings_form:advice_settings'] = 'Enabled advice options';
-$string['course_settings_form:allow_teacher_involvement'] = 'Allow teacher involvement?';
-$string['course_settings_form:allow_teacher_involvement_help'] = 'When "Yes" is checked, teachers will be informed of your situation in case other means of interventions fail.';
-$string['course_settings_form:authorized'] = 'Enable Motbot';
-$string['course_settings_form:authorized_help'] = 'Allow the Motbot to analyze your user activity and intervene if needed.';
-$string['course_settings_form:model_settings'] = 'Enabled models';
-$string['course_settings_form:only_weekdays'] = 'Only send interventions on weekdays';
-$string['course_settings_form:pref_time'] = 'Prefered time of day for receiveing messages:';
-$string['course_settings_form:pref_time_help'] = 'Here you can set a time of day. The MotBot will try to send you messages at this time. If you select auto, the motbot will use a time calculated by your usual active hours.';
-
-//----
+$string['userdisabledmotbot'] = 'User disabled motbot activity.';

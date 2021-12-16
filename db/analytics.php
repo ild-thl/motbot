@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Capability definitions for the motbot module
+ * Analytics model definitions for the motbot module
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -79,18 +79,27 @@ $models = [
             '\mod_workshop\analytics\indicator\social_breadth',
         ],
     ],
-    // [
-    //     'target' => '\mod_motbot\analytics\target\upcoming_activities_due',
-    //     'indicators' => [
-    //         '\core_course\analytics\indicator\activities_due',
-    //     ],
-    //     'timesplitting' => '\core\analytics\time_splitting\upcoming_week',
-    //     'enabled' => true,
-    // ],
+    [
+        'target' => '\mod_motbot\analytics\target\upcoming_activities_due',
+        'indicators' => [
+            '\core_course\analytics\indicator\activities_due',
+        ],
+        'timesplitting' => '\core\analytics\time_splitting\upcoming_week',
+        'enabled' => true,
+    ],
     [
         'target' => '\mod_motbot\analytics\target\no_recent_accesses',
         'indicators' => [
             '\core\analytics\indicator\any_course_access',
+        ],
+        'timesplitting' => '\core\analytics\time_splitting\past_week',
+        'enabled' => true,
+    ],
+    [
+        'target' => '\mod_motbot\analytics\target\recent_cognitive_presence',
+        'indicators' => [
+            '\mod_motbot\analytics\indicator\any_access',
+            '\mod_motbot\analytics\indicator\any_write_action',
         ],
         'timesplitting' => '\core\analytics\time_splitting\past_week',
         'enabled' => true,
@@ -107,10 +116,8 @@ $models = [
     ],
 ];
 
-$result = [];
-
 foreach ($models as $model) {
     if (!\core_analytics\model::exists(\core_analytics\manager::get_target($model['target']))) {
-        $result[] = \core_analytics\manager::create_declared_model($model);
+        \core_analytics\manager::create_declared_model($model);
     }
 }

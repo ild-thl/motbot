@@ -1,106 +1,108 @@
 {{!
-    This file is part of Moodle - http://moodle.org/
+This file is part of Moodle - http://moodle.org/
 
-    Moodle is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Moodle is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Moodle is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
+Moodle is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Moodle. If not, see
-    <http: //www.gnu.org/licenses />.
+You should have received a copy of the GNU General Public License
+along with Moodle. If not, see
+<http: //www.gnu.org/licenses />.
 }}
 {{!
-    @template mod_motbot/user_view
+@template mod_motbot/user_view
 
-    HTML message for insights with one single prediction
+HTML message for insights with one single prediction
 
-    Classes required for JS:
-    * none
+Classes required for JS:
+* none
 
-    Data attributes required for JS:
-    * none
+Data attributes required for JS:
+* none
 
-    Example context (json):
-    {
-        "settings_url": "http://localhost/mod/motbot/course_settings.php?id=2567",
-        "models": [
-            {
-             "name" : "Attendance",
-             "enabled": true,
-             "count": 11
-             "helpful" : 5,
-             "unhelpful" : 3,
-             "last_intervention": "2. April 2020 19:45",
-             "image": "happy_motbot",
-            },
-        ]
-        "interventions_table": "some html",
-    }
+Example context (json):
+{
+"settings_url": "http://localhost/mod/motbot/course_settings.php?id=2567",
+"models": [
+{
+"name" : "Attendance",
+"enabled": true,
+"count": 11
+"helpful" : 5,
+"unhelpful" : 3,
+"last_intervention": "2. April 2020 19:45",
+"image": "happy_motbot",
+},
+]
+"interventions_table": "some html",
+}
 }}
 
 {{> mod_motbot/styles}}
 
-{{#settings_url}}
-<div class="float-right">
-  <a class="btn btn-primary" href="{{{.}}}">Edit settings</a>
-</div>
-{{/settings_url}}
+<div class="mod_motbot_user_view">
+  {{#settings_url}}
+  <div class="float-right">
+    <a class="btn btn-primary" href="{{{.}}}">Edit settings</a>
+  </div>
+  {{/settings_url}}
 
-<div class="overview">
-  <h2>Quick Overview</h2>
-  <div class="row">
-    {{#models}}
-    <div class="column">
-      {{#pix}} {{{image}}}, motbot, {{{image}}} motbot {{/pix}}
-      <h5>{{{name}}}</h5>
+  <div class="overview">
+    <h2>Quick Overview</h2>
+    <div class="row">
+      {{#models}}
+      <div class="column">
+        {{#pix}} {{{image}}}, motbot, {{{image}}} motbot {{/pix}}
+        <h5>{{{name}}}</h5>
 
-      {{#count}}
-      <br />
-      <table class="generaltable">
-        <thead>
-          <tr>
-            <th class="header c0">Helpful</th>
-            <th class="header c1">Unhelpful</th>
-            <th class="header c2">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="cell c0">{{{helpful}}}</td>
-            <td class="cell c1">{{{unhelpful}}}</td>
-            <td class="cell c2">
-              <strong>{{{count}}}</strong>
-            </td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <!-- <td class="footer">Total interventions</td>
+        {{#count}}
+        <br />
+        <table class="generaltable">
+          <thead>
+            <tr>
+              <th class="header c0">Helpful</th>
+              <th class="header c1">Unhelpful</th>
+              <th class="header c2">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cell c0">{{{helpful}}}</td>
+              <td class="cell c1">{{{unhelpful}}}</td>
+              <td class="cell c2">
+                <strong>{{{count}}}</strong>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <!-- <td class="footer">Total interventions</td>
           <td class="footer">
             <strong>{{{count}}}</strong>
           </td> -->
-        </tfoot>
-      </table>
+          </tfoot>
+        </table>
 
-      <br />
-      <p>Last intervention on:</p>
-      <p>{{{last_intervention}}}</p>
-      {{/count}}
-      {{^count}}
-      <p>No Interventions yet.</p>
-      {{/count}}
-      {{^enabled}}
-      <p>Model paused by course manager</p>
-      {{/enabled}}
-      {{#intervention_url}}
-      <a class="btn btn-primary" href="{{{.}}}">Show intervention</a>
-      {{/intervention_url}}
+        <br />
+        <p>Last intervention on:</p>
+        <p>{{{last_intervention}}}</p>
+        {{/count}}
+        {{^count}}
+        <p>No Interventions yet.</p>
+        {{/count}}
+        {{^enabled}}
+        <p>Model paused by course manager</p>
+        {{/enabled}}
+        {{#intervention_url}}
+        <a class="btn btn-primary" href="{{{.}}}">Show intervention</a>
+        {{/intervention_url}}
+      </div>
+      {{/models}}
     </div>
-    {{/models}}
   </div>
 </div>

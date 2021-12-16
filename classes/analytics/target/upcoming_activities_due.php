@@ -43,7 +43,7 @@ class upcoming_activities_due extends \core_user\analytics\target\upcoming_activ
      *
      * @return \lang_string
      */
-    public static function get_name() : \lang_string {
+    public static function get_name(): \lang_string {
         return new \lang_string('target:upcomingactivitiesdue', 'motbot');
     }
 
@@ -68,7 +68,7 @@ class upcoming_activities_due extends \core_user\analytics\target\upcoming_activ
     public function is_valid_analysable(\core_analytics\analysable $user, $fortraining = true) {
         global $DB;
 
-        if(!$DB->get_record('motbot_user', array('user' => $user->get_id(), 'authorized' => 1))) {
+        if (!$DB->get_record('motbot_user', array('user' => $user->get_id(), 'authorized' => 1))) {
             return false;
         }
 

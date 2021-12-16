@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Interaction.
+ * Advice that suggests to check out recent forum activities.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -28,6 +28,13 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 
+/**
+ * Advice that suggests to check out recent forum activities.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class recent_forum_activity extends \mod_motbot\retention\advice\title_and_actionlist {
     /**
     * Returns a lang_string object representing the name for the indicator or target.
@@ -42,6 +49,15 @@ class recent_forum_activity extends \mod_motbot\retention\advice\title_and_actio
         return new \lang_string('advice:recent_forum_activity', 'motbot');
     }
 
+    /**
+     * Contsructor.
+     *
+     * TODO: Update to get recent forum activities instead of recently created course modules.
+     *
+     * @param \core\user $user
+     * @param \core\course $course
+     * @return void
+     */
     public function __construct($user, $course) {
         global $DB, $CFG;
 
@@ -50,11 +66,19 @@ class recent_forum_activity extends \mod_motbot\retention\advice\title_and_actio
         }
 
         $endtime = time();
-        $lastaccess = $DB->get_record('user_lastaccess', ['courseid' => $course->id, 'userid' => $user->id]);
+        $lastaccess_condition = array('userid' => $user->id);
+        if($course) {
+            $lastaccess_condition['courseid'] = $course->id;
+        }
+        $lastaccess = $DB->get_record('user_lastaccess', $lastaccess_condition, '*', IGNORE_MISSING);
         $starttime = $lastaccess->timeaccess;
-        $select = "courseid = :courseid AND eventname = :eventname AND timecreated > :starttime AND timecreated <= :endtime";
-        $params = array('courseid' => $course->id, 'eventname' => '\core\event\course_module_created', 'starttime' => $starttime, 'endtime' => $endtime);
-        $new_activities = $logstore->get_events_select($select, $params, null, null, null);
+        $select = "eventname = :eventname AND timecreated > :starttime AND timecreated <= :endtime";
+        $params = array('eventname' => '\core\event\course_module_created', 'starttime' => $starttime, 'endtime' => $endtime);
+        if($course) {
+            $select .= " AND courseid = :courseid";
+            $params['courseid'] = $course->id;
+        }
+        $new_activities = $logstore->get_events_select($select, $params, 'timecreated DESC', 0, 5);
 
         if(empty($new_activities)) {
             throw new \moodle_exception('No recent activities.');

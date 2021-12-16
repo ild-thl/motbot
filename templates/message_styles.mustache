@@ -1,0 +1,355 @@
+{{!
+This file is part of Moodle - http://moodle.org/
+
+Moodle is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Moodle is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Moodle. If not, see
+<http: //www.gnu.org/licenses />.
+}}
+{{!
+@template mod_motbot/message_styles
+
+Styles for insights' notifications (only for email).
+
+These styles are not applied to Moodle's web UI as there is a body:not(.dir-ltr):not(.dir-rtl)
+
+Classes required for JS:
+* none
+
+Data attributes required for JS:
+* none
+
+Example context (json):
+{
+}
+}}
+
+{{! The styles defined here will be included in the Moodle web UI and in emails. Emails do not include Moodle
+stylesheets so we want these styles to be applied to emails. However, they will also be included in the Moodle web UI.
+We use the not(.dir-ltr):not(.dir-rtl) so that this style is not applied to the Moodle UI.
+Note that gmail strips out HTML styles which selector includes the caracters (), so the font-family rule
+is not applied in gmail.}}
+
+<head>
+  <style>
+    body:not(.dir-ltr):not(.dir-rtl) {
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .btn-insight {
+      color: #007bff;
+      background-color: transparent;
+      display: inline-block;
+      font-weight: 400;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      user-select: none;
+      border: 1px solid #007bff;
+      padding: 0.375rem 0.75rem;
+      line-height: 1.5;
+      border-radius: 0;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .motbot_advice__title {
+      font-size: 1.171875rem;
+      margin-bottom: 0.5 rem;
+      font-weight: 300;
+      line-height: 1.2;
+      margin-top: 0;
+      margin-block-start: 1.67em;
+      margin-block-end: 1.67em;
+      margin-inline-start: 0px;
+      margin-inline-end: 0px;
+    }
+
+    .motbot-comment {
+      display: flex;
+      align-items: end;
+    }
+
+    .motbot-message a,
+    .motbot-comment a,
+    .motbot-message-right a {
+      color: white;
+    }
+
+    .motbot-message p,
+    .motbot-comment p,
+    .motbot-message-right p {
+      position: relative;
+      background: #0f6fc5;
+      width: max-content;
+      max-width: 300px;
+      padding: 5px 15px;
+      border-radius: 5px 5px 5px 0px;
+      color: white;
+    }
+
+    .motbot-message-right p {
+      border-radius: 5px 5px 0px 5px;
+      text-align: right;
+    }
+
+    .motbot-message-right p::before {
+      border-radius: 5px 5px 0px 5px;
+      border: 12px solid transparent;
+      border-top-color: transparent;
+      border-top-style: solid;
+      border-top-width: 12px;
+      border-bottom-color: transparent;
+      border-bottom-style: solid;
+      border-bottom-width: 12px;
+      border-top: 18px solid #0f6fc5;
+      border-bottom: 0;
+      border-bottom-width: 0px;
+      height: 0;
+      width: 0;
+      border-bottom-width: 16px;
+      content: '';
+      display: block;
+      position: absolute;
+      right: -10px;
+      bottom: 0px;
+      transform-origin: center;
+      transform: rotate(180deg) skew(25deg) translateY(0px);
+    }
+
+    .motbot-message p::before,
+    .motbot-comment p::before {
+      border-radius: 5px 5px 5px 0px;
+      border: 6px solid transparent;
+      border-top: 6px solid #0f6fc5;
+      border-bottom: 0;
+      height: 0;
+      width: 0;
+      border-top-width: 12px;
+      content: '';
+      display: block;
+      position: absolute;
+      left: -6px;
+      bottom: 0px;
+      transform-origin: center;
+      transform: rotate(180deg) skew(-25deg) translateY(0px);
+    }
+
+    .motbot-comment .image-container {
+      margin-right: 3em;
+    }
+
+    .motbot-comment .icon {
+      width: 25px;
+      height: auto;
+    }
+
+    .motbot-message img {
+      border-radius: 2px;
+      margin: 10px 10px;
+      box-shadow: 0px 2px 8px #12121266;
+    }
+
+    .mod_motbot_advice ul {
+      margin: 0;
+    }
+
+    .mod_motbot_advice li {
+      list-style-type: none;
+      padding-bottom: 0.2em;
+    }
+
+    .mod_motbot_advice {
+      display: block;
+      padding: 2em;
+      background: #efefef;
+      margin-bottom: 1em;
+    }
+
+    .mod_motbot_advice .quote {
+      background: #dcdcdc;
+      margin: 0;
+      padding: 1em;
+      max-width: 800px;
+      margin-top: 1em;
+      font-family: monospace;
+    }
+
+    .mod_motbot_advice .subject {
+      font-style: italic;
+      font-size: 1.2em;
+      margin-bottom: 0.3em;
+    }
+
+    .mod_motbot_advice .message {
+      font-size: 1em;
+    }
+
+    .mod_motbot_advice p {
+      margin: 0;
+    }
+
+    .mod_motbot_advice .btn {
+      margin-top: 0.5em;
+    }
+
+    .mod_motbot__action:hover {
+      color: #fff;
+      background-color: #0c5ba1;
+      border-color: #0b5496;
+      text-decoration: none;
+    }
+
+    .mod_motbot__action:focus,
+    .mod_motbot__action.focus {
+      outline: 0.2 rem solid #010407;
+      color: #fff;
+      background-color: #0c5ba1;
+      border-color: #0b5496;
+      -webkit-box-shadow: 0 0 0 0.2rem rgb(51 133 206 / 50%);
+      box-shadow: 0 0 0 0.2rem rgb(51 133 206 / 50%);
+    }
+
+    .mod_motbot__action:not(:disabled):not(.disabled):active:focus,
+    .mod_motbot__action:not(:disabled):not(.disabled).active:focus,
+    .show>.mod_motbot__action.dropdown-toggle:focus {
+      -webkit-box-shadow: 0 0 0 0.2rem rgb(51 133 206 / 50%);
+      box-shadow: 0 0 0 0.2rem rgb(51 133 206 / 50%);
+    }
+
+    .mod_motbot__action:not(:disabled):not(.disabled):active,
+    .mod_motbot__action:not(:disabled):not(.disabled).active,
+    .show>.mod_motbot__action.dropdown-toggle {
+      color: #fff;
+      background-color: #0b5496;
+      border-color: #0a4e8a;
+    }
+
+    .mod_motbot__action:not(:disabled):not(.disabled) {
+      cursor: pointer;
+    }
+
+    .suggestion .mod_motbot__action {
+      margin-top: 0.5 em;
+    }
+
+    @media (max-width: 1200px) {
+      .mod_motbot__action {
+        font-size: calc(.90375rem + .045vw);
+      }
+    }
+
+    .mod_motbot__action {
+      display: inline-block;
+      font-weight: 400;
+      color: #fff;
+      background-color: #0f6fc5;
+      border: 1px solid transparent;
+      border-color: #0f6fc5;
+      text-align: center;
+      vertical-align: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      padding: 0.375rem 0.75rem;
+      font-size: .9375rem;
+      line-height: 1.5;
+      border-radius: 0;
+      -webkit-transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+      -o-transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+      transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+
+    .progress-meter {
+      position: relative;
+      width: 70%;
+      max-width: 400px;
+      background: white;
+      border-radius: 10px;
+      height: 15px;
+      margin: 50px 0px 100px 40px;
+    }
+
+    .progress-meter+p {
+      max-width: 500px;
+      width: 70%;
+    }
+
+    .progress-stat {
+      position: absolute;
+      height: 100%;
+      border-radius: 10px 0px 0px 10px;
+      overflow: visible;
+    }
+
+    .progress-stat div {
+      right: 0px;
+      transform: translate(50%, 0%);
+      font-size: 1.2em;
+      position: absolute;
+      white-space: nowrap;
+      text-align: center;
+      line-height: 1.3em;
+      height: 80px;
+    }
+
+    .progress-stat-avg {
+      background: #3c88e6;
+    }
+
+    .progress-stat-avg div {
+      top: 0px;
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+    }
+
+    .progress-stat-user {
+      background: #9dcc0b;
+    }
+
+    .progress-stat-user div {
+      bottom: 0px;
+    }
+
+    .progress-value {
+      font-size: 0.9em;
+    }
+
+    .progress-stat::before {
+      content: '';
+      position: absolute;
+      background-color: #424242;
+      height: 200%;
+      width: 2px;
+      border-radius: 5px;
+      right: 0;
+    }
+
+    .progress-stat-user::before {
+      bottom: 0;
+    }
+
+    .progress-meter .legend {
+      position: absolute;
+    }
+
+    .progress-meter .legend:first-child {
+      right: 105%;
+    }
+
+    .progress-meter .legend:last-child {
+      left: 105%;
+    }
+  </style>
+</head>

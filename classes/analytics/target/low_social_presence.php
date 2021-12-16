@@ -26,7 +26,7 @@ namespace mod_motbot\analytics\target;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 /**
  * Low social presence target.
@@ -53,7 +53,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
      *
      * @return \lang_string
      */
-    public static function get_name() : \lang_string {
+    public static function get_name(): \lang_string {
         return new \lang_string('target:lowsocialpresence', 'motbot');
     }
 
@@ -79,25 +79,58 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
 
         $instances = $DB->get_records('motbot', array('course' => $course->get_id()));
 
-        if(!$instances) {
+        if (!$instances) {
             return get_string('nomotbotinstance', 'motbot');
         }
 
-        if(count($instances) > 1) {
+        if (count($instances) > 1) {
             return get_string('tomanyinstances', 'motbot');
         }
 
         $motbot = reset($instances);
-        if($motbot->active == 0) {
+        if ($motbot->active == 0) {
             return get_string('motbotpaused', 'motbot');
         }
 
         $message = $DB->get_record('motbot_model', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\low_social_presence'));
-        if(!$message || !$message->active) {
+        if (!$message || !$message->active) {
             return get_string('motbotmodelinactive', 'motbot');
         }
 
-        return parent::is_valid_analysable($course, $fortraining);
+        if (!$course->was_started()) {
+            return get_string('coursenotyetstarted', 'course');
+        }
+
+        if (!$fortraining && !$course->get_course_data()->visible) {
+            return get_string('hiddenfromstudents');
+        }
+
+        if (!$this->students = $course->get_students()) {
+            return get_string('nocoursestudents', 'course');
+        }
+
+        if (!course_format_uses_sections($course->get_course_data()->format)) {
+            // We can not split activities in time ranges.
+            return get_string('nocoursesections', 'course');
+        }
+
+        if ($course->get_end() && ($course->get_end() < $course->get_start())) {
+            return get_string('errorendbeforestart', 'course', $course->get_end());
+        }
+
+        // Finished courses can not be used to get predictions.
+        if (!$fortraining && $course->is_finished()) {
+            return get_string('coursealreadyfinished', 'course');
+        }
+
+        if ($fortraining) {
+            // Ongoing courses data can not be used to train.
+            if (!$course->is_finished()) {
+                return get_string('coursenotyetfinished', 'course');
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -119,7 +152,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
         $userid = \mod_motbot\manager::get_prediction_subject($sampleid);
         $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
-        if($motbot && !$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
+        if ($motbot && !$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
             return false;
         }
 
@@ -144,13 +177,12 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
             // We should not use this sample as the analysis results could be misleading.
             return null;
         }
-
-        echo('Samplid: ' . $sampleid);
+        echo ('Samplid: ' . $sampleid);
 
         $potential = 0;
         $score = 0;
 
-        if(mod_motbot_get_mod_count('forum', $course->get_id()) > 0) {
+        if (mod_motbot_get_mod_count('forum', $course->get_id()) > 0) {
             $potential++;
             $forumscore = $this->retrieve('\mod_motbot\analytics\indicator\social_presence_in_course_forum', $sampleid);
             if ($forumscore) {
@@ -158,14 +190,14 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
             }
         }
 
-        if(mod_motbot_get_mod_count('chat', $course->get_id()) > 0) {
+        if (mod_motbot_get_mod_count('chat', $course->get_id()) > 0) {
             $potential++;
             $chatscore = $this->retrieve('\mod_motbot\analytics\indicator\social_presence_in_course_chat', $sampleid);
             if ($chatscore) {
                 $score += $chatscore;
             }
         } else {
-            echo('no chat in course: ' . $course->get_id());
+            echo ('no chat in course: ' . $course->get_id());
         }
 
 
@@ -177,15 +209,9 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
         //     }
         // }
 
-        echo('potential: ' . $potential . ' and score: ' . $score . '_____');
+        echo ('potential: ' . $potential . ' and score: ' . $score . '_____');
 
-        // $normalized = $score / $potential;
-
-        // if($potential < 1) {
-        //     return null;
-        // }
-
-        if($score <= 0) {
+        if ($score <= 0) {
             return 1;
         }
         return 0;
@@ -200,7 +226,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
      * @param int $sampleid
      * @param int $rangeindex
      * @param \context $samplecontext
-     * @param float|int $prediction
+     * @param float|int $scalar_prediction
      * @param float $predictionscore
      * @return void
      */
@@ -255,7 +281,9 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
      * @return string[]
      */
     public static function get_desired_events() {
-        return array('\mod_chat\event\message_sent','\mod_forum\event\assessable_uploaded', '\mod_forum\event\discussion_created',
-        '\mod_forum\event\post_created');
+        return array(
+            '\mod_chat\event\message_sent', '\mod_forum\event\assessable_uploaded', '\mod_forum\event\discussion_created',
+            '\mod_forum\event\post_created'
+        );
     }
 }

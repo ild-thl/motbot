@@ -16,7 +16,7 @@ along with Moodle. If not, see
 <http: //www.gnu.org/licenses />.
 }}
 {{!
-@template mod_motbot/title_and_actionlist
+@template mod_motbot/title_and_action
 
 HTML message for insights with one single prediction
 
@@ -29,29 +29,12 @@ Data attributes required for JS:
 Example context (json):
 {
 "title": "Please visit the course!",
-"actions" : [
-[
-"action_title": "Title",
 "action_url": "https://en.wikipedia.org/wiki/Noodle",
 "action": "Course Name"
-],
-[
-"action_title": "Title",
-"action_url": "https://en.wikipedia.org/wiki/Noodle",
-"action": "Course Name"
-],
-]
 }
 }}
 
-<div class="mod_motbot_advice">
-  <h5>{{ title }}</h5>
-  <ul>
-    {{#actions}}
-    <li>
-      <span>{{ action_title }}</span>
-      <a class="btn btn-primary" href="{{ action_url }}">{{ action }}</a>
-    </li>
-    {{/actions}}
-  </ul>
+<div class="mod_motbot_advice mod_motbot_advice__action">
+    {{#title}}<p class="d-inline motbot_advice__title">{{title}}</p>&nbsp;{{/title}}<a href="{{action_url}}"
+        class="mod_motbot__action">{{action}}</a>
 </div>

@@ -57,13 +57,12 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
     }
 
     // Select columns. Include message column if $include_messages is set.
-    $select = 'i.id, i.model, i.timecreated, i.state, i.teachers_informed, m.target';
+    $select = 'i.id, i.timecreated, i.state, i.teachers_informed, i.target';
     if ($include_messages) {
         $select .= ', i.message';
     }
 
     $sql = "SELECT $select FROM mdl_motbot_intervention i
-        JOIN mdl_motbot_model m ON m.id = i.model
         $condition
         ORDER BY timecreated DESC;";
 

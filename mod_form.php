@@ -22,14 +22,16 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_analytics\prediction;
+
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
 }
 
-require_once($CFG->dirroot.'/course/moodleform_mod.php');
-require_once($CFG->dirroot.'/mod/motbot/lib.php');
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
-require_once($CFG->dirroot.'/mod/motbot/db/analytics.php');
+require_once($CFG->dirroot . '/course/moodleform_mod.php');
+require_once($CFG->dirroot . '/mod/motbot/lib.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
+require_once($CFG->dirroot . '/mod/motbot/db/analytics.php');
 
 /**
  * Form definition, used to create and update a motbot activity.
@@ -52,9 +54,9 @@ class mod_motbot_mod_form extends moodleform_mod {
     public function definition() {
         global $CFG, $DB, $OUTPUT;
 
-        $mform =& $this->_form;
+        $mform = &$this->_form;
 
-        $mform->addElement('text', 'name', get_string('mod_form:motbot_name', 'motbot'), array('size'=>'64'));
+        $mform->addElement('text', 'name', get_string('mod_form:motbot_name', 'motbot'), array('size' => '64'));
         $mform->setType('name', PARAM_TEXT);
         $mform->setDefault('name', 'MotBot');
         $mform->addRule('name', null, 'required', null, 'client');
@@ -66,7 +68,7 @@ class mod_motbot_mod_form extends moodleform_mod {
         $this->standard_intro_elements();
         $mform->setDefault('intro', array('text' => \get_string('mod_form:intro', 'motbot'), 'format' => FORMAT_HTML));
 
-        if(!$this->motbot_models || empty($this->motbot_models)) {
+        if (!$this->motbot_models || empty($this->motbot_models)) {
             $this->get_motbot_models();
         }
 
@@ -86,44 +88,47 @@ class mod_motbot_mod_form extends moodleform_mod {
      * @return void
      */
     private function add_intervention_settings($model) {
-        $mform =& $this->_form;
+        $mform = &$this->_form;
 
         $target_name = \mod_motbot_get_name_of_target($model->target);
 
-        $mform->addElement('header', $target_name.'_header', get_string('mod_form:' . $target_name . '_header', 'motbot'));
+        $mform->addElement('header', $target_name . '_header' . $model->prediction, get_string('mod_form:' . $target_name . '_header', 'motbot') . $model->prediction_description);
 
-        $mform->addElement('hidden', $target_name.'_id');
-        $mform->setType($target_name.'_id', PARAM_INT);
+        $mform->addElement('hidden', $target_name . '_id' . $model->prediction);
+        $mform->setType($target_name . '_id' . $model->prediction, PARAM_INT);
 
-        $mform->addElement('hidden', $target_name.'_motbot');
-        $mform->setType($target_name.'_motbot', PARAM_INT);
+        $mform->addElement('hidden', $target_name . '_motbot' . $model->prediction);
+        $mform->setType($target_name . '_motbot' . $model->prediction, PARAM_INT);
 
-        $mform->addElement('hidden', $target_name.'_model');
-        $mform->setType($target_name.'_model', PARAM_INT);
+        $mform->addElement('hidden', $target_name . '_model' . $model->prediction);
+        $mform->setType($target_name . '_model' . $model->prediction, PARAM_INT);
 
-        $mform->addElement('hidden', $target_name.'_target');
-        $mform->setType($target_name.'_target', PARAM_TEXT);
+        $mform->addElement('hidden', $target_name . '_target' . $model->prediction);
+        $mform->setType($target_name . '_target' . $model->prediction, PARAM_TEXT);
 
-        $mform->addElement('selectyesno', $target_name.'_active', get_string('mod_form:active', 'motbot'));
-        $mform->addHelpButton($target_name.'_active', 'mod_form:active', 'motbot');
+        $mform->addElement('selectyesno', $target_name . '_active' . $model->prediction, get_string('mod_form:active', 'motbot'));
+        $mform->addHelpButton($target_name . '_active' . $model->prediction, 'mod_form:active', 'motbot');
 
-        $mform->addElement('text', $target_name.'_subject', get_string('mod_form:subject', 'motbot'), array('size'=>'64'));
-        $mform->setType($target_name.'_subject', PARAM_TEXT);
-        $mform->addElement('textarea', $target_name.'_fullmessage', get_string('mod_form:fullmessage', 'motbot'), 'wrap="virtual" rows="10" cols="150"');
-        $mform->setType($target_name.'_fullmessage', PARAM_TEXT);
+        $mform->addElement('text', $target_name . '_subject' . $model->prediction, get_string('mod_form:subject', 'motbot'), array('size' => '64'));
+        $mform->setType($target_name . '_subject' . $model->prediction, PARAM_TEXT);
+        $mform->addElement('textarea', $target_name . '_fullmessage' . $model->prediction, get_string('mod_form:fullmessage', 'motbot'), 'wrap="virtual" rows="10" cols="150"');
+        $mform->setType($target_name . '_fullmessage' . $model->prediction, PARAM_TEXT);
 
 
-        $mform->addElement('editor', $target_name.'_fullmessagehtml', get_string('mod_form:fullmessagehtml', 'motbot'), array('rows' => 15), mod_motbot_get_editor_options($this->context));
-        $mform->setType($target_name.'_fullmessagehtml', PARAM_RAW);
+        $mform->addElement('editor', $target_name . '_fullmessagehtml' . $model->prediction, get_string('mod_form:fullmessagehtml', 'motbot'), array('rows' => 15), mod_motbot_get_editor_options($this->context));
+        $mform->setType($target_name . '_fullmessagehtml' . $model->prediction, PARAM_RAW);
 
-        $mform->addElement('hidden', $target_name.'_usermodified');
-        $mform->setType($target_name.'_usermodified', PARAM_INT);
+        $mform->addElement('hidden', $target_name . '_usermodified' . $model->prediction);
+        $mform->setType($target_name . '_usermodified' . $model->prediction, PARAM_INT);
 
-        $mform->addElement('hidden', $target_name.'_timemodified');
-        $mform->setType($target_name.'_timemodified', PARAM_INT);
+        $mform->addElement('hidden', $target_name . '_timemodified' . $model->prediction);
+        $mform->setType($target_name . '_timemodified' . $model->prediction, PARAM_INT);
 
-        $mform->addElement('hidden', $target_name.'_timecreated');
-        $mform->setType($target_name.'_timecreated', PARAM_INT);
+        $mform->addElement('hidden', $target_name . '_timecreated' . $model->prediction);
+        $mform->setType($target_name . '_timecreated' . $model->prediction, PARAM_INT);
+
+        $mform->addElement('hidden', $target_name . '_prediction' . $model->prediction);
+        $mform->setType($target_name . '_prediction' . $model->prediction, PARAM_INT);
     }
 
 
@@ -137,7 +142,7 @@ class mod_motbot_mod_form extends moodleform_mod {
         global $DB;
 
         // Get previous model settings for this specific motbot.
-        $this->motbot_models = $DB->get_records('motbot_model', array('motbot' => $this->current->instance));
+        $motbot_models = $DB->get_records('motbot_model', array('motbot' => $this->current->instance));
 
         // Get all available motbot models.
         $sql = "SELECT *
@@ -148,44 +153,70 @@ class mod_motbot_mod_form extends moodleform_mod {
 
         // Create deault values for models, that are valid for this course.
         foreach ($models as $model) {
-            // Skip models, for which there are already previous records.
-            $exists = false;
-            foreach ($this->motbot_models as $motbot_model) {
-                if($model->target == $motbot_model->target) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            if($exists || !$model->target::custom_intervention()) {
+            if (!$model->target::custom_intervention()) {
                 continue;
             }
+            // Get variants for possible prediction results.
+            /** @var \mod_motbot\analytics\target\motbot_target $target */
+            $target = \core_analytics\manager::get_target($model->target);
+            $classes = $model->target::get_classes();
+            $predictions = array();
+            $ignored = array();
+            if ($target instanceof \core_analytics\local\target\discrete) {
+                $ignored = $target->ignored_predicted_classes();
 
-            $target_name = \mod_motbot_get_name_of_target($model->target);
+                foreach ($classes as $class) { // Skip classes, for which there won't be any predictions made in the future.
+                    if (!in_array($class, $ignored)) {
+                        $predictions[] = $class;
+                    }
+                }
+            } else {
+                $predictions = $classes;
+            }
 
-            // Set default values.
-            $this->motbot_models[] = (object) [
-                'id' => null,
-                'motbot' => $this->current->instance,
-                'model' => $model->id,
-                'active' => 1,
-                'target' => $model->target,
-                'targetname' => null,
-                'subject' => \get_string('mod_form:' . $target_name . '_subject', 'motbot'),
-                'fullmessage' => \get_string('mod_form:' . $target_name . '_fullmessage', 'motbot'),
-                'fullmessageformat' => FORMAT_HTML,
-                'fullmessagehtml' => \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot'),
-                'attachementuri' => null,
-                'usermodified' => null,
-                'timecreated' => null,
-                'timemodified' => null,
-            ];
+            foreach ($predictions as $count => $prediction) {
+                // Skip models, for which there are already previous records.
+                $exists = false;
+                foreach ($motbot_models as $motbot_model) {
+                    if ($model->target == $motbot_model->target && $prediction == $motbot_model->prediction) {
+                        $exists = true;
+                        $motbot_model->prediction_description = count($predictions) > 1 ? '(' . (((int)$count) + 1) . '/' . count($predictions) . ')' : '';
+                        $this->motbot_models[] = $motbot_model;
+                        break;
+                    }
+                }
 
+                if ($exists) {
+                    continue;
+                }
+
+                $target_name = \mod_motbot_get_name_of_target($model->target);
+
+                // Set default values.
+                $this->motbot_models[] = (object) [
+                    'id' => null,
+                    'motbot' => $this->current->instance,
+                    'model' => $model->id,
+                    'active' => 1,
+                    'target' => $model->target,
+                    'targetname' => null,
+                    'prediction' => $prediction,
+                    'prediction_description' => count($predictions) > 1 ? ' (' . (((int)$count) + 1) . '/' . count($predictions) . ')' : '',
+                    'subject' => \get_string('mod_form:' . $target_name . '_subject', 'motbot'),
+                    'fullmessage' => \get_string('mod_form:' . $target_name . '_fullmessage', 'motbot'),
+                    'fullmessageformat' => FORMAT_HTML,
+                    'fullmessagehtml' => \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot'),
+                    'attachementuri' => null,
+                    'usermodified' => null,
+                    'timecreated' => null,
+                    'timemodified' => null,
+                ];
+            }
         }
 
-
-        foreach($this->motbot_models as $motbot_model) {
-            if(property_exists($motbot_model, 'targetname') && $motbot_model->targetname) {
+        // Set targetname, and prediction_name property where it isn't already set.
+        foreach ($this->motbot_models as $motbot_model) {
+            if (property_exists($motbot_model, 'targetname') && $motbot_model->targetname) {
                 continue;
             }
 
@@ -203,26 +234,36 @@ class mod_motbot_mod_form extends moodleform_mod {
      * @return void
      **/
     public function data_preprocessing(&$defaultvalues) {
-        $this->get_motbot_models();
+        if (!$this->motbot_models || empty($this->motbot_models)) {
+            $this->get_motbot_models();
+        }
 
-        foreach($this->motbot_models as $motbot_model) {
+        foreach ($this->motbot_models as $motbot_model) {
             $target_name = $motbot_model->targetname;
-            $draftitemid = file_get_submitted_draft_itemid($target_name . '_fullmessagehtml');
-            $defaultvalues[$target_name . '_id'] = $motbot_model->id;
-            $defaultvalues[$target_name . '_motbot'] = $motbot_model->motbot;
-            $defaultvalues[$target_name . '_model'] = $motbot_model->model;
-            $defaultvalues[$target_name . '_active'] = $motbot_model->active;
-            $defaultvalues[$target_name . '_target'] = $motbot_model->target;
-            $defaultvalues[$target_name . '_subject'] = $motbot_model->subject;
-            $defaultvalues[$target_name . '_fullmessage'] = $motbot_model->fullmessage;
-            $defaultvalues[$target_name . '_fullmessagehtml']['format'] = $motbot_model->fullmessageformat;
-            $defaultvalues[$target_name . '_fullmessagehtml']['text']   = file_prepare_draft_area($draftitemid, $this->context->id, 'mod_motbot',
-                'attachment', 0, mod_motbot_get_editor_options($this->context), $motbot_model->fullmessagehtml);
-            $defaultvalues[$target_name . '_fullmessagehtml']['itemid'] = $draftitemid;
-            $defaultvalues[$target_name . '_fullmessageformat'] = $motbot_model->fullmessageformat;
-            $defaultvalues[$target_name . '_usermodified'] = $motbot_model->usermodified;
-            $defaultvalues[$target_name . '_timemodified'] = $motbot_model->timemodified;
-            $defaultvalues[$target_name . '_timecreated'] = $motbot_model->timecreated;
+            $draftitemid = file_get_submitted_draft_itemid($target_name . '_fullmessagehtml' . $motbot_model->prediction);
+            $defaultvalues[$target_name . '_id' . $motbot_model->prediction] = $motbot_model->id;
+            $defaultvalues[$target_name . '_motbot' . $motbot_model->prediction] = $motbot_model->motbot;
+            $defaultvalues[$target_name . '_model' . $motbot_model->prediction] = $motbot_model->model;
+            $defaultvalues[$target_name . '_active' . $motbot_model->prediction] = $motbot_model->active;
+            $defaultvalues[$target_name . '_target' . $motbot_model->prediction] = $motbot_model->target;
+            $defaultvalues[$target_name . '_prediction' . $motbot_model->prediction] = $motbot_model->prediction;
+            $defaultvalues[$target_name . '_subject' . $motbot_model->prediction] = $motbot_model->subject;
+            $defaultvalues[$target_name . '_fullmessage' . $motbot_model->prediction] = $motbot_model->fullmessage;
+            $defaultvalues[$target_name . '_fullmessagehtml' . $motbot_model->prediction]['format'] = $motbot_model->fullmessageformat;
+            $defaultvalues[$target_name . '_fullmessagehtml' . $motbot_model->prediction]['text']   = file_prepare_draft_area(
+                $draftitemid,
+                $this->context->id,
+                'mod_motbot',
+                'attachment',
+                0,
+                mod_motbot_get_editor_options($this->context),
+                $motbot_model->fullmessagehtml
+            );
+            $defaultvalues[$target_name . '_fullmessagehtml' . $motbot_model->prediction]['itemid'] = $draftitemid;
+            $defaultvalues[$target_name . '_fullmessageformat' . $motbot_model->prediction] = $motbot_model->fullmessageformat;
+            $defaultvalues[$target_name . '_usermodified' . $motbot_model->prediction] = $motbot_model->usermodified;
+            $defaultvalues[$target_name . '_timemodified' . $motbot_model->prediction] = $motbot_model->timemodified;
+            $defaultvalues[$target_name . '_timecreated' . $motbot_model->prediction] = $motbot_model->timecreated;
         }
     }
 
@@ -240,8 +281,8 @@ class mod_motbot_mod_form extends moodleform_mod {
 
         $data->motbot_models = array();
 
-        foreach($this->motbot_models as $motbot_model) {
-            $data->motbot_models[] = $this->get_message_data($motbot_model->targetname, $data);
+        foreach ($this->motbot_models as $motbot_model) {
+            $data->motbot_models[] = $this->get_message_data($motbot_model->targetname, $motbot_model->prediction, $data);
         }
 
         return $data;
@@ -254,27 +295,27 @@ class mod_motbot_mod_form extends moodleform_mod {
      * @param object $data Form input data.
      * @return object
      **/
-    private function get_message_data($target_name, $data) {
+    private function get_message_data($target_name, $prediction, $data) {
         // Filter out badly formatted break lines.
-        $fullmessagehtml = $data->{$target_name . '_fullmessagehtml'}['text'];
+        $fullmessagehtml = $data->{$target_name . '_fullmessagehtml' . $prediction}['text'];
         $fullmessagehtml = str_replace("<p><br></p>", "<br>", $fullmessagehtml);
         $fullmessagehtml = str_replace("<p></p>", "<br>", $fullmessagehtml);
 
         return (object) [
-            'id' => $data->{$target_name . '_id'},
-            'motbot' => $data->{$target_name . '_motbot'},
-            'model' => $data->{$target_name . '_model'},
-            'active' => $data->{$target_name . '_active'},
-            'target' => $data->{$target_name . '_target'},
+            'id' => $data->{$target_name . '_id' . $prediction},
+            'motbot' => $data->{$target_name . '_motbot' . $prediction},
+            'model' => $data->{$target_name . '_model' . $prediction},
+            'active' => $data->{$target_name . '_active' . $prediction},
+            'target' => $data->{$target_name . '_target' . $prediction},
+            'prediction' => $data->{$target_name . '_prediction' . $prediction},
             'targetname' => $target_name,
-            'subject' => $data->{$target_name . '_subject'},
-            'fullmessage' => $data->{$target_name . '_fullmessage'},
-            'fullmessageformat' => $data->{$target_name . '_fullmessagehtml'}['format'],
+            'subject' => $data->{$target_name . '_subject' . $prediction},
+            'fullmessage' => $data->{$target_name . '_fullmessage' . $prediction},
+            'fullmessageformat' => $data->{$target_name . '_fullmessagehtml' . $prediction}['format'],
             'fullmessagehtml' => $fullmessagehtml,
-            'attachementuri' => null,
-            'usermodified' => $data->{$target_name . '_usermodified'},
-            'timemodified' => $data->{$target_name . '_timemodified'},
-            'timecreated' => $data->{$target_name . '_timecreated'},
+            'usermodified' => $data->{$target_name . '_usermodified' . $prediction},
+            'timemodified' => $data->{$target_name . '_timemodified' . $prediction},
+            'timecreated' => $data->{$target_name . '_timecreated' . $prediction},
         ];
     }
 }

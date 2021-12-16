@@ -41,9 +41,26 @@ abstract class base {
     */
     public static abstract function get_name() : \lang_string;
 
+    /**
+     * Generates advices as text.
+     *
+     * @return void
+    */
     public abstract function render();
 
+    /**
+     * Generates advices as html.
+     *
+     * @return void
+    */
     public abstract function render_html();
 
+    /**
+     * Constructor.
+
+     * @param \core\user $user
+     * @param \core\course $course
+     * @return void
+    */
     public abstract function __construct($user, $course);
 }

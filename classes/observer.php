@@ -36,35 +36,36 @@ defined('MOODLE_INTERNAL') || die();
 class observer {
 
     /**
-     * Event processor - course summary viewed
+     * Event processor - course summary viewed.
      *
-     * @param $event
-     * @return bool
+     * @param \core\event $event
+     * @return void
      */
     public static function course_viewed($event) {
-        global $DB;
-
+        global $USER, $DB;
+        if ($event->courseid <= 1) {
+            return;
+        }
         $context = \context_course::instance($event->courseid);
 
-        $conditions_array = array(
-            'recipient' => $event->userid,
-            'contextid' => $context->id,
-            'state' => \mod_motbot\retention\intervention::INTERVENED,
-        );
-        $records = $DB->get_records('motbot_intervention', $conditions_array);
-        foreach($records as $record) {
-            if(in_array($event->eventname, json_decode($record->desired_events))) {
-                $intervention = \mod_motbot\retention\intervention::from_db($record);
-                $intervention->set_state(\mod_motbot\retention\intervention::SUCCESSFUL);
+        // Update intervention state.
+        $success = self::set_intervention_success($event->userid, $context->id, $event->eventname);
+        if ($success) {
+            try {
+                $course = $DB->get_record('course', array('id' => $event->courseid), '*', IGNORE_MISSING);
+                $suggestion = new \mod_motbot\retention\advice\last_stop($USER, $course);
+                \core\notification::success(\get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot', $suggestion->render_html()));
+            } catch (\moodle_exception $e) {
+                print_r($e->getMessage());
             }
         }
     }
 
     /**
-     * Event processor - discussion or post created
+     * Event processor - discussion or post created.
      *
-     * @param $event
-     * @return bool
+     * @param \core\event $event
+     * @return void
      */
     public static function discussion_or_post_created($event) {
         global $DB;
@@ -76,22 +77,68 @@ class observer {
             AND c.contextlevel = 50;';
         $contextid = $DB->get_record_sql($sql, array('cmid' => $cmid))->cid;
 
+        $success = self::set_intervention_success($event->userid, $contextid, $event->eventname);
+        if ($success) {
+            try {
+                \core\notification::success(\get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot'));
+            } catch (\moodle_exception $e) {
+                print_r($e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Event processor - user logged in.
+     *
+     * @param \core\event $event
+     * @return void
+     */
+    public static function user_loggedin($event) {
+        global $USER;
+        // Update intervention state.
+        $success = self::set_intervention_success($event->userid, null, $event->eventname);
+
+        // Give positive feedback and suggestion in case of success.
+        if ($success) {
+            try {
+                $suggestion = new \mod_motbot\retention\advice\last_stop($USER, null);
+                \core\notification::success(\get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot', $suggestion->render_html()));
+            } catch (\moodle_exception $e) {
+                print_r($e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Set all interventions as successful, that have listed this event as desired.
+     *
+     * @param int $recipient
+     * @param int $contextid
+     * @param string $eventname
+     * @return bool
+     */
+    private static function set_intervention_success($recipient, $contextid, $eventname) {
+        global $DB;
+
         $conditions_array = array(
-            'recipient' => $event->userid,
-            'contextid' => $contextid,
+            'recipient' => $recipient,
             'state' => \mod_motbot\retention\intervention::INTERVENED,
         );
 
-        $records = $DB->get_records('motbot_intervention', $conditions_array);
-
-        if(!$records || empty($records)) {
-            return;
+        if ($contextid) {
+            $conditions_array['contextid'] = $contextid;
         }
-        foreach($records as $record) {
-            if(in_array($event->eventname, json_decode($record->desired_events))) {
+
+        $records = $DB->get_records('motbot_intervention', $conditions_array);
+        $success = false;
+        foreach ($records as $record) {
+            if (in_array($eventname, json_decode($record->desired_events))) {
+                $success = $eventname;
                 $intervention = \mod_motbot\retention\intervention::from_db($record);
                 $intervention->set_state(\mod_motbot\retention\intervention::SUCCESSFUL);
             }
         }
+
+        return $success;
     }
 }

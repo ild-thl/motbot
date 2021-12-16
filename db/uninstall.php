@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Post installation hook for removing an entry in custom user menu.
+ *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -22,14 +24,19 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2021121612;
-$plugin->requires = 2018051701;
-// $plugin->requires = 2021051700;
-$plugin->component = 'mod_motbot';
-$plugin->maturity = MATURITY_ALPHA;
-// $plugin->release = 'TODO';
+/**
+ * Post installation procedure.
+ *
+ * Remove the motbot menu item from the custom user menu.
+ */
+function xmldb_motbot_uninstall() {
+    global $CFG;
+    $result = true;
 
-// $plugin->dependencies = [
-//     'mod_forum' => ANY_VERSION,
-//     'mod_data' => TODO
-// ];
+    $motbot_item = "\nmodulenameplural,mod_motbot|/mod/motbot/overview.php|grades";
+    $menu = $CFG->customusermenuitems;
+    $menu = str_replace($motbot_item, "", $menu);
+    set_config('customusermenuitems', $menu);
+
+    return $result;
+}

@@ -49,7 +49,8 @@ if(!$motbot_user) {
         'id' => null,
         'user' => $USER->id,
         'authorized' => 0,
-        'allow_teacher_involvement' => 0,
+        'pref_time' => null,
+        'only_weekdays' => 0,
         'usermodified' => null,
         'timecreated' => null,
         'timemodified' => null,
@@ -59,13 +60,8 @@ if(!$motbot_user) {
 // Create form default values.
 $toform = (object) [
     'authorized' => $motbot_user->authorized,
-    'allow_teacher_involvement' => $motbot_user->allow_teacher_involvement,
-    'allow_course_completion' => true,
-    'allow_feedback' => true,
-    'allow_recent_activities' => true,
-    'allow_recent_forum_activity' => true,
-    'allow_recommended_discussion' => true,
-    'allow_visit_course' => true,
+    'pref_time' => $motbot_user->pref_time,
+    'only_weekdays' => $motbot_user->only_weekdays,
 ];
 
 $todeleteform = (object) [
@@ -86,7 +82,13 @@ if ($mform->is_cancelled()) {
     $time = time();
     $form_data = $mform->get_data();
     $motbot_user->authorized = $form_data->authorized;
-    $motbot_user->allow_teacher_involvement = $form_data->allow_teacher_involvement;
+    $motbot_user->pref_time = $form_data->pref_time;
+    if($motbot_user->pref_time == -1) {
+        $auto_period = motbot_calc_user_active_period($motbot_user->user);
+        $motbot_user->pref_time = $auto_period;
+    }
+    $motbot_user->only_weekdays = $form_data->only_weekdays;
+    // $motbot_user->allow_teacher_involvement = $form_data->allow_teacher_involvement;
     $motbot_user->usermodified = $USER->id;
     $motbot_user->timemodified = $time;
 

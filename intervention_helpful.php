@@ -26,6 +26,7 @@ require_once('../../config.php');
 $id = required_param('id', PARAM_INT);           // Course ID.
 $helpful = required_param('helpful', PARAM_INT);           // User feedback.
 
+// Get cooresponding intervention.
 $intervention = $DB->get_record('motbot_intervention', array('id' => $id));
 if($intervention) {
     // Update intervention with users feedback.
@@ -34,5 +35,5 @@ if($intervention) {
 }
 
 // Redirect back to notifications, where users
-$url = $CFG->wwwroot . '/message/output/popup/notifications.php';
-redirect($url, 'Thank you for your feedback!', 1);
+$url = new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message . '&offset=0');
+redirect($url, 'Thank you for your feedback!', 1, \core\output\notification::NOTIFY_SUCCESS);

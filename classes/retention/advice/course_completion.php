@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Interaction.
+ * Advice that displays the course progress of the subject in relation to the average course progress.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -28,6 +28,13 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot."/lib/completionlib.php");
 
+/**
+ * Advice that displays the course progress of the subject in relation to the average course progress.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class course_completion extends \mod_motbot\retention\advice\base {
     protected $title = null;
     protected $user_progress = null;
@@ -47,6 +54,11 @@ class course_completion extends \mod_motbot\retention\advice\base {
         return new \lang_string('advice:course_completion', 'motbot');
     }
 
+    /**
+     * Generates advices as text.
+     *
+     * @return void
+    */
     public function render() {
         $message = $this->title . PHP_EOL;
         $message .= PHP_EOL;
@@ -81,6 +93,11 @@ class course_completion extends \mod_motbot\retention\advice\base {
         return $message;
     }
 
+    /**
+     * Generates advices as html.
+     *
+     * @return void
+    */
     public function render_html() {
         global $OUTPUT;
 
@@ -95,8 +112,20 @@ class course_completion extends \mod_motbot\retention\advice\base {
         return $OUTPUT->render_from_template('mod_motbot/course_completion', $context);
     }
 
+    /**
+     * Constructor.
+
+     * @param \core\user $user
+     * @param \core\course $course
+     * @return void
+    */
     public function __construct($user, $course) {
         global $CFG, $DB;
+
+        // Stop initialization, if $course is unset.
+        if (!$course) {
+            throw new \moodle_exception('No course given.');
+        }
 
         $usercount_sql = "SELECT
             COUNT(u.id) as count

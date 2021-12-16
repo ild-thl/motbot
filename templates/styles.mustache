@@ -1,36 +1,36 @@
 {{!
-  This file is part of Moodle - http://moodle.org/
+This file is part of Moodle - http://moodle.org/
 
-  Moodle is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+Moodle is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-  Moodle is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  GNU General Public License for more details.
+Moodle is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with Moodle. If not, see
-  <http: //www.gnu.org/licenses />.
+You should have received a copy of the GNU General Public License
+along with Moodle. If not, see
+<http: //www.gnu.org/licenses />.
 }}
 {{!
-  @template mod_motbot/styles
+@template mod_motbot/styles
 
-  Styles for insights' notifications (only for email).
+Styles for insights' notifications (only for email).
 
-  These styles are not applied to Moodle's web UI as there is a body:not(.dir-ltr):not(.dir-rtl)
+These styles are not applied to Moodle's web UI as there is a body:not(.dir-ltr):not(.dir-rtl)
 
-  Classes required for JS:
-  * none
+Classes required for JS:
+* none
 
-  Data attributes required for JS:
-  * none
+Data attributes required for JS:
+* none
 
-  Example context (json):
-  {
-  }
+Example context (json):
+{
+}
 }}
 
 {{! The styles defined here will be included in the Moodle web UI and in emails. Emails do not include Moodle
@@ -43,6 +43,52 @@ is not applied in gmail.}}
   <style>
     body:not(.dir-ltr):not(.dir-rtl) {
       font-family: 'Open Sans', sans-serif;
+    }
+
+    .mod_motbot_modal {
+      position: fixed;
+      bottom: 15%;
+      right: 0;
+      padding: 1em 4em 1em 3em;
+      box-sizing: border-box;
+      transform: translate(100%, 0%);
+      transition: transform 1s ease-out;
+    }
+
+    .mod_motbot--show {
+      transform: translate(0%, 0%);
+    }
+
+    .mod_motbot_modal>div {
+      position: relative;
+    }
+
+    .mod_motbot_modal>div::before {
+      content: '';
+      position: absolute;
+      background-color: #fff;
+      width: 150%;
+      height: 110%;
+      display: block;
+      z-index: -100;
+      left: -3em;
+      border: 3px #e4e4e4 solid;
+      top: -5%;
+    }
+
+    .mod_motbot_modal .motbot__actions__close {
+      opacity: 1;
+    }
+
+    .mod_motbot_modal .motbot__actions__edit {
+      padding: 0;
+      background-color: transparent;
+      border: 0;
+    }
+
+    .mod_motbot_modal .motbot__avatar .icon {
+      height: auto;
+      width: 10em;
     }
 
     .btn-insight {
@@ -66,35 +112,58 @@ is not applied in gmail.}}
       margin-bottom: 2em;
     }
 
-    .row {
-      margin: 2em 0em;
-      display: flex;
-      flex-direction: row;
+    .motbot__message {
+      margin-top: 2em;
+    }
+
+    .mod_motbot_modal .row {
+      justify-content: space-between;
+      padding: 1em;
+    }
+
+    .mod_motbot_user_view .row,
+    .mod_motbot_teacher_view .row {
+      margin: 4em 0em;
       justify-content: space-around;
     }
 
-    .column {
-      /* display: flex;
+    .mod_motbot_modal .column,
+    .mod_motbot_user_view .column,
+    .mod_motbot_teacher_view .column {
+      display: flex;
       flex-direction: column;
-      justify-content: space-around; */
+      justify-content: space-around;
+      align-items: center;
       text-align: center;
     }
 
-    .column table {
+    .column-align-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: flex-end;
+      text-align: center;
+    }
+
+    .mod_motbot_user_view .column table,
+    .mod_motbot_teacher_view .column table {
       border: 2px solid #e3e9ea;
     }
 
-    .column .icon {
+    .mod_motbot_user_view .column .icon,
+    .mod_motbot_teacher_view .column .icon {
       width: 100px;
       height: 100px;
       margin-bottom: 2em;
     }
 
-    .column .btn {
+    .mod_motbot_user_view .column .btn,
+    .mod_motbot_teacher_view .column .btn {
       margin-top: 1em;
     }
 
-    .column p {
+    .mod_motbot_user_view .column p,
+    .mod_motbot_teacher_view .column p {
       margin: 0;
     }
   </style>

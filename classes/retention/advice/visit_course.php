@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Interaction.
+ * Advice - Visit course.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -26,22 +26,41 @@ namespace mod_motbot\retention\advice;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Advice - Visit course.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class visit_course extends \mod_motbot\retention\advice\title_and_action {
     /**
-    * Returns a lang_string object representing the name for the indicator or target.
-    *
-    * Used as column identificator.
-    *
-    * If there is a corresponding '_help' string this will be shown as well.
-    *
-    * @return \lang_string
-    */
-    public static function get_name() : \lang_string{
+     * Returns a lang_string object representing the name for the indicator or target.
+     *
+     * Used as column identificator.
+     *
+     * If there is a corresponding '_help' string this will be shown as well.
+     *
+     * @return \lang_string
+     */
+    public static function get_name(): \lang_string {
         return new \lang_string('advice:visit_course', 'motbot');
     }
 
+    /**
+     * Contstructor.
+
+     * @param \core\user $user
+     * @param \core\course $course
+     * @return void
+     */
     public function __construct($user, $course) {
         global $CFG;
+
+        // Stop initialization, if $course is unset.
+        if (!$course) {
+            throw new \moodle_exception('No course given.');
+        }
 
         $this->title = 'Visit the course!';
         $this->action_url = $CFG->wwwroot . '/course/view.php?id=' . $course->id;

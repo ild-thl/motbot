@@ -23,8 +23,8 @@
  */
 
 function xmldb_motbot_upgrade($oldversion) {
-    global $DB;
-    $dbman = $DB->get_manager();
+    global $DB, $CFG;
+    // $dbman = $DB->get_manager();
 
     // if ($oldversion < 2021081815) {
 
@@ -44,6 +44,11 @@ function xmldb_motbot_upgrade($oldversion) {
     //     // Motbot savepoint reached.
     //     upgrade_mod_savepoint(true, 2021081815, 'motbot');
     // }
+
+
+
+    // Load default advice from all components.
+    include($CFG->dirroot . '/mod/motbot/load_default_advice.php');
 
     return true;
 }

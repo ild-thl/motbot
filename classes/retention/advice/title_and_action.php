@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Interaction.
+ * Abstract class for advices that need a title and exactly one call to action.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -28,15 +28,32 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 
+/**
+ * Abstract class for advices that need a title and exactly one call to action.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 abstract class title_and_action extends \mod_motbot\retention\advice\base {
     protected $title = null;
     protected $action_url = null;
     protected $action = null;
 
+    /**
+     * Generates advices as text.
+     *
+     * @return void
+    */
     public function render() {
         return $this->title . PHP_EOL . '*' . $this->action . '*: _' . $this->action_url . '_';
     }
 
+    /**
+     * Generates advices as html.
+     *
+     * @return void
+    */
     public function render_html() {
         global $OUTPUT;
 

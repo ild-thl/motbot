@@ -34,12 +34,14 @@ if (isguestuser()) {
     redirect($CFG->wwwroot.'/login/');
 }
 
-$motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
+$motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*', IGNORE_MISSING);
 $view = new mod_motbot_overview($USER->id);
+// If motbot user not yet registered or motbot activity ist deactivated by the user, redirect to settings page.
 if(!$motbot_user || !$motbot_user->authorized) {
     redirect($view->settings_url, 'Please activate your Motbot.');
 }
 
+// Else render view.
 $PAGE->set_context($context);
 $PAGE->set_url('/mod/motbot/overview.php');
 $PAGE->set_pagelayout('admin');

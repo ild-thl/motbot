@@ -26,7 +26,7 @@ namespace mod_motbot\retention;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 /**
  * Intervention.
@@ -42,85 +42,228 @@ class intervention {
     const UNSUCCESSFUL = 3;
     const STORED = 4;
 
+    /**
+     * @var int DB id of this intervention.
+     */
     private $id = null;
+
+    /**
+     * @var int User id of the intervention recipient.
+     */
     private $recipient = null;
+
+    /**
+     * @var \core\user Intervention recipient.
+     */
     private $recipientuser = null;
+
+    /**
+     * @var object Motbot instance.
+     */
     private $motbot = null;
+
+    /**
+     * @var string Name of the model that produced the prediction this intervention is based on.
+     */
     private $model = null;
+
+    /**
+     * @var int Id of the context of the prediction this intervention is based on.
+     */
     private $contextid = null;
+
+    /**
+     * @var \context Context object with id $this->contextid.
+     */
     private $context = null;
+
+    /**
+     * @var \core\course Course for wich a prediction was made.
+     */
     private $course = null;
+
+    /**
+     * @var core_analytics\local\target\base Target of the model that produced the prediction this intervention is based on.
+     */
     private $target = null;
+
+    /**
+     * @var string[] Array of desirable moodle events.
+     */
     private $desired_events = null;
+
+    /**
+     * @var int State of the intervention.
+     */
     private $state = self::SCHEDULED;
+
+    /**
+     * @var bool Wether a user allows the involvement their teacher in certain conditions.
+     */
     private $teachers_informed = false;
+
+    /**
+     * @var int The id of the message that is sent to the user in the course of the intervention.
+     */
     private $message = null;
+
+    /**
+     * @var bool Wether a user has marked this intervention as helpful or not.
+     */
     private $helpful = null;
+
+    /**
+     * @var int The id of the user that last modified the DB entry of this intervention.
+     */
     private $usermodified = null;
+
+    /**
+     * @var int The time a DB entry for this intervention was inserted.
+     */
     private $timecreated = null;
+
+    /**
+     * @var int The Time, when the DB entry of this intervention was last modified.
+     */
     private $timemodified = null;
+
+    /**
+     * @var \mod_motbot\retention\advice_manager Manages and generates advices for this intervention.
+     */
     public $advice_manager = null;
 
+    /**
+     * @var int The scalar prediction result.
+     */
+    private $prediction = null;
 
+
+    /**
+     * Constructor.
+     *
+     * @return void
+     */
     private function __construct() {
     }
 
+    /**
+     * Get the lang string describing the current state of the intervention.
+     *
+     * @param int $state
+     * @return string
+     */
     public static function get_state_name($state) {
         return \get_string('state:' . $state, 'motbot');
     }
 
+    /**
+     * Caches the user information belonging to the recipient id.
+     *
+     * @return \core\user
+     */
     public function get_recipient() {
         global $DB;
-        if(!$this->recipientuser) {
+        if (!$this->recipientuser) {
             $this->recipientuser = $DB->get_record('user', array('id' => $this->recipient));
         }
         return $this->recipientuser;
     }
 
 
+    /**
+     * Caches the motbot db info.
+     *
+     * @return object
+     */
     public function get_motbot() {
         global $DB;
-        if(!$this->motbot && $this->get_context()->contextlevel == 50) {
+        if (!$this->get_context()->contextlevel == 50) {
+            return null;
+        }
+        if (!$this->motbot) {
             $this->motbot = $DB->get_record('motbot', array('course' => $this->get_context()->instanceid));
         }
         return $this->motbot;
     }
 
+    /**
+     * Caches the context db info.
+     *
+     * @return \context
+     */
     public function get_context() {
         global $DB;
-        if(!$this->context) {
+        if (!$this->context) {
             $this->context = $DB->get_record('context', array('id' => $this->contextid));
         }
         return $this->context;
     }
 
+    /**
+     * Caches the course db info.
+     *
+     * @return \core\course
+     */
     public function get_course() {
         global $DB;
-        if(!$this->course && $this->get_context()->contextlevel == 50) {
+        if (!$this->get_context()->contextlevel == 50) {
+            return null;
+        }
+        if (!$this->course) {
             $this->course = $DB->get_record('course', array('id' => $this->get_context()->instanceid));
         }
         return $this->course;
     }
 
-
+    /**
+     * Chaches the analytics target.
+     *
+     * @return core_analytics\local\target
+     */
     public function get_target() {
         return \core_analytics\manager::get_target($this->target);
     }
 
+    /**
+     * Chaches the advice_manager.
+     *
+     * @return core_analytics\local\target
+     */
+    public function get_advice_manager() {
+        if (!$this->advice_manager) {
+            $this->advice_manager = new \mod_motbot\retention\advice_manager($this->get_recipient(), $this->get_course(), $this->target);
+        }
 
+        return $this->advice_manager;
+    }
+
+
+
+    /**
+     * Factory constructor for initialising an intervention based on prediction data.
+     *
+     * @param object $prediction
+     * @return mod_motbot\retention\intervention
+     */
     public static function from_prediction($prediction) {
         global $DB;
 
         $intervention = new self();
-
+        $intervention->prediction = $prediction->result;
         $intervention->contextid = $prediction->samplecontext->id;
-        $motbot = $intervention->get_motbot();
-        $motbot_model = $DB->get_record('motbot_model', array('motbot' => $motbot->id, 'model' => $prediction->modelid), 'id, target', IGNORE_MISSING);
-        $intervention->model = $motbot_model->id;
-        $intervention->target = $motbot_model->target;
+        if ($motbot = $intervention->get_motbot()) {
+            $motbot_model = $DB->get_record('motbot_model', array('motbot' => $motbot->id, 'model' => $prediction->modelid), 'id, target', IGNORE_MISSING);
+            $intervention->model = $motbot_model->id;
+            $intervention->target = $motbot_model->target;
+        } else {
+            $analytics_model = $DB->get_record('analytics_models', array('id' => $prediction->modelid), 'id, target', IGNORE_MISSING);
+            if ($analytics_model) {
+                $intervention->target = $analytics_model->target;
+            }
+        }
         // Get recipient id.
         $recipientid = \mod_motbot\manager::get_prediction_subject($prediction->sampleid, $intervention->target);
-        if(!$recipientid) {
+        if (!$recipientid) {
             error_log('no subject');
             return;
         }
@@ -130,7 +273,7 @@ class intervention {
 
         // Create DB entry.
         $intervention->id = $DB->insert_record('motbot_intervention', $intervention->get_db_data());
-        if(!$intervention->id) {
+        if (!$intervention->id) {
             error_log('Intervention couldnt be inserted into DB');
             return;
         }
@@ -138,12 +281,46 @@ class intervention {
         return $intervention;
     }
 
+    /**
+     * Factory constructor. Initializes an intervention based on a DB record.
+     *
+     * @param object $record
+     * @return \mod_motbot\retention\intervention
+     */
+    public static function from_db($record) {
+        $intervention = new self();
+
+        $intervention->id = $record->id;
+        $intervention->recipient = $record->recipient;
+        $intervention->model = $record->model;
+        $intervention->contextid = $record->contextid;
+        $intervention->desired_events = $record->desired_events;
+        $intervention->target = $record->target;
+        $intervention->prediction = $record->prediction;
+        $intervention->state = $record->state;
+        $intervention->teachers_informed = $record->teachers_informed;
+        $intervention->message = $record->message;
+        $intervention->usermodified = $record->usermodified;
+        $intervention->timecreated = $record->timecreated;
+        $intervention->timemodified = $record->timemodified;
+
+        return $intervention;
+    }
+
+    /**
+     * Checks if an intervention is critical. An intervention is critical,
+     * if there are previous unsuccessful interventions.
+     *
+     * @return bool
+     */
     public function is_critical() {
         global $DB;
 
         $critical = false;
 
-        if(!$this->target::is_critical()) {
+        // If the result of the targets is_critical method is false,
+        // don't check previous interventions - return false.
+        if (!$this->target::is_critical()) {
             return false;
         }
 
@@ -155,16 +332,17 @@ class intervention {
             'state' => \mod_motbot\retention\intervention::INTERVENED,
         );
         $prevint_records = $DB->get_records('motbot_intervention', $prevints_conditions, 'id');
-        foreach($prevint_records as $prevint_record) {
-            if($prevint_record->id == $this->id) {
+        foreach ($prevint_records as $prevint_record) {
+            if ($prevint_record->id == $this->id) {
                 continue;
             }
-            if($prevint_record->state != \mod_motbot\retention\intervention::SUCCESSFUL) {
-                $prevint = self::from_db($prevint_record)->set_state(self::UNSUCCESSFUL);
+            if ($prevint_record->state != \mod_motbot\retention\intervention::SUCCESSFUL) {
+                self::from_db($prevint_record)->set_state(self::UNSUCCESSFUL);
                 $critical = true;
             }
         }
 
+        // Check wether user has allowed teacher involvement
         $sql = "SELECT *
                 FROM mdl_motbot_course_user mu, mdl_motbot m
                 WHERE m.course = :course
@@ -172,37 +350,23 @@ class intervention {
                 AND mu.allow_teacher_involvement = 1
                 AND mu.user = :user;";
         $allowed = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'user' => $this->recipient));
-        echo("_Teacher inv allowed_");
-        if(!$critical || !$allowed) {
+        echo ("_Teacher inv allowed_");
+        if (!$critical || !$allowed) {
             return false;
         }
         return true;
     }
 
-    public static function from_db($record) {
-        $intervention = new self();
 
-        $intervention->id = $record->id;
-        $intervention->recipient = $record->recipient;
-        $intervention->model = $record->model;
-        $intervention->contextid = $record->contextid;
-        $intervention->desired_events = $record->desired_events;
-        $intervention->target = $record->target;
-        $intervention->state = $record->state;
-        $intervention->teachers_informed = $record->teachers_informed;
-        $intervention->message = $record->message;
-        $intervention->usermodified = $record->usermodified;
-        $intervention->timecreated = $record->timecreated;
-        $intervention->timemodified = $record->timemodified;
-        $intervention->advice_manager = new \mod_motbot\retention\advice_manager($intervention->get_recipient(), $intervention->get_course(), $intervention->target);
-
-        return $intervention;
-    }
-
+    /**
+     * Generates an object fit for inserting or updating th db based on current intervention state.
+     *
+     * @return object
+     */
     private function get_db_data() {
         global $USER;
 
-        if(!$this->timecreated) {
+        if (!$this->timecreated) {
             $this->timecreated = time();
         }
 
@@ -213,6 +377,7 @@ class intervention {
             'model' => $this->model,
             'desired_events' => $this->desired_events,
             'target' => $this->target,
+            'prediction' => $this->prediction,
             'state' => $this->state,
             'teachers_informed' => $this->teachers_informed,
             'message' => $this->message,
@@ -223,17 +388,26 @@ class intervention {
         ];
     }
 
+    /**
+     * Generates a json string based on an array of deired event, defined in the target.
+     *
+     * @return string
+     */
     private function get_desired_events() {
-        print_r($this->target);
         return json_encode($this->target::get_desired_events());
     }
 
 
+    /**
+     * Generates a message meant for the recipients teacher.
+     *
+     * @return object
+     */
     public function get_teacher_message() {
         global $DB;
         $target_name = \mod_motbot_get_name_of_target($this->target);
 
-        if(!$target_name || empty($target_name)) {
+        if (!$target_name || empty($target_name)) {
             error_log('Target name couldnt be identified.');
             return null;
         }
@@ -241,63 +415,93 @@ class intervention {
         $recipient = $this->get_recipient();
 
         $message = new \core\message\message();
-        $message->component = 'mod_motbot'; // Your plugin's name
-        $message->name = 'motbot_teacher_intervention'; // Your notification name from message.php
-        $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here
+        $message->component = 'mod_motbot'; // Your plugin's name.
+        $message->name = 'motbot_teacher_intervention'; // Your notification name from message.php.
+        $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here.
         $message->userto = null;
         $message->subject = \get_string('message:teacher_subject', 'motbot', $recipient->firstname . ' ' . $recipient->lastname);
-        $message->fullmessage = 'message body';
         $message->fullmessageformat = FORMAT_HTML;
         $message->fullmessagehtml = \get_string('message:teacher_fullmessagehtml', 'motbot', (object)['fullname' => $recipient->firstname . ' ' . $recipient->lastname, 'interventions' => mod_motbot_get_interventions_table($this->recipient, $this->contextid)]);
-        $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
-        $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification
-        $message->contexturlname = 'To Course'; // Link title explaining where users get to for the contexturl
+        $message->fullmessage = strip_tags($message->fullmessagehtml);
+        $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message.
+        $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification.
+        $message->contexturlname = 'To Course'; // Link title explaining where users get to for the contexturl.
 
         return $message;
     }
 
-
+    /**
+     * Generates the intervention message containing individually generated suggestions.
+     *
+     * @return object
+     */
     public function get_intervention_message() {
         global $DB, $OUTPUT, $CFG;
         $target_name = \mod_motbot_get_name_of_target($this->target);
 
-        if(!$target_name || empty($target_name)) {
+        if (!$target_name || empty($target_name)) {
             error_log('Target name couldnt be identified.');
             return null;
         }
 
         $recipient = $this->get_recipient();
-        $sql = "SELECT m.subject, m.fullmessage, m.fullmessageformat, m.fullmessagehtml, m.attachementuri
-                FROM mdl_motbot_model m
-                JOIN mdl_motbot motbot ON m.motbot = motbot.id
-                WHERE motbot.course = :course AND m.target = :target;";
-        $db_m = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'target' => $this->target));
 
-        if(!$db_m) {
-            echo('no message template found in db');
+
+        // Retrieve message template.
+        if ($this->get_context()->contextlevel == 50) {
+            $sql = "SELECT m.subject, m.fullmessage, m.fullmessageformat, m.fullmessagehtml
+                    FROM mdl_motbot_model m
+                    JOIN mdl_motbot motbot ON m.motbot = motbot.id
+                    WHERE motbot.course = :course
+                    AND m.target = :target
+                    AND m.prediction = :prediction;";
+            $motbot_model = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'target' => $this->target, 'prediction' => $this->prediction));
+        } else {
+            $motbot_model = $DB->get_record(
+                'motbot_model',
+                array('motbot' => null, 'target' => $this->target, 'prediction' => $this->prediction),
+                'subject, fullmessage, fullmessageformat, fullmessagehtml',
+                IGNORE_MISSING
+            );
         }
 
         $message = new \core\message\message();
-        $message->component = 'mod_motbot'; // Your plugin's name
-        $message->name = 'motbot_intervention'; // Your notification name from message.php
-        $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here
+        $message->component = 'mod_motbot'; // Your plugin's name.
+        $message->name = 'motbot_intervention'; // Your notification name from message.php.
+        $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here.
         $message->userto = $recipient;
-        $message->subject = $db_m ? $db_m->subject : \get_string('mod_form:' . $target_name . '_subject', 'motbot');
+        $message->subject = $motbot_model ? $motbot_model->subject : \get_string('mod_form:' . $target_name . '_subject', 'motbot');
         $message->subject = \mod_motbot\manager::replace_intervention_placeholders($message->subject, $this);
-        $message->fullmessageformat = $db_m ? $db_m->fullmessageformat : FORMAT_MARKDOWN;
+        $message->fullmessageformat = $motbot_model ? $motbot_model->fullmessageformat : FORMAT_MARKDOWN;
 
+        $body = $motbot_model ? $motbot_model->fullmessagehtml : \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot');
+        // Get module context.
         $context = $this->get_context();
-        if(!$motbot_sql = $DB->get_record('course_modules', array("course" => $this->get_course()->id, "instance" => $this->get_motbot()->id), "id", IGNORE_MISSING)) {
-            throw new \dml_exception("Couldn't get motbot instanceid.");
+        if ($this->get_context()->contextlevel == 50) {
+            $sql = 'SELECT cm.id
+                FROM {course_modules} AS cm
+                JOIN {modules} AS m
+                ON m.id = cm.module
+                WHERE m.name = :module_name
+                AND cm.course = :course
+                AND cm.instance = :motbot';
+            $params = array("course" => $this->get_course()->id, "motbot" => $this->get_motbot()->id, "module_name" => 'motbot');
+            if (!$course_module = $DB->get_record_sql($sql, $params, IGNORE_MISSING)) {
+                throw new \dml_exception("Couldn't get motbot instanceid.");
+            }
+            $module_context = \context_module::instance($course_module->id);
+
+            // This step is need so that pictures and other attachements can be displayed correctly.
+            $body = file_rewrite_pluginfile_urls($body, 'pluginfile.php', $module_context->id, 'mod_motbot', 'attachment', 0);
         }
-        $module_context = \context_module::instance($motbot_sql->id);
-        $body = $db_m ? $db_m->fullmessagehtml : \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot');
-        $body = file_rewrite_pluginfile_urls($body, 'pluginfile.php', $module_context->id, 'mod_motbot', 'attachment', 0);
+        // Insert placeholder info.
         $body = \mod_motbot\manager::replace_intervention_placeholders($body, $this);
 
-        $helpfulurl = $CFG->wwwroot.'/mod/motbot/intervention_helpful.php?id=' . $this->id . '&helpful=';
+        $helpfulurl = $CFG->wwwroot . '/mod/motbot/intervention_helpful.php?id=' . $this->id . '&helpful=';
 
-        $html_advice = $this->advice_manager->render_html();
+        // Get advice/suggestions as html.
+        $html_advice = $this->get_advice_manager()->render_html();
+        // Contextinfo to be displayed in the intervention mustache template.
         $contextinfo = [
             'usefulbuttons' => ['usefulurl' => $helpfulurl . '1', 'notusefulurl' => $helpfulurl . '0'],
             'advice' => $html_advice,
@@ -305,24 +509,25 @@ class intervention {
         ];
         $message->fullmessagehtml = $OUTPUT->render_from_template('mod_motbot/intervention_message', $contextinfo);
 
-        $message->fullmessage = $db_m ? \mod_motbot\manager::replace_intervention_placeholders($db_m->fullmessage, $this) : 'message body';
+        $message->fullmessage = $motbot_model ? \mod_motbot\manager::replace_intervention_placeholders($motbot_model->fullmessage, $this) : 'message body';
 
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
 
         $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification
         $message->contexturlname = 'To Course';
-        // Link title explaining where users get to for the contexturl
-        // $content = array('*' => array('header' => ' test ', 'footer' => ' test ')); // Extra content for specific processor
-        // $message->set_additional_content('email', $content);
 
         return $message;
     }
 
-
+    /**
+     * Update intervention DB record based on current intervention objects state.
+     *
+     * @return bool
+     */
     private function update_record() {
         global $DB;
 
-        if(!$DB->update_record('motbot_intervention', $this->get_db_data())) {
+        if (!$DB->update_record('motbot_intervention', $this->get_db_data())) {
             error_log('Couldnt update intervention.');
             return false;
         }
@@ -330,16 +535,31 @@ class intervention {
         return true;
     }
 
+    /**
+     * Set the state property and updates DB.
+     *
+     * @return void
+     */
     public function set_state($state) {
         $this->state = $state;
         $this->update_record();
     }
 
+    /**
+     * Set the message property and updates DB.
+     *
+     * @return void
+     */
     public function set_messageid($messageid) {
         $this->message = $messageid;
         $this->update_record();
     }
 
+    /**
+     * Set the teachers_informed property and updates DB.
+     *
+     * @return void
+     */
     public function set_teachers_informed($teachers_informed) {
         $this->teachers_informed = $teachers_informed;
         $this->update_record();

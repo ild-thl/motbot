@@ -34,119 +34,179 @@ defined('MOODLE_INTERNAL') || die();
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class manager {
-    public static function log_prediction($modelid, $sampleid, $rangeindex, \context $samplecontext, $scalar_prediction, $predictionscore) {
+
+    /**
+     * Creates interventions with prediction data.
+     *
+     * @param int $modelid
+     * @param int $sampleid
+     * @param int $rangeindex
+     * @param \context $samplecontext
+     * @param float|int $scalar_prediction
+     * @param float $predictionscore
+     * @return void
+     */
+    public static function log_prediction($modelid, $sampleid, $rangeindex, \context $samplecontext, $result, $score) {
+
+        if ($score < 0.7) {
+            // Ignore prediction results that are not very accurate.
+            \core\notification::info("Ignored prediction result due to lack of accuracy: score = " . $score);
+            return;
+        }
 
         $prediction = (object) [
             'modelid' => $modelid,
             'samplecontext' => $samplecontext,
             'sampleid' => $sampleid,
             'rangeindex' => $rangeindex,
-            'prediction' => $scalar_prediction,
-            'predictionscore' => $predictionscore
+            'result' => $result,
+            'score' => $score
         ];
 
         $intervention = \mod_motbot\retention\intervention::from_prediction($prediction);
 
-        // self::intervene($intervention);
+        self::intervene($intervention);
     }
 
-
+    /**
+     * Only call this method for development purposes to skip the scheduling.
+     * Generates and sends a message to the intervention recipient.
+     *
+     * @param \mod_motbot\retention\intervention $intervention
+     * @return void
+     */
     private static function intervene($intervention) {
 
-        $intervention = \mod_motbot\retention\intervention::from_db($intervention);
+        // $intervention = \mod_motbot\retention\intervention::from_db($intervention);
 
-        if($intervention->get_target()::always_intervene()) {
-            $message = $intervention->get_intervention_message();
+        $message = $intervention->get_intervention_message();
 
-            $messageid = \mod_motbot\manager::send_message($message);
-            if($messageid) {
-                $intervention->set_messageid($messageid);
-                $intervention->set_state(\mod_motbot\retention\intervention::INTERVENED);
-            }
+        $messageid = \mod_motbot\manager::send_message($message);
+        if ($messageid) {
+            $intervention->set_messageid($messageid);
+            $intervention->set_state(\mod_motbot\retention\intervention::INTERVENED);
         }
     }
 
+
+    /**
+     * Gets the id of the user, about which a prediction has made a stament.
+     *
+     * @param int $sampleid Samplid of a prediction.
+     * @param string $target Prediction target.
+     * @return int User id - Prediction subject.
+     */
     public static function get_prediction_subject($sampleid, $target = null) {
         global $DB;
-        if($target == '\mod_motbot\analytics\target\upcoming_activities_due') {
-            $sql = "SELECT id as userid
-                FROM mdl_user
-                WHERE id = :sampleid;";
 
-        } else {
-            $sql = "SELECT u.id as userid
-                    FROM mdl_user u
-                    JOIN mdl_user_enrolments ue ON ue.userid = u.id
-                    WHERE ue.id = :sampleid;";
+        if ($target == '\mod_motbot\analytics\target\upcoming_activities_due' || $target == '\mod_motbot\analytics\target\recent_cognitive_presence') {
+            // In this case the sampleid is equal to the userid.
+            return $sampleid;
         }
 
+        $sql = "SELECT u.id as userid
+            FROM mdl_user u
+            JOIN mdl_user_enrolments ue ON ue.userid = u.id
+            WHERE ue.id = :sampleid;";
         $result = $DB->get_record_sql($sql, array('sampleid' => $sampleid));
 
-        if(!$result) {
-            echo('No user found! ' . $sampleid);
+        if (!$result) {
+            echo ('No user found! ' . $sampleid);
             return null;
         }
 
         return $result->userid;
     }
 
-
+    /**
+     * Sends a message to a user.
+     *
+     * @param object $message
+     * @param \core\user $userto
+     * @return int|null Id of sent message, null the message couldn't be sent.
+     */
     public static function send_message($message, $userto = null) {
-        if(!$message) {
+        if (!$message) {
             return null;
         }
 
-        if(!$message->userto) {
+        // Set recipient, if not already set.
+        if (!$message->userto) {
             $message->userto = $userto;
         }
 
 
         // Actually send the message
-        try{
+        try {
             $messageid = message_send($message);
         } catch (\moodle_exception $e) {
             print_r($e->getMessage());
         }
-        if($messageid) {
+
+        // Update contexturl with messageid, so user get redirected to the full message, wehen they click on a notification.
+        if ($messageid) {
             self::set_message_contexturl($messageid);
-            echo('Message ' . $messageid . ' sent to User ' . $message->userto->id);
+            echo ('Message ' . $messageid . ' sent to User ' . $message->userto->id);
         }
 
         return $messageid;
     }
 
-
+    /**
+     * Update the context_url of a message, with a url to the message itself.
+     *
+     * @param int $messageid
+     * @return void
+     */
     public static function set_message_contexturl($messageid) {
         global $DB;
 
-        if(!$message = $DB->get_record('notifications', array('id' => $messageid), '*', IGNORE_MISSING)) {
+        if (!$message = $DB->get_record('notifications', array('id' => $messageid), '*', IGNORE_MISSING)) {
             return;
         }
 
+        // URl leading to the message itself.
         $message->contexturl = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $messageid . '&offset=0'))->out(false); // A relevant URL for the notification
         $message->contexturlname = 'Notification';
 
         $DB->update_record('notifications', $message);
     }
 
+    /**
+     * Replace placeholders in intervention messages with the requested content.
+     *
+     * @param string $text
+     * @param \mod_motbot\retention\intervention $intervention
+     * @return string
+     */
+    public static function replace_intervention_placeholders($text, $intervention) {
+        $result = $text;
 
+        if ($recipient = $intervention->get_recipient()) {
+            $result = str_replace('{firstname}', $recipient->firstname, $result);
+            $result = str_replace('{lastname}', $recipient->lastname, $result);
+        }
 
+        $context = $intervention->get_context();
+        if ($context->contextlevel == 50) {
+            // If intervention in a course level context.
+            if ($motbot = $intervention->get_motbot()) {
+                $result = str_replace('{motbot}', $motbot->name, $result);
+            }
 
-    public static function replace_intervention_placeholders($subject, $intervention) {
-        $recipient = $intervention->get_recipient();
-        $motbot = $intervention->get_motbot();
-        $course = $intervention->get_course();
-        $courseurl = (new \moodle_url('/course/view.php?id=' . $intervention->get_context()->instanceid))->out(false);
+            if ($course = $intervention->get_course()) {
+                $result = str_replace('{course_shortname}', $course->shortname, $result);
+                $result = str_replace('{course_fullname}', $course->fullname, $result);
 
-        $result = $subject;
-        $result = str_replace('{firstname}', $recipient->firstname, $result);
-        $result = str_replace('{lastname}', $recipient->lastname, $result);
-        $result = str_replace('{motbot}', $motbot->name, $result);
-        $result = str_replace('{course_shortname}', $course->shortname, $result);
-        $result = str_replace('{course_fullname}', $course->fullname, $result);
-        $result = str_replace('{course_url}', $courseurl, $result);
-        if(strpos($result, '{suggestions}') !== false) {
-            $result = str_replace('{suggestions}', $intervention->advice_manager->render(), $result);
+                $courseurl = (new \moodle_url('/course/view.php?id=' . $context->instanceid))->out(false);
+                $result = str_replace('{course_url}', $courseurl, $result);
+            }
+        } else {
+            $result = str_replace('{motbot}', 'MotBot', $result);
+        }
+
+        if (strpos($result, '{suggestions}') !== false) {
+            $result = str_replace('{suggestions}', $intervention->get_advice_manager()->render(), $result);
         }
         return $result;
     }

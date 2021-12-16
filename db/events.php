@@ -49,4 +49,9 @@ $observers = array(
         'callback'    => '\mod_motbot\observer::discussion_or_post_created',
     ),
 
+    array(
+        'eventname'   => '\core\event\user_loggedin',
+        'callback'    => '\mod_motbot\observer::user_loggedin',
+    ),
+
 );

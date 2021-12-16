@@ -41,37 +41,37 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      *
      * @return \lang_string
      */
-    public static function get_name() : \lang_string {
+    public static function get_name(): \lang_string {
         return new \lang_string('target:norecentaccesses', 'motbot', null, 'en');
     }
 
-        /**
+    /**
      * Discards courses that are not yet ready to be used for prediction.
      *
      * @param \core_analytics\analysable $course
      * @param bool $fortraining
-     * @return true|string
+     * @return true|string If not valid, returns short message, esplaining the reason.
      */
     public function is_valid_analysable(\core_analytics\analysable $course, $fortraining = true) {
         global $DB;
 
         $instances = $DB->get_records('motbot', array('course' => $course->get_id()));
 
-        if(!$instances) {
+        if (!$instances) {
             return get_string('nomotbotinstance', 'motbot');
         }
 
-        if(count($instances) > 1) {
+        if (count($instances) > 1) {
             return get_string('tomanyinstances', 'motbot');
         }
 
         $motbot = reset($instances);
-        if($motbot->active == 0) {
+        if ($motbot->active == 0) {
             return get_string('motbotpaused', 'motbot');
         }
 
         $message = $DB->get_record('motbot_model', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\no_recent_accesses'));
-        if(!$message || !$message->active) {
+        if (!$message || !$message->active) {
             return get_string('motbotmodelinactive', 'motbot');
         }
 
@@ -99,8 +99,8 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
         $userid = \mod_motbot\manager::get_prediction_subject($sampleid);
         $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
-        if($motbot) {
-            if(!$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
+        if ($motbot) {
+            if (!$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
                 return false;
             }
         }
@@ -138,11 +138,11 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      * @return float|null 0 -> accesses, 1 -> no accesses.
      */
     protected function calculate_sample($sampleid, \core_analytics\analysable $analysable, $starttime = false, $endtime = false) {
-        $no_recent_access = $this->retrieve('\core\analytics\indicator\any_course_access', $sampleid);
-        if ($no_recent_access == \core\analytics\indicator\any_course_access::get_min_value()) {
+        $recent_access = $this->retrieve('\core\analytics\indicator\any_course_access', $sampleid);
+        if ($recent_access === \core\analytics\indicator\any_course_access::get_min_value()) {
             return 1;
         }
-        return 1;
+        return 0;
     }
 
 
@@ -194,5 +194,4 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
     public static function get_desired_events() {
         return array('\core\event\course_viewed');
     }
-
 }

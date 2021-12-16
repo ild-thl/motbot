@@ -46,64 +46,73 @@ class bot extends \core\task\scheduled_task {
 
     /**
      * Execute the task.
+     *
+     * @return void
      */
     public function execute() {
         global $DB;
+        // Get all scheduled interventions.
         $scheduled_interventions = $DB->get_records('motbot_intervention', array('state' => \mod_motbot\retention\intervention::SCHEDULED), '', '*');
 
         $now = new \DateTime("now", \core_date::get_user_timezone_object());
         $dayofweek = intval($now->format('N'));
         $hour = intval($now->format('H'));
-        echo('hour: ' . $hour);
-        echo('dayofweek: ' . $dayofweek);
+        echo ('hour: ' . $hour);
+        echo ('dayofweek: ' . $dayofweek);
 
-        foreach($scheduled_interventions as $i) {
-            $sql = "SELECT u.pref_time, u.only_weekdays FROM mdl_motbot_course_user u
-                JOIN mdl_motbot m ON u.motbot = m.id
-                JOIN mdl_context c ON m.course = c.instanceid
-                WHERE c.id = :contextid
-                AND u.user = :recipient;";
-            $user_pref = $DB->get_record_sql($sql, array('contextid' => $i->contextid, 'recipient' => $i->recipient), IGNORE_MISSING);
-            if(!$user_pref->only_weekdays || ($user_pref->only_weekdays && $dayofweek < 6)) {
-                if($user_pref->pref_time > -1 && $hour >= $user_pref->pref_time) {
-                    $this->execute_interventions_individually($i);
+        // Check for each scheduled intervention, if now is the right time for intervention.
+        foreach ($scheduled_interventions as $intervention) {
+            // Get the preferred time from the intervention recipient.
+            $user_pref = $DB->get_record('motbot_user', array('user' => $intervention->recipient), 'pref_time, only_weekdays', IGNORE_MISSING);
+
+            // Check if now time is in a 3 hour period after the set prefered time.
+            if (!$user_pref->only_weekdays || ($user_pref->only_weekdays && $dayofweek < 6)) {
+                if ($user_pref->pref_time > -1 && $hour >= $user_pref->pref_time && $hour <= ($user_pref->pref_time - 3)) {
+                    $this->intervene($intervention);
                 } else {
-                    echo('later...');
+                    echo ('later...');
                 }
             } else {
-                echo('only during weekdays, later...');
+                echo ('only during weekdays, later...');
             }
         }
     }
 
-    private function execute_interventions_individually($scheduled_intervention) {
+    /**
+     * Send intervention message. If necessary also send message to teacher.
+     *
+     * @param \mod_motbot\retention\intervention
+     * @return void
+     */
+    private function intervene($scheduled_intervention) {
         $intervention = \mod_motbot\retention\intervention::from_db($scheduled_intervention);
 
-        if($intervention->get_target()::always_intervene()) {
-            $this->intervene($intervention);
+        if ($intervention->get_target()::always_intervene()) {
+            $message = $intervention->get_intervention_message();
+
+            $messageid = \mod_motbot\manager::send_message($message);
+            if ($messageid) {
+                $intervention->set_messageid($messageid);
+                $intervention->set_state(\mod_motbot\retention\intervention::INTERVENED);
+            }
         } else {
             $intervention->set_state(\mod_motbot\retention\intervention::STORED);
         }
 
-        if($intervention->get_context()->contextlevel == 50) {
-            if($intervention->is_critical()) {
+        if ($intervention->get_context()->contextlevel == 50) {
+            if ($intervention->is_critical()) {
                 $this->inform_teachers($intervention);
             }
         }
     }
 
-
-    private function intervene($intervention) {
-        $message = $intervention->get_intervention_message();
-
-        $messageid = \mod_motbot\manager::send_message($message);
-        if($messageid) {
-            $intervention->set_messageid($messageid);
-            $intervention->set_state(\mod_motbot\retention\intervention::INTERVENED);
-        }
-    }
-
-
+    /**
+     * Inform teachers that are responsible for the student or the course context,
+     * about intervention history of the intervention subject.
+     *
+     * @param \mod_motbot\retention\intervention
+     * @return void
+     */
     private function inform_teachers($intervention) {
         global $DB;
 
@@ -111,25 +120,24 @@ class bot extends \core\task\scheduled_task {
         $context = \context_course::instance($intervention->get_context()->instanceid);
         $teachers = get_role_users($role->id, $context);
 
-        if(!$teachers || empty($teachers)) {
+        if (!$teachers || empty($teachers)) {
             return;
         }
-
 
         $intervention->set_teachers_informed(true);
         $sent = false;
 
         $message = $intervention->get_teacher_message();
-        foreach($teachers as $teacher) {
+        foreach ($teachers as $teacher) {
             $userto = $DB->get_record('user', array('id' => $teacher->id), '*');
-            if(\mod_motbot\manager::send_message($message, $userto)) {
+            if (\mod_motbot\manager::send_message($message, $userto)) {
                 $sent = true;
             } else {
-                echo('Couldnt send message to ' . $teacher->id);
+                echo ('Couldnt send message to ' . $teacher->id);
             }
         }
 
-        if(!$sent) {
+        if (!$sent) {
             $intervention->set_teachers_informed(false);
         }
     }

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * post installation hook for adding entry in customusermenu.
+ * Post installation hook for removing entry in custom user menu.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -26,16 +26,24 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Post installation procedure
+ *
+ * Add a motbot menu item to the custom user menu.
  */
 function xmldb_motbot_install() {
     global $CFG;
     $result = true;
 
-    $newitem = "\nmodulenameplural,mod_motbot|/mod/motbot/overview.php|grades";
-    $oldmenu = $CFG->customusermenuitems;
-    $oldmenu = str_replace($newitem, "", $oldmenu);
-    $newmenu = $oldmenu .= $newitem;
-    set_config('customusermenuitems', $newmenu);
+    $new_item = "\nmodulenameplural,mod_motbot|/mod/motbot/overview.php|grades";
+    $menu = $CFG->customusermenuitems;
+    // Remove any old motbot menu items, if there are any.
+    $menu = str_replace($new_item, "", $menu);
+
+    // Add the motbot menu item.
+    $menu = $menu .= $new_item;
+    set_config('customusermenuitems', $menu);
+
+    // Load default advice from all components.
+    include($CFG->dirroot.'/mod/motbot/load_default_advice.php');
 
     return $result;
 }

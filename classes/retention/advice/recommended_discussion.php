@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Interaction.
+ * Advice that recommends to post to a negelected diccusion.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -26,6 +26,13 @@ namespace mod_motbot\retention\advice;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Advice that recommends to post to a negelected diccusion.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class recommended_discussion extends \mod_motbot\retention\advice\forum_quote {
     /**
     * Returns a lang_string object representing the name for the indicator or target.
@@ -40,8 +47,20 @@ class recommended_discussion extends \mod_motbot\retention\advice\forum_quote {
         return new \lang_string('advice:recommended_discussion', 'motbot');
     }
 
+    /**
+     * Constructor.
+
+     * @param \core\user $user
+     * @param \core\course $course
+     * @return void
+     */
     public function __construct($user, $course) {
         global $CFG, $DB;
+
+        // Stop initialization, if $course is unset.
+        if (!$course) {
+            throw new \moodle_exception('No course given.');
+        }
 
         $sql = "SELECT d.id, d.course, d.userid, d.firstpost, pp.subject, pp.message, MIN(pp.created) as timecreated, p.replycount
             FROM mdl_forum_discussions d

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Interaction.
+ * Advice to take part in a feedback survey.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
@@ -28,6 +28,13 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/motbot/locallib.php');
 
+/**
+ * Advice to take part in a feedback survey.
+ *
+ * @package   mod_motbot
+ * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
     /**
     * Returns a lang_string object representing the name for the indicator or target.
@@ -42,33 +49,47 @@ class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
         return new \lang_string('advice:feedback', 'motbot');
     }
 
+    /**
+    * Constructor.
+
+     * @param \core\user $user
+     * @param \core\course $course
+     * @return void
+    */
     public function __construct($user, $course) {
         global $DB, $CFG;
 
-        if(!mod_motbot_has_completed_feedback($user->id, $course->id)) {
-            $sql = 'SELECT cm.id as id, f.name as name
-                FROM mdl_course_modules cm
-                JOIN mdl_modules m ON m.id = cm.module
-                JOIN mdl_feedback f ON f.id = cm.instance
-                WHERE cm.course = :courseid
-                AND m.name = "feedback";';
-            $activities = $DB->get_records_sql($sql, array('courseid' => $course->id));
+        // Stop initialization, if $course is unset.
+        if (!$course) {
+            throw new \moodle_exception('No course given.');
+        }
 
-            $this->title = 'Please consider giving some feedback as well, so we can support you better!';
-            // $this->title .= " \xF0\x9F\x99\x8F";
-
-            if(!$activities || empty($activities)) {
-                throw new \moodle_exception('No feedback activity available.');
-            }
-
-            foreach($activities as $feedback) {
-                $this->actions[] = [
-                    'action_url' => $CFG->wwwroot . '/mod/feedback/view.php?id=' . $feedback->id,
-                    'action' => 'Go to ' . $feedback->name,
-                ];
-            }
-        } else {
+        // Stop initialization if user already took part in a feedback
+        // or if ther is no feedback option available.
+        if(mod_motbot_has_completed_feedback($user->id, $course->id)) {
             throw new \moodle_exception('Feedback already given.');
+        }
+
+        $sql = 'SELECT cm.id as id, f.name as name
+            FROM mdl_course_modules cm
+            JOIN mdl_modules m ON m.id = cm.module
+            JOIN mdl_feedback f ON f.id = cm.instance
+            WHERE cm.course = :courseid
+            AND m.name = "feedback";';
+        $activities = $DB->get_records_sql($sql, array('courseid' => $course->id));
+
+        $this->title = 'Please consider giving some feedback as well, so we can support you better!';
+        // $this->title .= " \xF0\x9F\x99\x8F";
+
+        if(!$activities || empty($activities)) {
+            throw new \moodle_exception('No feedback activity available.');
+        }
+
+        foreach($activities as $feedback) {
+            $this->actions[] = [
+                'action_url' => $CFG->wwwroot . '/mod/feedback/view.php?id=' . $feedback->id,
+                'action' => 'Go to ' . $feedback->name,
+            ];
         }
     }
 }

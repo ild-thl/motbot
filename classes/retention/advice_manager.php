@@ -26,7 +26,7 @@ namespace mod_motbot\retention;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 /**
  * Manages the generation of advice for an intervention.
@@ -36,86 +36,289 @@ require_once($CFG->dirroot.'/mod/motbot/locallib.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class advice_manager {
-    private $user;
-    private $course;
-    private $target;
-    private $advices = null;
 
+    /**
+     * Name of the file where components declare their advice.
+     */
+    const ADVICE_FILENAME = 'db/advice.php';
+
+    /**
+     * @var \core\user Subject of the advice, Moodle user.
+     */
+    private $user;
+
+    /**
+     * @var \core\course The course where the bot intervenes the user.
+     */
+    private $course;
+
+    /**
+     * @var int The target of the analytics model.
+     */
+    private $target;
+
+    /**
+     * @var int User id of the intervention recipient.
+     */
+    private $advice = null;
+
+    /**
+     * Contstructor.
+     */
     public function __construct($user, $course, $target) {
         $this->user = $user;
         $this->course = $course;
         $this->target = $target;
     }
 
+    /**
+     * Initialize advice, that is available in this context (user, course, target).
+     *
+     * @param string $class
+     * @return array
+     */
     private function generate_advice() {
-        if($this->target == '\mod_motbot\analytics\target\low_social_presence') {
-            if(!$advice = $this->get_advice_if_available('\mod_motbot\retention\advice\recommended_discussion')) {
-                $advice = $this->get_advice_if_available('\mod_motbot\retention\advice\recent_forum_activity');
+        global $DB;
+
+        $advice = array();
+        // Get advice settings.
+        $advice_settings = $DB->get_records('motbot_advice', array());
+
+        // Initialize advice, if aplicable for the set target
+        foreach ($advice_settings as $setting) {
+            if (!$setting->enabled) { // Skip, if advice is disabled.
+                continue;
             }
-            $this->advices[] = $advice;
-        } else if($this->target == '\mod_motbot\analytics\target\no_recent_accesses') {
-            $this->advices[] = $this->get_advice_if_available('\mod_motbot\retention\advice\course_completion');
-            $this->advices[] = $this->get_advice_if_available('\mod_motbot\retention\advice\visit_course');
-            $this->advices[] = $this->get_advice_if_available('\mod_motbot\retention\advice\recent_activities');
+
+            $targets = json_decode($setting->targets);
+            if (!in_array($this->target, $targets)) { // Skip, if target is not part of the defined aplicable targets.
+                continue;
+            }
+
+            if ($a = $this->get_advice_if_available($setting->name)) {
+                $advice[] = $a;
+            }
         }
 
-        $this->advices[] = $this->get_advice_if_available('\mod_motbot\retention\advice\feedback');
+        return $advice;
     }
 
+    /**
+     * Try to initialize a specific advice object.
+     *
+     * @param string $class
+     * @return mod_motbot\retention\advice\base
+     */
     public function get_advice_if_available($class) {
         $advice = null;
-        try{
+        try {
+            // Init new advice
             $advice = new $class($this->user, $this->course);
         } catch (\moodle_exception $e) {
             print_r($e->getMessage());
-            return null;
         }
         return $advice;
     }
 
+    /**
+     * Generates advice as text.
+     *
+     * @return string
+     */
     public function render() {
-        if($this->advices == null) {
-            $this->generate_advice();
-        }
-        $message = '';
+        $advice_output = '';
 
-        foreach($this->advices as $advice) {
-            if($advice == null) {
-                continue;
-            }
-            $message .= PHP_EOL . PHP_EOL . $advice->render();
+        if ($this->advice == null) {
+            $this->advice = $this->generate_advice();
+        }
+        if (empty($this->advice)) {
+            return $advice_output;
         }
 
-        return $message;
+        foreach ($this->advice as $advice) {
+            $advice_output .= PHP_EOL . PHP_EOL . $advice->render();
+        }
+
+        return $advice_output;
     }
 
+    /**
+     * Generates advice as html.
+     *
+     * @return string
+     */
     public function render_html() {
         global $OUTPUT;
+        $advice_output = '';
 
-        if($this->advices == null) {
-            $this->generate_advice();
+        if ($this->advice == null) {
+            $this->advice = $this->generate_advice();
         }
-
-        $html_rendered_advices = [];
-        $message = "<h3>Suggestions:</h3><div>";
-
-        foreach($this->advices as $advice) {
-            if($advice == null) {
-                continue;
-            }
-            $rendered = $advice->render_html();
-            $html_rendered_advices[] = $rendered;
-            $message .= $rendered . "<br/>";
+        if (empty($this->advice)) {
+            return $advice_output;
         }
-
-        $message .= "</div><br/>";
-
-        $context = [
-            "advices" => $html_rendered_advices,
+        $advices = array();
+        foreach ($this->advice as $advice) {
+            $advices[] = $advice->render_html();
+        }
+        $context = (object) [
+            "advices" => $advices,
         ];
+        $advice_output = $OUTPUT->render_from_template('mod_motbot/advices', $context);
 
-        return $message;
+        return $advice_output;
+    }
 
-        // return $OUTPUT->render_from_template('mod_motbot/advices', $context);
+
+    /**
+     * Define and create DB entrys for advice, so motbot knows wich advice to generate in diffrent situations.
+     *
+     * @param array $advice
+     * @return void
+     */
+    static function create_advice($advice) {
+        global $DB;
+
+        // Json Encode targets array, because DB only accepts strings.
+        $advice['targets'] = json_encode($advice['targets']);
+
+        // Look for entry with same name.
+        $exists = $DB->get_field('motbot_advice', 'id', array('name' => $advice['name']), IGNORE_MISSING);
+        try {
+            if ($exists) { // If another record exists, update it.
+                $advice['id'] = $exists;
+                $DB->update_record('motbot_advice', $advice);
+            } else { // Else insert new record.
+                $id = $DB->insert_record('motbot_advice', $advice);
+                if (!$id) {
+                    throw new \dml_exception('Could\'nt insert advice into database.');
+                }
+            }
+        } catch (\moodle_exception $e) {
+            error_log($e->getMessage());
+        }
+    }
+
+
+    /**
+     * Return the list of advice declared by the given component.
+     *
+     * @param string $componentname The name of the component to load advice for.
+     * @throws \coding_exception Exception thrown in case of invalid syntax.
+     * @return array The $advice description array.
+     */
+    public static function load_default_advice_for_component(string $componentname): array {
+
+        $dir = \core_component::get_component_directory($componentname);
+
+        if (!$dir) {
+            // This is either an invalid component, or a core subsystem without its own root directory.
+            return [];
+        }
+
+        $file = $dir . '/' . self::ADVICE_FILENAME;
+
+        if (!is_readable($file)) {
+            return [];
+        }
+
+        $advice = null;
+        include($file);
+
+        if (!isset($advice) || !is_array($advice) || empty($advice)) {
+            return [];
+        }
+
+        foreach ($advice as &$ad) {
+            if (!isset($ad['enabled'])) {
+                $ad['enabled'] = false;
+            } else {
+                $ad['enabled'] = clean_param($ad['enabled'], PARAM_BOOL);
+            }
+        }
+
+        static::validate_advice_declaration($advice);
+
+        return $advice;
+    }
+
+    /**
+     * Return the list of advice declared anywhere in this Moodle installation.
+     *
+     * Models defined by the core and core subsystems come first, followed by those provided by plugins.
+     *
+     * @return array indexed by the frankenstyle component
+     */
+    public static function load_default_advice_for_all_components(): array {
+
+        $result = array();
+
+        foreach (\core_component::get_component_list() as $type => $components) {
+            foreach (array_keys($components) as $component) {
+                if ($loaded = static::load_default_advice_for_component($component)) {
+                    $result[$type][$component] = $loaded;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Validate the declaration of advice according to the syntax expected in the component's db folder.
+     *
+     * The expected structure looks like this:
+     *
+     *  [
+     *      [
+     *          'name' => '\fully\qualified\name\of\the\advice\classname',
+     *          'targets' => [
+     *              '\fully\qualified\name\of\the\first\target',
+     *              '\fully\qualified\name\of\the\second\target',
+     *          ],
+     *          'enabled' => true,
+     *      ],
+     *  ];
+     *
+     * @param array $advice_list List of declared advice.
+     * @throws \coding_exception Exception thrown in case of invalid syntax.
+     */
+    public static function validate_advice_declaration(array $advice_list) {
+
+        foreach ($advice_list as $advice) {
+            if (!isset($advice['name'])) {
+                throw new \coding_exception('Missing advice name declaration');
+            }
+
+            if (!static::is_valid($advice['name'], '\mod_motbot\retention\advice\base')) {
+                throw new \coding_exception('Invalid advice classname', $advice['name']);
+            }
+
+            if (empty($advice['targets']) || !is_array($advice['targets'])) {
+                throw new \coding_exception('Missing advice targets declaration');
+            }
+
+            foreach ($advice['targets'] as $target) {
+                if (!static::is_valid($target, '\core_analytics\local\target\base')) {
+                    throw new \coding_exception('Invalid advice target classname', $target);
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns whether a classname is valid or not.
+     *
+     * @param string $fullclassname
+     * @param string $baseclass
+     * @return bool
+     */
+    public static function is_valid($fullclassname, $baseclass) {
+        if (is_subclass_of($fullclassname, $baseclass)) {
+            if ((new \ReflectionClass($fullclassname))->isInstantiable()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -85,7 +85,7 @@ class mod_motbot_overview {
         $models = array();
 
         foreach($amodels as $amodel) {
-            if(!\core_analytics\manager::get_target($amodel->target)::custom_intervention()) {
+            if(\core_analytics\manager::get_target($amodel->target)::uses_insights()) {
                 continue;
             }
             $models[] = $this->get_model_data($amodel);

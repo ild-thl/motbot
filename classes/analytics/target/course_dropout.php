@@ -50,7 +50,7 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
      *
      * @return \lang_string
      */
-    public static function get_name() : \lang_string {
+    public static function get_name(): \lang_string {
         return new \lang_string('target:coursedropout', 'motbot', null, 'en');
     }
 
@@ -66,21 +66,21 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
 
         $instances = $DB->get_records('motbot', array('course' => $course->get_id()));
 
-        if(!$instances) {
+        if (!$instances) {
             return get_string('nomotbotinstance', 'motbot');
         }
 
-        if(count($instances) > 1) {
+        if (count($instances) > 1) {
             return get_string('tomanyinstances', 'motbot');
         }
 
         $motbot = reset($instances);
-        if($motbot->active == 0) {
+        if ($motbot->active == 0) {
             return get_string('motbotpaused', 'motbot');
         }
 
         $message = $DB->get_record('motbot_message', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\course_dropout'));
-        if(!$message || !$message->active) {
+        if (!$message || !$message->active) {
             return get_string('motbotmodelinactive', 'motbot');
         }
 
@@ -106,8 +106,8 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
         $userid = \mod_motbot\manager::get_prediction_subject($sampleid);
         $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
-        if($motbot) {
-            if(!$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
+        if ($motbot) {
+            if (!$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
                 // echo('motbot not authorized for user: ' . $userid);
                 return false;
             }
@@ -158,7 +158,7 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
      * @return float|null 0 -> not at risk, 1 -> at risk
      */
     protected function calculate_sample($sampleid, \core_analytics\analysable $course, $starttime = false, $endtime = false) {
-        echo('Calculate sample: ' . $sampleid);
+        echo ('Calculate sample: ' . $sampleid);
 
         $potential_cognitive_depth = $this->retrieve('\core_course\analytics\indicator\potential_cognitive_depth', $sampleid);
         print_r('Cognitive Depth: ' . $potential_cognitive_depth);
@@ -170,7 +170,7 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
 
         if (!$this->enrolment_active_during_analysis_time($sampleid, $starttime, $endtime)) {
             // We should not use this sample as the analysis results could be misleading.
-            echo("no active erol during analysis time");
+            echo ("no active erol during analysis time");
             return null;
         }
 
@@ -181,7 +181,7 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
         if ($completion->is_enabled() && $completion->has_criteria()) {
             $ccompletion = new \completion_completion(array('userid' => $userenrol->userid, 'course' => $course->get_id()));
             if ($ccompletion->is_complete()) {
-                echo('comletion complete');
+                echo ('comletion complete');
                 return 0;
             } else {
                 return 1;
@@ -201,7 +201,7 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
         if ($nlogs == 0) {
             return 1;
         }
-        echo('logs during last quarter');
+        echo ('logs during last quarter');
         return 0;
     }
 

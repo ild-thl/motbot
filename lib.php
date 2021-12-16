@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 /**
  * Return if the plugin supports $feature.
@@ -59,7 +59,7 @@ function motbot_add_instance($data, $mform = null) {
 
     $id = $DB->insert_record('motbot', $data);
 
-    foreach($data->motbot_models as $motbot_model) {
+    foreach ($data->motbot_models as $motbot_model) {
         $motbot_model->motbot = $id;
         $motbot_model->timecreated = $data->timecreated;
         $motbot_model->usermodified = $USER->id;
@@ -67,9 +67,9 @@ function motbot_add_instance($data, $mform = null) {
 
         $target_name = $motbot_model->targetname;
 
-        if ($mform and !empty($data->{$target_name.'_fullmessagehtml'}['itemid'])) {
+        if ($mform and !empty($data->{$target_name . '_fullmessagehtml' . $motbot_model->prediction}['itemid'])) {
 
-            $draftitemid = $data->{$target_name.'_fullmessagehtml'}['itemid'];
+            $draftitemid = $data->{$target_name . '_fullmessagehtml' . $motbot_model->prediction}['itemid'];
             $cmid = $data->coursemodule;
             $context = context_module::instance($cmid);
 
@@ -97,10 +97,10 @@ function motbot_update_instance($data, $mform = null) {
     $data->timemodified = time();
     $data->id = $data->instance;
 
-    foreach($data->motbot_models as $motbot_model) {
+    foreach ($data->motbot_models as $motbot_model) {
         $motbot_model->timemodified = $data->timemodified;
         $motbot_model->usermodified = $USER->id;
-        if(!$motbot_model->id) {
+        if (!isset($motbot_model->id)) {
             $motbot_model->motbot = $data->id;
             $motbot_model->timecreated = $data->timemodified;
             $motbot_model->id = $DB->insert_record('motbot_model', $motbot_model);
@@ -109,7 +109,7 @@ function motbot_update_instance($data, $mform = null) {
         }
         $target_name = $motbot_model->targetname;
 
-        $draftitemid = $data->{$target_name . '_fullmessagehtml'}['itemid'];
+        $draftitemid = $data->{$target_name . '_fullmessagehtml' . $motbot_model->prediction}['itemid'];
         $cmid = $data->coursemodule;
         $context = context_module::instance($cmid);
         if ($draftitemid) {
@@ -131,16 +131,15 @@ function motbot_delete_instance($id) {
     global $DB;
 
     $exists = $DB->get_record('motbot', array('id' => $id));
-    if (!$exists) {
-        return false;
+    if ($exists) {
+        $DB->delete_records('motbot', array('id' => $id));
     }
 
-    $exists = $DB->get_records('motbot_model', array('motbot' => $id));
-    foreach($exists as $ex) {
-        $DB->delete_records('motbot_model', array('id' => $ex->id));
+    $records = $DB->get_records('motbot_model', array('motbot' => $id));
+    foreach ($records as $record) {
+        $DB->delete_records('motbot_model', array('id' => $record->id));
     }
 
-    $DB->delete_records('motbot', array('id' => $id));
     return true;
 }
 
@@ -157,7 +156,7 @@ function motbot_delete_instance($id) {
  * @param array $options additional options affecting the file serving
  * @return bool false if file not found, does not return if found - just send the file
  */
-function motbot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function motbot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
     global $CFG, $DB;
 
     if ($filearea !== 'attachment') {
@@ -177,7 +176,7 @@ function motbot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownl
     if (!$args) {
         $filepath = '/'; // $args is empty => the path is '/'
     } else {
-        $filepath = '/'.implode('/', $args).'/'; // $args contains elements of the filepath
+        $filepath = '/' . implode('/', $args) . '/'; // $args contains elements of the filepath
     }
 
     // Retrieve the file from the Files API.
@@ -204,10 +203,10 @@ function motbot_cm_info_view(cm_info $cm) {
 
     $courseid = required_param('id', PARAM_INT);
 
-    $motbot = $DB->get_record('motbot', array('id'=> $cm->instance), '*', MUST_EXIST);
+    $motbot = $DB->get_record('motbot', array('id' => $cm->instance), '*', MUST_EXIST);
     $motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $USER->id), '*');
 
-    if(!$motbot_course_user) {
+    if (!$motbot_course_user) {
         $motbot_course_user = (object) [
             'id' => null,
             'motbot' => $motbot->id,
@@ -218,7 +217,7 @@ function motbot_cm_info_view(cm_info $cm) {
     }
 
     // Display a form that lets students enable the motbot, if they haven't already.
-    if(!$motbot_course_user->authorized && !has_capability('mod/motbot:addinstance', $modulecontext)) {
+    if (!$motbot_course_user->authorized && !has_capability('mod/motbot:addinstance', $modulecontext)) {
         $content = mod_motbot_view_enable_module_form($motbot_course_user, $courseid);
         $content = str_replace('class="mform"', 'class="mform float-right"', $content);
         $cm->set_name($motbot->name);
@@ -243,11 +242,11 @@ function motbot_cm_info_dynamic(cm_info $cm) {
     $modulecontext = context_module::instance($cm->id);
     $coursecontext = context_course::instance($cm->course);
 
-    if(!has_capability('mod/motbot:addinstance', $modulecontext)) {
+    if (!has_capability('mod/motbot:addinstance', $modulecontext)) {
         // Display a diffrent icon depending on wether the motbot is enabled for the loged in user.
         $active = $DB->get_record('motbot_course_user', array('motbot' => $cm->instance, 'user' => $USER->id, 'authorized' => 1));
-        if($active) {
-            if(!motbot_is_happy($cm->instance, $coursecontext->id)) {
+        if ($active) {
+            if (!motbot_is_happy($cm->instance, $coursecontext->id)) {
                 $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-unhappy.svg'));
             }
         } else {
@@ -256,7 +255,7 @@ function motbot_cm_info_dynamic(cm_info $cm) {
         }
     } else {
         $paused = $DB->get_record('motbot', array('id' => $cm->instance, 'active' => 0));
-        if($paused) {
+        if ($paused) {
             $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-inactive.svg'));
             $cm->set_name('Motbot disabled');
         }
@@ -273,8 +272,8 @@ function motbot_cm_info_dynamic(cm_info $cm) {
 function motbot_is_happy($motbotid, $contextid) {
     global $DB, $USER;
     $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'id, active');
-    foreach($motbot_models as $motbot_model) {
-        if(!$motbot_model->active) {
+    foreach ($motbot_models as $motbot_model) {
+        if (!$motbot_model->active) {
             continue;
         }
         $sql = "SELECT *
@@ -285,7 +284,7 @@ function motbot_is_happy($motbotid, $contextid) {
                 ORDER BY timecreated DESC
                 LIMIT 1";
         $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $USER->id, 'model' => $motbot_model->id), IGNORE_MISSING);
-        if(!$latest_intervention) {
+        if (!$latest_intervention) {
             continue;
         }
 

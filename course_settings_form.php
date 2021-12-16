@@ -34,7 +34,9 @@ require_once("locallib.php");
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_motbot_course_settings_form extends moodleform {
-    private $id = null;
+    /**
+     * @var array Array of analytics models available for a course
+     */
     private $models = null;
 
     /**
@@ -56,12 +58,12 @@ class mod_motbot_course_settings_form extends moodleform {
         $mform->addHelpButton('allow_teacher_involvement', 'course_settings_form:allow_teacher_involvement', 'motbot');
 
         // Pefered time selector.
-        $mform->addElement('select', 'pref_time', get_string('course_settings_form:pref_time', 'motbot'), [-1 => 'auto', 0 => '0', 1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5', 6 => '6', 7 => '7', 8 => '8', 9 => '9', 10 => '10', 11 => '11', 12 => '12', 13 => '13', 14 => '14', 15 => '15', 16 => '16', 17 => '17', 18 => '18', 19 => '19', 20 => '20', 21 => '21', 22 => '22', 23 => '23']);
-        $mform->addHelpButton('pref_time', 'course_settings_form:pref_time', 'motbot');
+        // $mform->addElement('select', 'pref_time', get_string('course_settings_form:pref_time', 'motbot'), [-1 => 'auto', 0 => '0', 1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5', 6 => '6', 7 => '7', 8 => '8', 9 => '9', 10 => '10', 11 => '11', 12 => '12', 13 => '13', 14 => '14', 15 => '15', 16 => '16', 17 => '17', 18 => '18', 19 => '19', 20 => '20', 21 => '21', 22 => '22', 23 => '23']);
+        // $mform->addHelpButton('pref_time', 'course_settings_form:pref_time', 'motbot');
 
         // $mform->addElement('selectyesno', 'only_weekdays', get_string('course_settings_form:only_weekdays', 'motbot'));
-        $mform->addElement('hidden', 'only_weekdays');
-        $mform->setType('only_weekdays', PARAM_INT);
+        // $mform->addElement('hidden', 'only_weekdays');
+        // $mform->setType('only_weekdays', PARAM_INT);
 
         $mform->addElement('header', 'advice_settings', get_string('course_settings_form:model_settings', 'motbot'), '', array('group' => 1, 'checked' => true), array(0, 1));
         $this->add_model_settings($mform);
@@ -81,6 +83,12 @@ class mod_motbot_course_settings_form extends moodleform {
         $this->add_action_buttons();
     }
 
+    /**
+     * Adds a checkbox for every analytics model.
+     *
+     * @param object $mform
+     * @return void
+     */
     private function add_model_settings($mform) {
         $models = $this->get_models();
         foreach($models as $model) {
@@ -90,6 +98,13 @@ class mod_motbot_course_settings_form extends moodleform {
         }
     }
 
+    /**
+     * Creates a json string, containing information about wich models
+     * were disabled by the user in the submitted form.
+     *
+     * @param object $data Submitted form data.
+     * @return string Json String.
+     */
     private function get_disabled_models($data) {
         $disabled_models = array();
         $models = $this->get_models();
@@ -102,6 +117,11 @@ class mod_motbot_course_settings_form extends moodleform {
         return json_encode($disabled_models);
     }
 
+    /**
+     * Gets all analytics models from the db.
+     *
+     * @return array
+     */
     private function get_models() {
         global $DB;
         if(!$this->models) {

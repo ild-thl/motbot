@@ -33,7 +33,7 @@ $id = required_param('id', PARAM_INT);
 list ($course, $cm) = get_course_and_cm_from_cmid($id, 'motbot');
 $moduleinstance = $DB->get_record('motbot', array('id'=> $cm->instance), '*', MUST_EXIST);
 
-require_login();
+require_login($course, true, $cm);
 $modulecontext = context_module::instance($cm->id);
 $coursecontext = context_course::instance($course->id);
 
@@ -45,6 +45,7 @@ if(has_capability('mod/motbot:addinstance', $coursecontext)) {
         redirect($view->settings_url, 'Please activate Motbot first.');
     }
 } else {
+    // Else init student view.
     $motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
     $motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
 
@@ -55,7 +56,6 @@ if(has_capability('mod/motbot:addinstance', $coursecontext)) {
     }
 }
 
-require_login($course, true, $cm);
 
 $PAGE->set_url('/mod/motbot/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($moduleinstance->name));

@@ -58,7 +58,8 @@ if(!$motbot_user) {
         'id' => null,
         'user' => $USER->id,
         'authorized' => 0,
-        'allow_teacher_involvement' => 0,
+        'pref_time' => -1,
+        'only_weekdays' => 0,
         'usermodified' => null,
         'timecreated' => null,
         'timemodified' => null,
@@ -75,8 +76,8 @@ if(!$motbot_course_user) {
         'allow_teacher_involvement' => 0,
         'disabled_models' => [],
         'disabled_advice' => [],
-        'pref_time' => -1,
-        'only_weekdays' => 0,
+        // 'pref_time' => -1,
+        // 'only_weekdays' => 0,
         'usermodified' => null,
         'timecreated' => null,
         'timemodified' => null,
@@ -90,8 +91,8 @@ $toform = (object) [
     'allow_teacher_involvement' => $motbot_course_user->allow_teacher_involvement,
     'disabled_models' => $motbot_course_user->disabled_models,
     'disabled_advice' => $motbot_course_user->disabled_advice,
-    'pref_time' => $motbot_course_user->pref_time,
-    'only_weekdays' => $motbot_course_user->only_weekdays,
+    // 'pref_time' => $motbot_course_user->pref_time,
+    // 'only_weekdays' => $motbot_course_user->only_weekdays,
     'allow_course_completion' => true,
     'allow_feedback' => true,
     'allow_recent_activities' => true,
@@ -146,12 +147,12 @@ if ($mform->is_cancelled()) {
     $motbot_course_user->allow_teacher_involvement = $form_data->allow_teacher_involvement;
     $motbot_course_user->disabled_models = $form_data->disabled_models;
     $motbot_course_user->disabled_advice = $form_data->disabled_advice;
-    $motbot_course_user->pref_time = $form_data->pref_time;
-    if($motbot_course_user->pref_time == -1) {
-        $auto_period = motbot_calc_user_active_period($motbot_course_user->user);
-        $motbot_course_user->pref_time = $auto_period;
-    }
-    $motbot_course_user->only_weekdays = $form_data->only_weekdays;
+    // $motbot_course_user->pref_time = $form_data->pref_time;
+    // if($motbot_course_user->pref_time == -1) {
+    //     $auto_period = motbot_calc_user_active_period($motbot_course_user->user);
+    //     $motbot_course_user->pref_time = $auto_period;
+    // }
+    // $motbot_course_user->only_weekdays = $form_data->only_weekdays;
     $motbot_course_user->usermodified = $USER->id;
     $motbot_course_user->timemodified = $time;
     if(!$motbot_course_user->timecreated) {

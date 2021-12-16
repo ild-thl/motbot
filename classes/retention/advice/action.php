@@ -15,35 +15,54 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Form that allows a user to enable a motbot module.
+ * Abstract class for advices that need a title and exactly one call to action.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// moodleform is defined in formslib.php.
-require_once("$CFG->libdir/formslib.php");
+namespace mod_motbot\retention\advice;
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 /**
- * Form that allows a user to enable a motbot module.
+ * Abstract class for advices that need a title and exactly one call to action.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_motbot_enable_module_form extends moodleform {
+abstract class action extends \mod_motbot\retention\advice\base {
+    protected $title = null;
+    protected $action_url = null;
+    protected $action = null;
+
     /**
-     * Form definition.
+     * Generates advices as text.
+     *
      * @return void
      */
-    public function definition() {
-        global $CFG;
+    public function render() {
+        return ($this->title ? $this->title . " " : "") . '*' . $this->action . '*: _' . $this->action_url . '_';
+    }
 
-        $mform = $this->_form;
+    /**
+     * Generates advices as html.
+     *
+     * @return void
+     */
+    public function render_html() {
+        global $OUTPUT;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('submit', 'authorized', get_string('course_settings_form:authorized', 'motbot'));
+        $context = [
+            "title" => $this->title,
+            "action_url" => $this->action_url,
+            "action" => $this->action,
+        ];
+
+        return $OUTPUT->render_from_template('mod_motbot/action', $context);
     }
 }

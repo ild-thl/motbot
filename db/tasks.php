@@ -28,7 +28,7 @@ $tasks = [
     [
         'classname' => 'mod_motbot\retention\bot',
         'blocking' => 0,
-        'minute' => '*/5',
+        'minute' => '*/2',
         'hour' => '*',
         'day' => '*',
         'month' => '*',
