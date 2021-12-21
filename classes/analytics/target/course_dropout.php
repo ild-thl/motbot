@@ -67,7 +67,7 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
         $instances = $DB->get_records('motbot', array('course' => $course->get_id()));
 
         if (!$instances) {
-            return get_string('nomotbotinstance', 'motbot');
+            return get_string('motbot:noinstance', 'motbot');
         }
 
         if (count($instances) > 1) {
@@ -76,12 +76,12 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
 
         $motbot = reset($instances);
         if ($motbot->active == 0) {
-            return get_string('motbotpaused', 'motbot');
+            return get_string('motbot:paused', 'motbot');
         }
 
         $message = $DB->get_record('motbot_message', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\course_dropout'));
         if (!$message || !$message->active) {
-            return get_string('motbotmodelinactive', 'motbot');
+            return get_string('motbot:modelinactive', 'motbot');
         }
 
         return parent::is_valid_analysable($course, $fortraining);

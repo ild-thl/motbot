@@ -35,15 +35,15 @@ defined('MOODLE_INTERNAL') || die();
  */
 class recent_activities extends \mod_motbot\retention\advice\title_and_actionlist {
     /**
-    * Returns a lang_string object representing the name for the indicator or target.
-    *
-    * Used as column identificator.
-    *
-    * If there is a corresponding '_help' string this will be shown as well.
-    *
-    * @return \lang_string
-    */
-    public static function get_name() : \lang_string {
+     * Returns a lang_string object representing the name for the indicator or target.
+     *
+     * Used as column identificator.
+     *
+     * If there is a corresponding '_help' string this will be shown as well.
+     *
+     * @return \lang_string
+     */
+    public static function get_name(): \lang_string {
         return new \lang_string('advice:recent_activities', 'motbot');
     }
 
@@ -63,32 +63,32 @@ class recent_activities extends \mod_motbot\retention\advice\title_and_actionlis
 
         $endtime = time();
         $lastaccess_condition = array('userid' => $user->id);
-        if($course) {
+        if ($course) {
             $lastaccess_condition['courseid'] = $course->id;
         }
         $lastaccess = $DB->get_record('user_lastaccess', $lastaccess_condition, '*', IGNORE_MISSING);
         $starttime = $lastaccess->timeaccess;
         $select = "eventname = :eventname AND timecreated > :starttime AND timecreated <= :endtime";
         $params = array('eventname' => '\core\event\course_module_created', 'starttime' => $starttime, 'endtime' => $endtime);
-        if($course) {
+        if ($course) {
             $select .= " AND courseid = :courseid";
             $params['courseid'] = $course->id;
         }
         $new_activities = $logstore->get_events_select($select, $params, 'timecreated DESC', 0, 5);
 
-        if(empty($new_activities)) {
+        if (empty($new_activities)) {
             throw new \moodle_exception('No recent activities.');
         }
 
         $actions = array();
-        foreach($new_activities as $activity) {
+        foreach ($new_activities as $activity) {
             $this->actions[] = [
-                'action_title' => 'An activity or ressource of type ' . \get_string('modulename', 'mod_' . $activity->other['modulename']) . ' was added on ' . userdate($activity->timecreated),
+                'action_title' => \get_string('advice:recentactivities_action', 'motbot'),
                 'action_url' => $CFG->wwwroot . '/mod/' . $activity->other['modulename'] . '/view.php?id=' . $activity->objectid,
-                'action' => 'Go to ' . $activity->other['name'],
+                'action' => \get_string('motbot:goto', 'motbot', $activity->other['name']),
             ];
         }
 
-        $this->title = 'These new ressources might be worth checking out:';
+        $this->title = \get_string('advice:recentactivities_title', 'motbot');
     }
 }

@@ -38,8 +38,6 @@ class mod_motbot_enable_module_form extends moodleform {
      * @return void
      */
     public function definition() {
-        global $CFG;
-
         $mform = $this->_form;
 
         $mform->addElement('hidden', 'id');

@@ -28,21 +28,21 @@
 
 require('../../config.php');
 require_once('lib.php');
-require_once(__DIR__. '/course_settings_form.php');
-require_once(__DIR__. '/delete_intervention_data_form.php');
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once(__DIR__ . '/course_settings_form.php');
+require_once(__DIR__ . '/delete_intervention_data_form.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 $id = required_param('id', PARAM_INT);
-list ($course, $cm) = get_course_and_cm_from_cmid($id, 'motbot');
-$moduleinstance = $DB->get_record('motbot', array('id'=> $cm->instance), '*', MUST_EXIST);
+list($course, $cm) = get_course_and_cm_from_cmid($id, 'motbot');
+$moduleinstance = $DB->get_record('motbot', array('id' => $cm->instance), '*', MUST_EXIST);
 
 // Only looged in user should be able to view this page.
 $modulecontext = context_module::instance($cm->id);
 $coursecontext = context_course::instance($course->id);
 
 // Redirect teachers and managers.
-if(has_capability('mod/motbot:addinstance', $coursecontext)) {
-    $url = $CFG->wwwroot.'/course/modedit.php?update=' . $id;
+if (has_capability('mod/motbot:addinstance', $coursecontext)) {
+    $url = $CFG->wwwroot . '/course/modedit.php?update=' . $id;
     redirect($url);
     die;
 }
@@ -52,7 +52,7 @@ $motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
 $motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
 
 // In case there are no previous settings, set default options.
-if(!$motbot_user) {
+if (!$motbot_user) {
     $time = time();
     $motbot_user = (object) [
         'id' => null,
@@ -67,7 +67,7 @@ if(!$motbot_user) {
 }
 
 // In case there are no previous settings, set default options.
-if(!$motbot_course_user) {
+if (!$motbot_course_user) {
     $motbot_course_user = (object) [
         'id' => null,
         'motbot' => $moduleinstance->id,
@@ -102,12 +102,12 @@ $toform = (object) [
 ];
 
 $disabled_models = json_decode($motbot_course_user->disabled_models);
-foreach($disabled_models as $d) {
+foreach ($disabled_models as $d) {
     $targetname = mod_motbot_get_name_of_target($d);
     $toform->$targetname = 0;
 }
 $disabled_advice = json_decode($motbot_course_user->disabled_advice);
-foreach($disabled_advice as $d) {
+foreach ($disabled_advice as $d) {
     $toform->$d = 0;
 }
 
@@ -133,10 +133,10 @@ $deletedataform = new mod_motbot_delete_intervention_data_form();
 if ($mform->is_cancelled()) {
     // Handle form cancel operation.
 
-    if($motbot_course_user->authorized) {
-        $url = $CFG->wwwroot.'/mod/motbot/view.php?id=' . $id;
+    if ($motbot_course_user->authorized) {
+        $url = $CFG->wwwroot . '/mod/motbot/view.php?id=' . $id;
     } else {
-        $url = $CFG->wwwroot.'/course/view.php?id=' . $course->id;
+        $url = $CFG->wwwroot . '/course/view.php?id=' . $course->id;
     }
     redirect($url);
 } else if ($fromform = $mform->get_data()) {
@@ -155,7 +155,7 @@ if ($mform->is_cancelled()) {
     // $motbot_course_user->only_weekdays = $form_data->only_weekdays;
     $motbot_course_user->usermodified = $USER->id;
     $motbot_course_user->timemodified = $time;
-    if(!$motbot_course_user->timecreated) {
+    if (!$motbot_course_user->timecreated) {
         $motbot_course_user->timecreated = $time;
     }
 
@@ -163,24 +163,24 @@ if ($mform->is_cancelled()) {
     $motbot_user->allow_teacher_involvement = $form_data->allow_teacher_involvement;
     $motbot_user->usermodified = $USER->id;
     $motbot_user->timemodified = $time;
-    if(!$motbot_user->timecreated) {
+    if (!$motbot_user->timecreated) {
         $motbot_user->timecreated = $time;
     }
     // Update user records.
-    if(!$motbot_course_user->id) {
+    if (!$motbot_course_user->id) {
         $DB->insert_record('motbot_course_user', $motbot_course_user);
     } else {
         $DB->update_record('motbot_course_user', $motbot_course_user);
     }
 
-    if(!$motbot_user->id) {
+    if (!$motbot_user->id) {
         $DB->insert_record('motbot_user', $motbot_user);
     }
 
-    if($motbot_course_user->authorized) {
-        $url = $CFG->wwwroot.'/mod/motbot/view.php?id=' . $id;
+    if ($motbot_course_user->authorized) {
+        $url = $CFG->wwwroot . '/mod/motbot/view.php?id=' . $id;
     } else {
-        $url = $CFG->wwwroot.'/course/view.php?id=' . $course->id;
+        $url = $CFG->wwwroot . '/course/view.php?id=' . $course->id;
     }
     redirect($url);
 } else if ($fromform = $deletedataform->get_data()) {
@@ -188,14 +188,14 @@ if ($mform->is_cancelled()) {
     // Delete users intervention records blonging to this module.
     $DB->delete_records('motbot_intervention', array('recipient' => $USER->id, 'contextid' => $coursecontext->id));
 
-    $url = $CFG->wwwroot.'/mod/motbot/view.php?id=' . $id;
+    $url = $CFG->wwwroot . '/mod/motbot/view.php?id=' . $id;
     redirect($url);
 } else {
     // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
     // or on the first display of the form.
 
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('pluginname', 'motbot') . ' preferences for ' . $course->fullname);
+    echo $OUTPUT->heading(get_string('settings:course_settings_header', 'motbot', array('pluginname' => \get_string('pluginname', 'motbot'), 'coursename' => $course->fullname)));
 
     // Set default data (if any).
     $mform->set_data($toform);

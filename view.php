@@ -30,19 +30,19 @@ require_once(__DIR__ . '/user_view.php');
 require_once(__DIR__ . '/teacher_view.php');
 
 $id = required_param('id', PARAM_INT);
-list ($course, $cm) = get_course_and_cm_from_cmid($id, 'motbot');
-$moduleinstance = $DB->get_record('motbot', array('id'=> $cm->instance), '*', MUST_EXIST);
+list($course, $cm) = get_course_and_cm_from_cmid($id, 'motbot');
+$moduleinstance = $DB->get_record('motbot', array('id' => $cm->instance), '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $modulecontext = context_module::instance($cm->id);
 $coursecontext = context_course::instance($course->id);
 
 
-if(has_capability('mod/motbot:addinstance', $coursecontext)) {
+if (has_capability('mod/motbot:addinstance', $coursecontext)) {
     // If teacher or admin, redirect.
     $view = new mod_motbot_teacher_view($id, $moduleinstance->id, $coursecontext->id, $USER->id);
-    if(!$DB->get_record('motbot', array('id' => $moduleinstance->id), 'active')->active) {
-        redirect($view->settings_url, 'Please activate Motbot first.');
+    if (!$DB->get_record('motbot', array('id' => $moduleinstance->id), 'active')->active) {
+        redirect($view->settings_url, \get_string('motbot:pleaseactivate', 'motbot'));
     }
 } else {
     // Else init student view.
@@ -50,9 +50,9 @@ if(has_capability('mod/motbot:addinstance', $coursecontext)) {
     $motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
 
     $view = new mod_motbot_user_view($id, $moduleinstance->id, $coursecontext->id, $USER->id);
-    if(!$motbot_course_user || !$motbot_course_user->authorized) {
+    if (!$motbot_course_user || !$motbot_course_user->authorized) {
         // If motbot inactive redirect to motbot settings.
-        redirect($view->settings_url, 'Please activate your Motbot.');
+        redirect($view->settings_url, \get_string('motbot:pleaseactivate', 'motbot'));
     }
 }
 

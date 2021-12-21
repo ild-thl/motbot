@@ -44,12 +44,12 @@ Example context (json):
       style="width:{{ user_progress }}%; z-index: {{ user_prog_less_or_equal }}">
       <div>
         <p class="progress-value">{{ user_progress }}%</p>
-        <p>Your Progress</p>
+        <p>{{#str}}advice:yourprogress, motbot{{/str}}</p>
       </div>
     </div>
     <div class="progress-stat progress-stat-avg" style="width:{{ avg_progress }}%">
       <div>
-        <p>Average Progress</p>
+        <p>{{#str}}advice:averageprogress, motbot{{/str}}</p>
         <p class="progress-value">{{ avg_progress }}%</p>
       </div>
     </div>

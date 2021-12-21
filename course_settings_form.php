@@ -44,8 +44,6 @@ class mod_motbot_course_settings_form extends moodleform {
      * @return void
      */
     public function definition() {
-        global $CFG;
-
         $mform = $this->_form;
 
         // Yes, No selector to enable motbot, as default disabled.
@@ -91,7 +89,7 @@ class mod_motbot_course_settings_form extends moodleform {
      */
     private function add_model_settings($mform) {
         $models = $this->get_models();
-        foreach($models as $model) {
+        foreach ($models as $model) {
             $targetname = mod_motbot_get_name_of_target($model->target);
             $mform->addElement('checkbox', $targetname, get_string('target:' . $targetname . '_short', 'motbot'), '', array('group' => 1), array(0, 1));
             $mform->setDefault($targetname, 1);
@@ -108,9 +106,9 @@ class mod_motbot_course_settings_form extends moodleform {
     private function get_disabled_models($data) {
         $disabled_models = array();
         $models = $this->get_models();
-        foreach($models as $model) {
+        foreach ($models as $model) {
             $targetname = mod_motbot_get_name_of_target($model->target);
-            if(!property_exists($data, $targetname)) {
+            if (!property_exists($data, $targetname)) {
                 $disabled_models[] = $model->target;
             }
         }
@@ -124,7 +122,7 @@ class mod_motbot_course_settings_form extends moodleform {
      */
     private function get_models() {
         global $DB;
-        if(!$this->models) {
+        if (!$this->models) {
             $sql = "SELECT *
                 FROM mdl_analytics_models
                 WHERE enabled = 1

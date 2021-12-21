@@ -29,6 +29,23 @@ $string['advice:recent_activities'] = 'Recommendation for recently added activit
 $string['advice:recent_forum_activity'] = 'Recommendation for recent forum posts';
 $string['advice:recommended_discussion'] = 'Recomemnded discussion';
 $string['advice:visit_course'] = 'Advice to visit course';
+$string['advice:averageprogress'] = 'Average progress';
+$string['advice:yourprogress'] = 'Your progress';
+$string['advice:postedby'] = 'Posted by {$a->author} on {$a->date}';
+$string['advice:coursecompletion_title'] = 'Your recent course progress:';
+$string['advice:coursecompletion_desc_bad'] = 'Your progress is only {$a}% behind course average. You can easily catch up!';
+$string['advice:coursecompletion_desc_worst'] = 'You ara quite a bit behind. But nothing is lost. Try catching up. Please don\'t hesitate to ask your fellow students or teachers for help!';
+$string['advice:coursecompletion_desc_good'] = 'Your progress is looking fine. But there is no time to rest. A regular interaction with the course content is only recommended!';
+$string['advice:coursecompletion_desc_best'] = 'You are far ahead! But don\'t rest on your laurels!';
+$string['advice:feedback_title'] = 'Please consider giving some feedback as well, so we can support you better! \xF0\x9F\x99\x8F';
+$string['advice:laststop_title'] = 'Continue where you last stopped:';
+$string['advice:laststop_title_newchallenge'] = 'Continue with a new challenge:';
+$string['advice:recentactivities_title'] = 'These new forum discussions could be interesting for you:';
+$string['advice:recentactivities_action'] = 'The discussion regarding "{$a->activityname}" was posted on {$a->date}';
+$string['advice:recommendeddiscussion_title'] = 'Nobody replied to this students post yet. Maybe you could try to add something to the discussion?';
+$string['advice:recommendeddiscussion_action'] = 'Reply now';
+$string['advice:visitcourse_title'] = 'Visit the course!';
+
 //----
 
 //---- Bot
@@ -39,8 +56,8 @@ $string['bot'] = 'Executes scheduled interventions';
 $string['course_settings_form:advice_settings'] = 'Enabled advice options';
 $string['course_settings_form:allow_teacher_involvement'] = 'Allow teacher involvement?';
 $string['course_settings_form:allow_teacher_involvement_help'] = 'When "Yes" is checked, teachers will be informed of your situation in case other means of interventions fail.';
-$string['course_settings_form:authorized'] = 'Enable Motbot';
-$string['course_settings_form:authorized_help'] = 'Allow the Motbot to analyze your user activity and intervene if needed.';
+$string['course_settings_form:authorized'] = 'Enable MotBot';
+$string['course_settings_form:authorized_help'] = 'Allow the MotBot to analyze your user activity and intervene if needed.';
 $string['course_settings_form:model_settings'] = 'Enabled models';
 $string['course_settings_form:only_weekdays'] = 'Only send interventions on weekdays';
 $string['course_settings_form:pref_time'] = 'Prefered time of day for receiveing messages:';
@@ -68,35 +85,38 @@ $string['load_default_advice'] = 'Successfully loaded {$a->count} advice definit
 
 //----  Message
 $string['messageprovider:motbot_intervention'] = 'New prediction avaialble';
-$string['messageprovider:motbot_teacher_intervention'] = 'Motbot teacher intervention';
+$string['messageprovider:motbot_teacher_intervention'] = 'MotBot teacher intervention';
 
 
 $string['message:teacher_subject'] = 'Failed intervention: {$a}';
-$string['message:teacher_fullmessagehtml'] = '<p>Student {$a->fullname} might need your attention.</p><p>Previous automatic interventions by Motbot were unsuccessful.</p><p>Previous interventions:</p>{$a->interventions}';
+$string['message:teacher_fullmessagehtml'] = '<p>Student {$a->fullname} might need your attention.</p><p>Previous automatic interventions by MotBot were unsuccessful.</p><p>Previous interventions:</p>{$a->interventions}';
 
 
 $string['message:unhelpfulinterventions_subject'] = 'Unhelpful interventions in: {course}';
 $string['message:unhelpfulinterventions_fullmessage'] = 'Hello {firstname} {lastname},
-Motbot detected undesirable intervention results.
+MotBot detected undesirable intervention results.
 There are either an uncommon amount of negative interventions or students that received interventions found them unhelpful.
 Please check motbot settings and check wether the calculated model is appropriate.
-Kind regards Motbot {motbot}';
+Kind regards MotBot {motbot}';
 $string['message:unhelpfulinterventions_fullmessagehtml'] = '<p>Hello {firstname} {lastname},</p><p>
-Motbot detected undesirable intervention results.</p><p>
+MotBot detected undesirable intervention results.</p><p>
 There are either an uncommon amount of negative interventions or students that received interventions found them unhelpful.</p><p>
 Please check motbot settings and check wether the calculated model is appropriate.</p><p>
-Kind regards Motbot {motbot}</p>';
+Kind regards MotBot {motbot}</p>';
 //----
 
 //----  Module
-$string['modulename'] = 'Motbot';
-$string['modulenameplural'] = 'Motbot';
+$string['modulename'] = 'MotBot';
+$string['modulenameplural'] = 'MotBot';
 //----
 
 
 //----  Mod Form
 $string['mod_form:active'] = 'Active';
 $string['mod_form:active_help'] = 'Select wether this model should analyze useractivity in this course and try to send interventions to users.';
+
+$string['mod_form:custom'] = 'Custom Message';
+$string['mod_form:custom_help'] = 'When this option is enabled a custom message will be sent to students identified by this model. You can edit the custom message using the following input fields.';
 
 $string['mod_form:course_dropout_header'] = 'Course Dropout Settings';
 $string['mod_form:course_dropout_subject'] = 'Do you have trouble with {course_shortname}?';
@@ -110,8 +130,6 @@ Kind regards, your {motbot}.';
 $string['mod_form:course_dropout_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you´re haveing difficulties keeping up.</p><p>Would you like to ask a teacher for help?</p></br><p>Kind regards, your {motbot}.</p>';
 
 $string['mod_form:fullmessage'] = 'Full Message';
-$string['mod_form:fullmessageformat'] = 'Full message format';
-$string['mod_form:fullmessageformat_help'] = 'Format of the full message';
 $string['mod_form:fullmessagehtml'] = 'Full Message HTML';
 
 $string['mod_form:intro'] = '<p>This is a motivational bot. It will analyse user activity and will intervene when it detects users that seem to have difficulties with the course content and motivation.</p>';
@@ -157,13 +175,36 @@ $string['mod_form:recent_cognitive_presence_subject'] = 'You hav\'nt been around
 $string['mod_form:subject'] = 'Subject';
 //----
 
-$string['motbotpaused'] = 'Motbot is paused for this course.';
-$string['nomotbotinstance'] = 'No Motbot activity found in course.';
-$string['motbotmodelinactive'] = 'This model is deactivated or has no motbot message information associated with it in course.';
+//---- MotBot General
+$string['motbot:modelinactive'] = 'This model is deactivated or has no motbot message information associated with it in course.';
+$string['motbot:noinstance'] = 'No MotBot activity found in course.';
+$string['motbot:paused'] = 'MotBot is paused for this course.';
+$string['motbot:pleaceactivate'] = 'Please activate the MotBot first.';
+$string['motbot:thanksforfeedback'] = 'Thank you for your feedback!';
+$string['motbot:overview_header'] = 'MotBot overview';
+$string['motbot:helpful'] = 'Helpful';
+$string['motbot:unhelpful'] = 'Unhelpful';
+$string['motbot:total'] = 'Total';
+$string['motbot:lastinterventionon'] = 'Last intervention on';
+$string['motbot:lastupdateon'] = 'Last update on';
+$string['motbot:nointerventionyet'] = 'No intervention yet';
+$string['motbot:viewintervention'] = 'View intervention';
+$string['motbot:allgood'] = 'All good';
+$string['motbot:interventions'] = 'Interventions';
+$string['motbot:notification'] = 'Notification';
+$string['motbot:gotocourse'] = 'To course';
+$string['motbot:goto'] = 'Go to {$a}';
+$string['motbot:reason'] = 'Reason for intervention';
+$string['motbot:date'] = 'Date';
+$string['motbot:state'] = 'State';
+$string['motbot:wereteachersinformed'] = 'Were teachers informed';
+$string['motbot:message'] = 'Message';
+$string['motbot:enablingmotbot'] = 'Enabling Motbot';
+//----
 
 //----  Plugin General
 $string['pluginadministration'] = 'Plugin Administration';
-$string['pluginname'] = 'Motbot';
+$string['pluginname'] = 'MotBot';
 //----
 
 
@@ -194,39 +235,42 @@ $string['state:4'] = 'Stored';
 //----
 
 //----  Settings
-$string['settings:edit_motbot'] = 'Motbot Settings';
+$string['settings:advanced_options'] = 'Advanced options';
+$string['settings:course_settings_header'] = '{$a->pluginname} settings for {$a->coursename}';
+$string['settings:deleteinterventiondata'] = 'Delete intervention data';
+$string['settings:edit_motbot'] = 'MotBot Settings';
 //----
 
 //----  Analytic Targets
-$string['target:recentcognitivepresence'] = 'Students recent cognitive presence (Motbot)';
+$string['target:recentcognitivepresence'] = 'Students recent cognitive presence (MotBot)';
 $string['target:recentcognitivepresence_help'] = 'This target describes how much the student has interacted with moodle content recently.';
 $string['target:recent_cognitive_presence_short'] = 'Recent cognitive presence';
 $string['target:recent_cognitive_presence_neutral'] = 'Recent cognitive presence';
 
-$string['target:coursedropout'] = 'Students at risk of dropping out (Motbot)';
-$string['target:coursedropout_help'] = 'This target describes whether the student is considered at risk of dropping out.';
+$string['target:coursedropout'] = 'Students at risk of dropping out (MotBot)';
+$string['target:coursedropout_help'] = 'This target describes wether the student is considered at risk of dropping out.';
 $string['target:course_dropout_short'] = 'Possible course dropout';
 $string['target:course_dropout_neutral'] = 'Dropout risk';
 
-$string['target:lowsocialpresence'] = 'Students with low social presence (Motbot)';
+$string['target:lowsocialpresence'] = 'Students with low social presence (MotBot)';
 $string['target:lowsocialpresence_help'] = 'This target generates reminders for upcoming activities due.';
 $string['target:lowsocialpresenceinfo'] = 'All upcoming activities due insights are listed here. These students have received these insights directly.';
 $string['target:low_social_presence_short'] = 'Low social presence';
 $string['target:low_social_presence_neutral'] = 'Social presence';
 
-$string['target:norecentaccesses'] = 'Students who have not accessed the course recently (Motbot)';
+$string['target:norecentaccesses'] = 'Students who have not accessed the course recently (MotBot)';
 $string['target:norecentaccesses_help'] = 'This target identifies students who have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
 $string['target:norecentaccessesinfo'] = 'The following students have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
 $string['target:no_recent_accesses_short'] = 'No recent accesses';
 $string['target:no_recent_accesses_neutral'] = 'Attendance';
 
-$string['target:unhelpfulinterventions'] = 'Motbot that sends unhelpful interventions (Motbot)';
-$string['target:unhelpfulinterventions_help'] = 'Motbot that sends unhelpful interventions (Motbot)';
-$string['target:unhelpfulinterventionsinfo'] = 'Motbot that sends unhelpful interventions (Motbot)';
+$string['target:unhelpfulinterventions'] = 'MotBot that sends unhelpful interventions (MotBot)';
+$string['target:unhelpfulinterventions_help'] = 'MotBot that sends unhelpful interventions (MotBot)';
+$string['target:unhelpfulinterventionsinfo'] = 'MotBot that sends unhelpful interventions (MotBot)';
 $string['target:unhelpfulinterventions_short'] = 'Unhelpful interventions';
 $string['target:unhelpfulinterventions_neutral'] = 'Interventions';
 
-$string['target:upcomingactivitiesdue'] = 'Upcoming activities due (Motbot)';
+$string['target:upcomingactivitiesdue'] = 'Upcoming activities due (MotBot)';
 $string['target:upcomingactivitiesdue_help'] = 'This target generates reminders for upcoming activities due.';
 $string['target:upcomingactivitiesdueinfo'] = 'All upcoming activities due insights are listed here. These students have received these insights directly.';
 $string['target:upcoming_activities_due_short'] = 'Upcoming activities due';
@@ -236,6 +280,6 @@ $string['targetlabellowsocialpresenceno'] = 'Student has low social presence.';
 $string['targetlabellowsocialpresenceyes'] = 'Student has enough social presence.';
 //----
 
-$string['tomanyinstances'] = 'There should only be one Motbot activity in a course.';
+$string['tomanyinstances'] = 'There should only be one MotBot activity in a course.';
 
 $string['userdisabledmotbot'] = 'User disabled motbot activity.';

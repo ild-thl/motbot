@@ -61,9 +61,9 @@ class mod_motbot_user_view {
      * @return void
      */
     public function __construct($moduleid, $motbotid, $contextid, $userid) {
-        global $DB, $CFG;
+        global $CFG;
 
-        $this->settings_url = $CFG->wwwroot.'/mod/motbot/course_settings.php?id=' . $moduleid;
+        $this->settings_url = $CFG->wwwroot . '/mod/motbot/course_settings.php?id=' . $moduleid;
         $this->motbotid = $motbotid;
         $this->contextid = $contextid;
         $this->userid = $userid;
@@ -91,13 +91,13 @@ class mod_motbot_user_view {
         $models = array();
 
         $motbot_models = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'id, target, active');
-        foreach($motbot_models as $motbot_model) {
+        foreach ($motbot_models as $motbot_model) {
             $models[] = $this->get_model_data($motbot_model);
         }
 
 
         function sort_models_by_enable($a, $b) {
-            if($a["enabled"] == $b["enabled"]) return 0;
+            if ($a["enabled"] == $b["enabled"]) return 0;
             return (!$b["enabled"] && $b["enabled"]) ? -1 : 1;
         }
 
@@ -133,7 +133,7 @@ class mod_motbot_user_view {
             "intervention_url" => null,
         ];
 
-        if(!$motbot_model->active) {
+        if (!$motbot_model->active) {
             return $model;
         }
 
@@ -146,7 +146,7 @@ class mod_motbot_user_view {
             LIMIT 1";
         $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $this->contextid, 'recipient' => $this->userid, 'model' => $motbot_model->id), IGNORE_MISSING);
 
-        if(!$latest_intervention) {
+        if (!$latest_intervention) {
             $model["image"] = 'happy_motbot';
             return $model;
         }
@@ -164,5 +164,4 @@ class mod_motbot_user_view {
         }
         return $model;
     }
-
 }

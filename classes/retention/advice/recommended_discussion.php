@@ -35,15 +35,15 @@ defined('MOODLE_INTERNAL') || die();
  */
 class recommended_discussion extends \mod_motbot\retention\advice\forum_quote {
     /**
-    * Returns a lang_string object representing the name for the indicator or target.
-    *
-    * Used as column identificator.
-    *
-    * If there is a corresponding '_help' string this will be shown as well.
-    *
-    * @return \lang_string
-    */
-    public static function get_name() : \lang_string{
+     * Returns a lang_string object representing the name for the indicator or target.
+     *
+     * Used as column identificator.
+     *
+     * If there is a corresponding '_help' string this will be shown as well.
+     *
+     * @return \lang_string
+     */
+    public static function get_name(): \lang_string {
         return new \lang_string('advice:recommended_discussion', 'motbot');
     }
 
@@ -78,16 +78,16 @@ class recommended_discussion extends \mod_motbot\retention\advice\forum_quote {
             WHERE d.course = :course
             AND p.replycount = 0";
         $neglected_discussion = $DB->get_record_sql($sql, array('course' => $course->id), IGNORE_MISSING);
-        if($neglected_discussion && $neglected_discussion->id) {
+        if ($neglected_discussion && $neglected_discussion->id) {
             $author = $DB->get_record('user', array('id' => $neglected_discussion->userid), 'firstname, lastname', IGNORE_MISSING);
-            $this->title = 'Nobody replied to this students post yet. Maybe you could try to add something to the discussion?';
+            $this->title = \get_string('advice:recommendeddiscussion_title', 'motbot');
             // $this->title .= " \xF0\x9F\x9A\x92";
             $this->subject = $neglected_discussion->subject;
             $this->message = $neglected_discussion->message;
             $this->author = $author->firstname . ' ' . $author->lastname;
             $this->date = userdate($neglected_discussion->timecreated);
             $this->action_url = $CFG->wwwroot . '/mod/forum/discuss.php?d=' . $neglected_discussion->id;
-            $this->action = 'Reply now';
+            $this->action =  \get_string('advice:recommendeddiscussion_action', 'motbot');
         } else {
             throw new \moodle_exception('No recommended discussion.');
         }

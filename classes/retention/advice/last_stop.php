@@ -116,9 +116,9 @@ class last_stop extends \mod_motbot\retention\advice\action {
 
             // Recommend this activity, if it wasn't yet completed by the user.
             if (!$activity->completed) {
-                $this->title = 'Continue where you last stopped:';
+                $this->title = \get_string('advice:laststop_title', 'motbot');
                 $this->action_url = $CFG->wwwroot . '/mod/' . $activity_log->objecttable . '/view.php?id=' . $activity_log->contextinstanceid;
-                $this->action = 'Go to ' . $activity->name;
+                $this->action = \get_string('motbot:goto', 'motbot', $activity->name);
                 return;
             }
 
@@ -164,9 +164,9 @@ class last_stop extends \mod_motbot\retention\advice\action {
             // Get the name of the activity.
             $activity_name = $DB->get_field($table->name, 'name', array('id' => $table->instance), IGNORE_MISSING);
             if ($activity_name) {
-                $this->title = 'Continue with a new challenge:';
+                $this->title = \get_string('advice:laststop_title_newchallenge');
                 $this->action_url = $CFG->wwwroot . '/mod/' . $table->name . '/view.php?id=' . $uncompleted->cmid;
-                $this->action = 'Go to ' . $activity_name;
+                $this->action = \get_string('motbot:goto', 'motbot', $activity->name);
                 return;
             }
         }
@@ -178,8 +178,8 @@ class last_stop extends \mod_motbot\retention\advice\action {
             'name' => $course_name,
         ];
 
-        $this->title = 'Continue where you last stopped:';
+        $this->title = \get_string('advice:laststop_title');
         $this->action_url = $CFG->wwwroot . $activity->url;
-        $this->action = 'Go to ' . $activity->name;
+        $this->action = \get_string('motbot:goto', 'motbot', $activity->name);
     }
 }

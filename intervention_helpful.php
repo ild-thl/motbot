@@ -28,7 +28,7 @@ $helpful = required_param('helpful', PARAM_INT);           // User feedback.
 
 // Get cooresponding intervention.
 $intervention = $DB->get_record('motbot_intervention', array('id' => $id));
-if($intervention) {
+if ($intervention) {
     // Update intervention with users feedback.
     $intervention->helpful = $helpful;
     $DB->update_record('motbot_intervention', $intervention);
@@ -36,4 +36,4 @@ if($intervention) {
 
 // Redirect back to notifications, where users
 $url = new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message . '&offset=0');
-redirect($url, 'Thank you for your feedback!', 1, \core\output\notification::NOTIFY_SUCCESS);
+redirect($url, \get_string('motbot:thanksforfeedback', 'motbot'), 1, \core\output\notification::NOTIFY_SUCCESS);

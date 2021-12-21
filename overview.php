@@ -31,14 +31,14 @@ require_login();
 $context = context_system::instance();
 
 if (isguestuser()) {
-    redirect($CFG->wwwroot.'/login/');
+    redirect($CFG->wwwroot . '/login/');
 }
 
 $motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*', IGNORE_MISSING);
 $view = new mod_motbot_overview($USER->id);
 // If motbot user not yet registered or motbot activity ist deactivated by the user, redirect to settings page.
-if(!$motbot_user || !$motbot_user->authorized) {
-    redirect($view->settings_url, 'Please activate your Motbot.');
+if (!$motbot_user || !$motbot_user->authorized) {
+    redirect($view->settings_url, \get_string('motbot:pleaseactivate', 'motbot'));
 }
 
 // Else render view.

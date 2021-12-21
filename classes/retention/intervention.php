@@ -419,13 +419,13 @@ class intervention {
         $message->name = 'motbot_teacher_intervention'; // Your notification name from message.php.
         $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here.
         $message->userto = null;
-        $message->subject = \get_string('message:teacher_subject', 'motbot', $recipient->firstname . ' ' . $recipient->lastname);
+        $message->subject = new \lang_string('message:teacher_subject', 'motbot', $recipient->firstname . ' ' . $recipient->lastname, $recipient->lang);
         $message->fullmessageformat = FORMAT_HTML;
-        $message->fullmessagehtml = \get_string('message:teacher_fullmessagehtml', 'motbot', (object)['fullname' => $recipient->firstname . ' ' . $recipient->lastname, 'interventions' => mod_motbot_get_interventions_table($this->recipient, $this->contextid)]);
+        $message->fullmessagehtml = new \lang_string('message:teacher_fullmessagehtml', 'motbot', (object)['fullname' => $recipient->firstname . ' ' . $recipient->lastname, 'interventions' => mod_motbot_get_interventions_table($this->recipient, $this->contextid)], $recipient->lang);
         $message->fullmessage = strip_tags($message->fullmessagehtml);
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message.
         $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification.
-        $message->contexturlname = 'To Course'; // Link title explaining where users get to for the contexturl.
+        $message->contexturlname = new \lang_string('motbot:gotocourse', 'motbot', null, $recipient->lang); // Link title explaining where users get to for the contexturl.
 
         return $message;
     }
@@ -449,18 +449,19 @@ class intervention {
 
         // Retrieve message template.
         if ($this->get_context()->contextlevel == 50) {
-            $sql = "SELECT m.subject, m.fullmessage, m.fullmessageformat, m.fullmessagehtml
+            $sql = "SELECT m.subject, m.fullmessage, m.fullmessagehtml
                     FROM mdl_motbot_model m
                     JOIN mdl_motbot motbot ON m.motbot = motbot.id
                     WHERE motbot.course = :course
                     AND m.target = :target
-                    AND m.prediction = :prediction;";
+                    AND m.prediction = :prediction
+                    AND m.custom = 1;";
             $motbot_model = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'target' => $this->target, 'prediction' => $this->prediction));
         } else {
             $motbot_model = $DB->get_record(
                 'motbot_model',
-                array('motbot' => null, 'target' => $this->target, 'prediction' => $this->prediction),
-                'subject, fullmessage, fullmessageformat, fullmessagehtml',
+                array('motbot' => null, 'target' => $this->target, 'prediction' => $this->prediction, 'custom' => 1),
+                'subject, fullmessage, fullmessagehtml',
                 IGNORE_MISSING
             );
         }
@@ -470,13 +471,21 @@ class intervention {
         $message->name = 'motbot_intervention'; // Your notification name from message.php.
         $message->userfrom = \core_user::get_noreply_user(); // If the message is 'from' a specific user you can set them here.
         $message->userto = $recipient;
-        $message->subject = $motbot_model ? $motbot_model->subject : \get_string('mod_form:' . $target_name . '_subject', 'motbot');
-        $message->subject = \mod_motbot\manager::replace_intervention_placeholders($message->subject, $this);
-        $message->fullmessageformat = $motbot_model ? $motbot_model->fullmessageformat : FORMAT_MARKDOWN;
+        $message->fullmessageformat = FORMAT_MARKDOWN;
 
-        $body = $motbot_model ? $motbot_model->fullmessagehtml : \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot');
+        if ($motbot_model) {
+            $message->subject = $motbot_model->subject;
+            $body = $motbot_model->fullmessagehtml;
+            $message->fullmessage = $motbot_model->fullmessage;
+        } else {
+            $message->subject = new \lang_string('mod_form:' . $target_name . '_subject', 'motbot', null, $recipient->lang);
+            $body = new \lang_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot', null, $recipient->lang);
+            $message->fullmessage = new \lang_string('mod_form:' . $target_name . '_fullmessage', 'motbot', null, $recipient->lang);
+        }
+        $message->subject = \mod_motbot\manager::replace_intervention_placeholders($message->subject, $this);
+        $message->fullmessage = \mod_motbot\manager::replace_intervention_placeholders($message->fullmessage, $this);
+
         // Get module context.
-        $context = $this->get_context();
         if ($this->get_context()->contextlevel == 50) {
             $sql = 'SELECT cm.id
                 FROM {course_modules} AS cm
@@ -509,12 +518,11 @@ class intervention {
         ];
         $message->fullmessagehtml = $OUTPUT->render_from_template('mod_motbot/intervention_message', $contextinfo);
 
-        $message->fullmessage = $motbot_model ? \mod_motbot\manager::replace_intervention_placeholders($motbot_model->fullmessage, $this) : 'message body';
 
         $message->notification = 1; // Because this is a notification generated from Moodle, not a user-to-user message
 
         $message->contexturl = (new \moodle_url('/course/view.php?id=' . $this->get_context()->instanceid))->out(false); // A relevant URL for the notification
-        $message->contexturlname = 'To Course';
+        $message->contexturlname = new \lang_string('motbot:gotocourse', 'motbot', null, $recipient->lang);
 
         return $message;
     }

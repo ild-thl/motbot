@@ -41,7 +41,8 @@ Example context (json):
 <div class="mod_motbot_advice">
   <h5>{{ title }}</h5>
   <br />
-  <p>Posted by {{ author }} on {{ date }}</p>
+  <p>{{#str}}advice:postedby, motbot, { "author": {{#quote}} {{author}} {{/quote}}, "date": {{#quote}} {{date}}
+    {{/quote}} } {{/str}}</p>
   <div class="quote">
     <p class="subject">{{ subject }}</p>
     <div class="message">{{{ message }}}</div>

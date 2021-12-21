@@ -80,7 +80,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
         $instances = $DB->get_records('motbot', array('course' => $course->get_id()));
 
         if (!$instances) {
-            return get_string('nomotbotinstance', 'motbot');
+            return get_string('motbot:noinstance', 'motbot');
         }
 
         if (count($instances) > 1) {
@@ -89,12 +89,12 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
 
         $motbot = reset($instances);
         if ($motbot->active == 0) {
-            return get_string('motbotpaused', 'motbot');
+            return get_string('motbot:paused', 'motbot');
         }
 
         $message = $DB->get_record('motbot_model', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\low_social_presence'));
         if (!$message || !$message->active) {
-            return get_string('motbotmodelinactive', 'motbot');
+            return get_string('motbot:modelinactive', 'motbot');
         }
 
         if (!$course->was_started()) {
@@ -211,6 +211,7 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
 
         echo ('potential: ' . $potential . ' and score: ' . $score . '_____');
 
+        return 1;
         if ($score <= 0) {
             return 1;
         }

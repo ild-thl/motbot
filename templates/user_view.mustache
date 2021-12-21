@@ -48,19 +48,19 @@ Example context (json):
 <div class="mod_motbot_user_view">
   {{#settings_url}}
   <div class="float-right">
-    <a class="btn btn-primary" href="{{{.}}}">Edit settings</a>
+    <a class="btn btn-primary" href="{{{.}}}">{{#str}}settings{{/str}}</a>
   </div>
   {{/settings_url}}
 
   <div class="overview">
-    <h2>Quick Overview</h2>
+    <h2>{{#str}}motbot:overview_header, motbot{{/str}}</h2>
     <div class="row">
       {{#models}}
       <div class="column">
         {{#pix}} {{{image}}}, motbot, {{{image}}} motbot {{/pix}}
         <h5>{{{name}}}</h5>
         {{#date}}
-        <p>Last update on:</p>
+        <p>{{#str}}motbot:lastupdateon, motbot{{/str}}:</p>
         <p>{{{date}}}</p>
         {{/date}}
         <p>
@@ -69,15 +69,15 @@ Example context (json):
           {{{state}}}
           {{/hasdata}}
           {{^hasdata}}
-          All good
+          {{#str}}motbot:allgood, motbot{{/str}}
           {{/hasdata}}
           {{/enabled}}
           {{^enabled}}
-          Model paused by course manager
+          {{#str}}motbot:paused, motbot{{/str}}
           {{/enabled}}
         </p>
         {{#intervention_url}}
-        <a class="btn btn-primary" href="{{{.}}}">Show intervention</a>
+        <a class="btn btn-primary" href="{{{.}}}">{{#str}}motbot:viewintervention, motbot{{/str}}</a>
         {{/intervention_url}}
       </div>
       {{/models}}
@@ -86,7 +86,7 @@ Example context (json):
 
   {{#interventions_table}}
   <div>
-    <h2>Interventions</h2>
+    <h2>{{#str}}motbot:interventions, motbot{{/str}}</h2>
     {{{.}}}
   </div>
   {{/interventions_table}}

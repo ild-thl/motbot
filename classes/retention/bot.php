@@ -57,8 +57,6 @@ class bot extends \core\task\scheduled_task {
         $now = new \DateTime("now", \core_date::get_user_timezone_object());
         $dayofweek = intval($now->format('N'));
         $hour = intval($now->format('H'));
-        echo ('hour: ' . $hour);
-        echo ('dayofweek: ' . $dayofweek);
 
         // Check for each scheduled intervention, if now is the right time for intervention.
         foreach ($scheduled_interventions as $intervention) {
@@ -69,11 +67,7 @@ class bot extends \core\task\scheduled_task {
             if (!$user_pref->only_weekdays || ($user_pref->only_weekdays && $dayofweek < 6)) {
                 if ($user_pref->pref_time > -1 && $hour >= $user_pref->pref_time && $hour <= ($user_pref->pref_time - 3)) {
                     $this->intervene($intervention);
-                } else {
-                    echo ('later...');
                 }
-            } else {
-                echo ('only during weekdays, later...');
             }
         }
     }

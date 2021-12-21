@@ -167,7 +167,7 @@ class manager {
 
         // URl leading to the message itself.
         $message->contexturl = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $messageid . '&offset=0'))->out(false); // A relevant URL for the notification
-        $message->contexturlname = 'Notification';
+        $message->contexturlname = \get_string('motbot:notification', 'motbot');
 
         $DB->update_record('notifications', $message);
     }

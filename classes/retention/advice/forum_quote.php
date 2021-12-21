@@ -26,7 +26,7 @@ namespace mod_motbot\retention\advice;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 /**
  * Abstract class for advices that consist of a title, a quote of a forum post, and one call to action.
@@ -48,11 +48,11 @@ abstract class forum_quote extends \mod_motbot\retention\advice\base {
      * Generates advices as text.
      *
      * @return void
-    */
+     */
     public function render() {
         $message = $this->title . PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Posted by *' . $this->author . '* on ' . $this->date . ':' . PHP_EOL;
+        $message .= \get_string('advice:postedby', 'motbot', array('author' => $this->author, 'date' => $this->date)) . ':' . PHP_EOL;
         $message .= PHP_EOL;
         $message .= '*' . $this->subject . '*' . PHP_EOL;
         $message .= '```' . strip_tags($this->message) . '```' . PHP_EOL . PHP_EOL;
@@ -65,7 +65,7 @@ abstract class forum_quote extends \mod_motbot\retention\advice\base {
      * Generates advices as html.
      *
      * @return void
-    */
+     */
     public function render_html() {
         global $OUTPUT;
 

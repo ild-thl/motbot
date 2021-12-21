@@ -49,12 +49,12 @@ Example context (json):
 <div class="mod_motbot_user_view">
   {{#settings_url}}
   <div class="float-right">
-    <a class="btn btn-primary" href="{{{.}}}">Edit settings</a>
+    <a class="btn btn-primary" href="{{{.}}}">{{#str}}settings{{/str}}</a>
   </div>
   {{/settings_url}}
 
   <div class="overview">
-    <h2>Quick Overview</h2>
+    <h2>{{#str}}motbot:overview_header, motbot{{/str}}</h2>
     <div class="row">
       {{#models}}
       <div class="column">
@@ -66,9 +66,9 @@ Example context (json):
         <table class="generaltable">
           <thead>
             <tr>
-              <th class="header c0">Helpful</th>
-              <th class="header c1">Unhelpful</th>
-              <th class="header c2">Total</th>
+              <th class="header c0">{{#str}}motbot:helpful, motbot{{/str}}</th>
+              <th class="header c1">{{#str}}motbot:unhelpful, motbot{{/str}}</th>
+              <th class="header c2">{{#str}}motbot:total, motbot{{/str}}</th>
             </tr>
           </thead>
           <tbody>
@@ -89,17 +89,17 @@ Example context (json):
         </table>
 
         <br />
-        <p>Last intervention on:</p>
+        <p>{{#str}}motbot:lastinterventionon, motbot{{/str}}:</p>
         <p>{{{last_intervention}}}</p>
         {{/count}}
         {{^count}}
-        <p>No Interventions yet.</p>
+        <p>{{#str}}motbot:nointerventionyet, motbot{{/str}}.</p>
         {{/count}}
         {{^enabled}}
-        <p>Model paused by course manager</p>
+        <p>{{#str}}motbot:paused, motbot{{/str}}</p>
         {{/enabled}}
         {{#intervention_url}}
-        <a class="btn btn-primary" href="{{{.}}}">Show intervention</a>
+        <a class="btn btn-primary" href="{{{.}}}">{{#str}}motbot:viewintervention, motbot{{/str}}</a>
         {{/intervention_url}}
       </div>
       {{/models}}

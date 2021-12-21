@@ -26,7 +26,7 @@ namespace mod_motbot\retention\advice;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 /**
  * Advice to take part in a feedback survey.
@@ -37,25 +37,25 @@ require_once($CFG->dirroot.'/mod/motbot/locallib.php');
  */
 class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
     /**
-    * Returns a lang_string object representing the name for the indicator or target.
-    *
-    * Used as column identificator.
-    *
-    * If there is a corresponding '_help' string this will be shown as well.
-    *
-    * @return \lang_string
-    */
-    public static function get_name() : \lang_string {
+     * Returns a lang_string object representing the name for the indicator or target.
+     *
+     * Used as column identificator.
+     *
+     * If there is a corresponding '_help' string this will be shown as well.
+     *
+     * @return \lang_string
+     */
+    public static function get_name(): \lang_string {
         return new \lang_string('advice:feedback', 'motbot');
     }
 
     /**
-    * Constructor.
+     * Constructor.
 
      * @param \core\user $user
      * @param \core\course $course
      * @return void
-    */
+     */
     public function __construct($user, $course) {
         global $DB, $CFG;
 
@@ -66,7 +66,7 @@ class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
 
         // Stop initialization if user already took part in a feedback
         // or if ther is no feedback option available.
-        if(mod_motbot_has_completed_feedback($user->id, $course->id)) {
+        if (mod_motbot_has_completed_feedback($user->id, $course->id)) {
             throw new \moodle_exception('Feedback already given.');
         }
 
@@ -78,17 +78,16 @@ class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
             AND m.name = "feedback";';
         $activities = $DB->get_records_sql($sql, array('courseid' => $course->id));
 
-        $this->title = 'Please consider giving some feedback as well, so we can support you better!';
-        // $this->title .= " \xF0\x9F\x99\x8F";
+        $this->title = \get_string('advice:feedback_title', 'motbot');
 
-        if(!$activities || empty($activities)) {
+        if (!$activities || empty($activities)) {
             throw new \moodle_exception('No feedback activity available.');
         }
 
-        foreach($activities as $feedback) {
+        foreach ($activities as $feedback) {
             $this->actions[] = [
                 'action_url' => $CFG->wwwroot . '/mod/feedback/view.php?id=' . $feedback->id,
-                'action' => 'Go to ' . $feedback->name,
+                'action' => \get_string('motbot:goto', 'motbot', $feedback->name),
             ];
         }
     }

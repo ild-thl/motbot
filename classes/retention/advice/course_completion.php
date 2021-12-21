@@ -26,7 +26,7 @@ namespace mod_motbot\retention\advice;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot."/lib/completionlib.php");
+require_once($CFG->dirroot . "/lib/completionlib.php");
 
 /**
  * Advice that displays the course progress of the subject in relation to the average course progress.
@@ -42,15 +42,15 @@ class course_completion extends \mod_motbot\retention\advice\base {
     protected $desc = null;
 
     /**
-    * Returns a lang_string object representing the name for the indicator or target.
-    *
-    * Used as column identificator.
-    *
-    * If there is a corresponding '_help' string this will be shown as well.
-    *
-    * @return \lang_string
-    */
-    public static function get_name() : \lang_string{
+     * Returns a lang_string object representing the name for the indicator or target.
+     *
+     * Used as column identificator.
+     *
+     * If there is a corresponding '_help' string this will be shown as well.
+     *
+     * @return \lang_string
+     */
+    public static function get_name(): \lang_string {
         return new \lang_string('advice:course_completion', 'motbot');
     }
 
@@ -58,17 +58,17 @@ class course_completion extends \mod_motbot\retention\advice\base {
      * Generates advices as text.
      *
      * @return void
-    */
+     */
     public function render() {
         $message = $this->title . PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Your progress: ' . PHP_EOL;
+        $message .= \get_string('advice:yourprogress', 'motbot') . ': ' . PHP_EOL;
         $prog10 = round($this->user_progress * 10, 0);
         $prog100 = round($this->user_progress * 100, 0);
 
         $message .= " |";
-        for($i = 0; $i < 10; $i++) {
-            if($i < $prog10) {
+        for ($i = 0; $i < 10; $i++) {
+            if ($i < $prog10) {
                 $message .= "=";
             } else {
                 $message .= "  ";
@@ -76,12 +76,12 @@ class course_completion extends \mod_motbot\retention\advice\base {
         }
         $message .= "| *" . $prog100 . '%*' . PHP_EOL;
         $message .= PHP_EOL;
-        $message .= 'Average progress: ' . PHP_EOL;
+        $message .= \get_string('advice:averageprogress', 'motbot') . ': ' . PHP_EOL;
         $avg_prog10 = round($this->avg_progress * 10, 0);
         $avg_prog100 = round($this->avg_progress * 100, 0);
         $message .= " |";
-        for($i = 0; $i < 10; $i++) {
-            if($i < $avg_prog10) {
+        for ($i = 0; $i < 10; $i++) {
+            if ($i < $avg_prog10) {
                 $message .= "=";
             } else {
                 $message .= "  ";
@@ -97,15 +97,15 @@ class course_completion extends \mod_motbot\retention\advice\base {
      * Generates advices as html.
      *
      * @return void
-    */
+     */
     public function render_html() {
         global $OUTPUT;
 
         $context = [
             "title" => $this->title,
-            "user_progress" => $this->user_progress*100,
-            "avg_progress" => $this->avg_progress*100,
-            "user_prog_less_or_equal" => $this->user_progress<=$this->avg_progress,
+            "user_progress" => $this->user_progress * 100,
+            "avg_progress" => $this->avg_progress * 100,
+            "user_prog_less_or_equal" => $this->user_progress <= $this->avg_progress,
             "desc" => $this->desc
         ];
 
@@ -118,7 +118,7 @@ class course_completion extends \mod_motbot\retention\advice\base {
      * @param \core\user $user
      * @param \core\course $course
      * @return void
-    */
+     */
     public function __construct($user, $course) {
         global $CFG, $DB;
 
@@ -140,10 +140,10 @@ class course_completion extends \mod_motbot\retention\advice\base {
             AND cxt.instanceid = c.id
             AND  roleid = 5
             AND c.id= :course";
-        if(!$users = $DB->get_record_sql($usercount_sql, array("course" => $course->id), IGNORE_MISSING)) {
+        if (!$users = $DB->get_record_sql($usercount_sql, array("course" => $course->id), IGNORE_MISSING)) {
             throw new \dml_exception('Couldnt retrieve course users.');
         }
-        if($users->count == 0) {
+        if ($users->count == 0) {
             throw new \moodle_exception('No users in course.');
         }
 
@@ -156,16 +156,16 @@ class course_completion extends \mod_motbot\retention\advice\base {
                 WHERE cc.userid = :userid) cc
             ON c.course = cc.course
             WHERE c.course = :course;";
-        if(!$user_completion = $DB->get_record_sql($user_sql, array("userid" => $user->id, "course" => $course->id), IGNORE_MISSING)) {
+        if (!$user_completion = $DB->get_record_sql($user_sql, array("userid" => $user->id, "course" => $course->id), IGNORE_MISSING)) {
             throw new \dml_exception('Couldnt retrieve user completion.');
         }
-        if($user_completion->total == 0) {
+        if ($user_completion->total == 0) {
             throw new \moodle_exception('No course completion criteria found.');
         }
 
-        $this->user_progress = round($user_completion->completed/$user_completion->total, 3);
+        $this->user_progress = round($user_completion->completed / $user_completion->total, 3);
 
-        if($this->user_progress == 1) {
+        if ($this->user_progress == 1) {
             throw new \moodle_exception("The user already completed the course.");
         }
 
@@ -179,26 +179,26 @@ class course_completion extends \mod_motbot\retention\advice\base {
             ON c.course = cc.course
             WHERE c.course = :course
             GROUP BY c.course;";
-        if(!$avg_completion = $DB->get_record_sql($avg_sql, array("course" => $course->id), IGNORE_MISSING)) {
+        if (!$avg_completion = $DB->get_record_sql($avg_sql, array("course" => $course->id), IGNORE_MISSING)) {
             throw new \dml_exception('Couldnt retrieve average completion.');
         }
 
-        $this->title = "Do you want to know how your course completion is going?";
-        $this->avg_progress = round(($avg_completion->completed/$users->count)/$user_completion->total, 3);
+        $this->title = \get_string('advice:coursecompletion_title', 'motbot');
+        $this->avg_progress = round(($avg_completion->completed / $users->count) / $user_completion->total, 3);
 
         $difference = $this->user_progress - $this->avg_progress;
 
-        if($difference < 0) {
-            if($difference >= -0.25) {
-                $this->desc = "Your progress is only " . abs(round($difference * 100, 0)) . "% behind course average. You can easily catch up!";
+        if ($difference < 0) {
+            if ($difference >= -0.25) {
+                $this->desc = \get_string('advice:coursecompletion_desc_bad', 'motbot', abs(round($difference * 100, 0)));
             } else {
-                $this->desc = "You ara quite a bit behind. But nothing is lost. Try catching up. Please don't hesitate to ask your fellow students or teachers for help!";
+                $this->desc = \get_string('advice:coursecompletion_desc_worst', 'motbot');
             }
         } else {
-            if($difference <= 0.25) {
-                $this->desc = "Your progress is looking fine. But there is no time to rest. A regular interaction with the course content is only recommended!";
+            if ($difference <= 0.25) {
+                $this->desc = \get_string('advice:coursecompletion_desc_good', 'motbot');
             } else {
-                $this->desc = "You are far ahead! But don't rest on your laurels!";
+                $this->desc = \get_string('advice:coursecompletion_desc_best', 'motbot');
             }
         }
     }

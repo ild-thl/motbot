@@ -58,7 +58,7 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
         $instances = $DB->get_records('motbot', array('course' => $course->get_id()));
 
         if (!$instances) {
-            return get_string('nomotbotinstance', 'motbot');
+            return get_string('motbot:noinstance', 'motbot');
         }
 
         if (count($instances) > 1) {
@@ -67,12 +67,12 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
 
         $motbot = reset($instances);
         if ($motbot->active == 0) {
-            return get_string('motbotpaused', 'motbot');
+            return get_string('motbot:paused', 'motbot');
         }
 
         $message = $DB->get_record('motbot_model', array('motbot' => $motbot->id, 'target' => '\mod_motbot\analytics\target\no_recent_accesses'));
         if (!$message || !$message->active) {
-            return get_string('motbotmodelinactive', 'motbot');
+            return get_string('motbot:modelinactive', 'motbot');
         }
 
         return parent::is_valid_analysable($course, $fortraining);
@@ -139,6 +139,7 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      */
     protected function calculate_sample($sampleid, \core_analytics\analysable $analysable, $starttime = false, $endtime = false) {
         $recent_access = $this->retrieve('\core\analytics\indicator\any_course_access', $sampleid);
+        return 1;
         if ($recent_access === \core\analytics\indicator\any_course_access::get_min_value()) {
             return 1;
         }

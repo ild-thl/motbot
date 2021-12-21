@@ -49,8 +49,8 @@ class mod_motbot_delete_intervention_data_form extends moodleform {
         $mform->addElement('hidden', 'contextid');
         $mform->setType('contextid', PARAM_INT);
 
-        $mform->addElement('header', 'delete_header', 'Advanced_options');
+        $mform->addElement('header', 'delete_header', \get_string('settings:advanced_options', 'motbot'));
         $mform->setExpanded('delete_header', false);
-        $mform->addElement('submit', 'submitbutton', 'Delete intervention data');
+        $mform->addElement('submit', 'submitbutton', \get_string('settings:deleteinterventiondata', 'motbot'));
     }
 }

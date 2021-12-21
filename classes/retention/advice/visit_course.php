@@ -62,8 +62,8 @@ class visit_course extends \mod_motbot\retention\advice\title_and_action {
             throw new \moodle_exception('No course given.');
         }
 
-        $this->title = 'Visit the course!';
+        $this->title = \get_string('advice:visitcourse_title', 'motbot');
         $this->action_url = $CFG->wwwroot . '/course/view.php?id=' . $course->id;
-        $this->action = 'Go to ' . $course->shortname;
+        $this->action = \get_string('motbot:goto', 'motbot', $course->shortname);
     }
 }

@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot.'/mod/motbot/enable_module_form.php');
+require_once($CFG->dirroot . '/mod/motbot/enable_module_form.php');
 
 /**
  * Returns default options for an html_editor.
@@ -51,7 +51,7 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
     // Only get interventions of a speicif context, if $contextid is set.
     $condition = 'WHERE i.recipient = :userid';
     $params_array = array('userid' => $userid);
-    if($contextid) {
+    if ($contextid) {
         $condition .= 'AND i.contextid = :contextid';
         $params_array = array_merge($params_array, array('contextid' => $contextid));
     }
@@ -72,8 +72,8 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
     // Format intervention data.
 
     $content = array();
-    if(!empty($interventions)) {
-        foreach($interventions as $intervention) {
+    if (!empty($interventions)) {
+        foreach ($interventions as $intervention) {
             $row = array();
             $targetname = mod_motbot_get_name_of_target($intervention->target);
             $row[] = \get_string('target:' . $targetname . '_short', 'motbot');
@@ -90,10 +90,10 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
     $table = new html_table();
     $table->attributes['class'] = 'generaltable';
 
-    $head = array('Reason', 'Date', 'State', 'Were teachers informed');
+    $head = array(\get_string('motbot:reason', 'motbot'), \get_string('motbot:date', 'motbot'), \get_string('motbot:state', 'motbot'), \get_string('motbot:wereteachersinformed', 'motbot'));
     $align = array('left ', 'left', 'left', 'left', 'left');
     if ($include_messages) {
-        $head[] = 'message';
+        $head[] = \get_string('motbot:message', 'motbot');
         $align[] = 'left';
     }
     $table->head  = $head;
@@ -127,18 +127,17 @@ function mod_motbot_view_enable_module_form($motbot_course_user, $courseid) {
     // Form processing and displaying is done here.
     if ($mform->is_cancelled()) {
         // Handle form cancel operation, if cancel button is present on form.
-    } else if ($fromform = $mform->get_data()) {
+    } else if ($mform->get_data()) {
         // In this case you process validated data. $mform->get_data() returns data posted in form.
-        $form_data = $mform->get_data();
         $motbot_course_user->authorized = true;
 
-        if(!$motbot_course_user->id) {
+        if (!$motbot_course_user->id) {
             $DB->insert_record('motbot_course_user', $motbot_course_user);
         } else {
             $DB->update_record('motbot_course_user', $motbot_course_user);
         }
 
-        redirect($CFG->wwwroot.'/course/view.php?id=' . $courseid, 'Enabling Motbot', 1);
+        redirect($CFG->wwwroot . '/course/view.php?id=' . $courseid, \get_string('motbot:enablingmotbot', 'motbot'), 1);
     } else {
         // This branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
         // or on the first display of the form.
@@ -149,7 +148,6 @@ function mod_motbot_view_enable_module_form($motbot_course_user, $courseid) {
         // Displays the form.
         return $mform->render();
     }
-
 }
 
 /**
@@ -216,19 +214,19 @@ function motbot_calc_user_active_period($user) {
     $events = $logstore->get_events_select($select, $params, null, null, null);
 
     $hours = 24;
-    $interval = $hours/8;
+    $interval = $hours / 8;
     $steps = array();
-    for($i = $interval; $i <= $hours; $i+=$interval) {
+    for ($i = $interval; $i <= $hours; $i += $interval) {
         $steps[$i] = 0;
     }
 
-    foreach($events as $event) {
+    foreach ($events as $event) {
         $time = new DateTime("now", core_date::get_user_timezone_object());
         $time->setTimestamp($event->timecreated);
         $hour = $time->format('H');
 
-        foreach($steps as $step => $count) {
-            if($hour < $step) {
+        foreach ($steps as $step => $count) {
+            if ($hour < $step) {
                 $steps[$step] = ++$count;
                 break;
             }
@@ -238,8 +236,8 @@ function motbot_calc_user_active_period($user) {
     $active_period = 0;
     $highest_count = 0;
 
-    foreach($steps as $step => $count) {
-        if($count > $highest_count) {
+    foreach ($steps as $step => $count) {
+        if ($count > $highest_count) {
             $highest_count = $count;
             $active_period = $step;
         }
