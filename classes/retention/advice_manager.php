@@ -64,6 +64,10 @@ class advice_manager {
 
     /**
      * Contstructor.
+     *
+     * @param \core\user $user
+     * @param \core\course $course
+     * @param \mod_motbot\retention\core_analytics\local\target\base $target
      */
     public function __construct($user, $course, $target) {
         $this->user = $user;
@@ -84,6 +88,15 @@ class advice_manager {
         // Get advice settings.
         $advice_settings = $DB->get_records('motbot_advice', array());
 
+        $sql = 'SELECT cu.disabled_advice
+            FROM {motbot_course_user} as cu
+            JOIN {motbot} as m
+            ON m.id = cu.motbot
+            WHERE cu.user = :userid
+            AND m.course = :courseid';
+        $course_user = $DB->get_record_sql($sql, array('userid' => $this->user->id, 'courseid' => $this->course->id), IGNORE_MISSING);
+        $disabled_advice = json_decode($course_user->disabled_advice);
+
         // Initialize advice, if aplicable for the set target
         foreach ($advice_settings as $setting) {
             if (!$setting->enabled) { // Skip, if advice is disabled.
@@ -92,6 +105,10 @@ class advice_manager {
 
             $targets = json_decode($setting->targets);
             if (!in_array($this->target, $targets)) { // Skip, if target is not part of the defined aplicable targets.
+                continue;
+            }
+
+            if (!empty($disabled_advice) && in_array($setting->name, $disabled_advice)) {
                 continue;
             }
 
@@ -174,9 +191,10 @@ class advice_manager {
      * Define and create DB entrys for advice, so motbot knows wich advice to generate in diffrent situations.
      *
      * @param array $advice
-     * @return void
+     * @param bool $update
+     * @return bool
      */
-    static function create_advice($advice) {
+    static function create_advice($advice, $update = true) {
         global $DB;
 
         // Json Encode targets array, because DB only accepts strings.
@@ -185,18 +203,23 @@ class advice_manager {
         // Look for entry with same name.
         $exists = $DB->get_field('motbot_advice', 'id', array('name' => $advice['name']), IGNORE_MISSING);
         try {
-            if ($exists) { // If another record exists, update it.
-                $advice['id'] = $exists;
-                $DB->update_record('motbot_advice', $advice);
-            } else { // Else insert new record.
+            if (!$exists) { // Else insert new record.
                 $id = $DB->insert_record('motbot_advice', $advice);
+
                 if (!$id) {
                     throw new \dml_exception('Could\'nt insert advice into database.');
                 }
+
+                return true;
+            } else if ($update) { // If another record exists, update it.
+                $advice['id'] = $exists;
+                $DB->update_record('motbot_advice', $advice);
             }
         } catch (\moodle_exception $e) {
             error_log($e->getMessage());
         }
+
+        return false;
     }
 
 
@@ -262,6 +285,35 @@ class advice_manager {
         }
 
         return $result;
+    }
+
+    public static function load_default_advice($update = false) {
+        foreach (\mod_motbot\retention\advice_manager::load_default_advice_for_all_components() as $type => $component) {
+            foreach ($component as $componentname => $advicelist) {
+                $numcreated = 0;
+                $numupdated = 0;
+
+                foreach ($advicelist as $definition) {
+                    $created = false;
+                    if (!$exists = \mod_motbot\retention\advice::exists($definition['name'])) {
+                        if (\mod_motbot\retention\advice::create($definition)) {
+                            $numcreated++;
+                        }
+                    } else if ($update) {
+                        $advice = new \mod_motbot\retention\advice($exists);
+                        $advice->update($definition['enabled'], $definition['targets']);
+                        $numupdated++;
+                    }
+                }
+                if ($numupdated) {
+                    $updatedmessage = get_string('advice:updated', 'motbot', ['count' => $numupdated, 'component' => $componentname]);
+                    \core\notification::info($updatedmessage);
+                }
+
+                $createdmessage = get_string('advice:created', 'motbot', ['count' => $numcreated, 'component' => $componentname]);
+                \core\notification::info($createdmessage);
+            }
+        }
     }
 
     /**

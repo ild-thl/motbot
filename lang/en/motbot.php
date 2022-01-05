@@ -23,12 +23,21 @@
  */
 
 //---- Advice
-$string['advice:course_completion'] = 'Advice regarding current course progress';
-$string['advice:feedback'] = 'Suggestion to give feedback';
-$string['advice:recent_activities'] = 'Recommendation for recently added activities';
-$string['advice:recent_forum_activity'] = 'Recommendation for recent forum posts';
+$string['advice'] = 'Advice';
+$string['advice:course_completion'] = 'Current course progress';
+$string['advice:course_completion_help'] = 'Current course progress';
+$string['advice:feedback'] = 'Feedback request';
+$string['advice:feedback_help'] = 'Feedback request';
+$string['advice:recent_activities'] = 'Recently added activities';
+$string['advice:recent_activities_help'] = 'Recently added activities';
+$string['advice:recent_forum_activity'] = 'Recent forum posts';
+$string['advice:recent_forum_activity_help'] = 'Recent forum posts';
 $string['advice:recommended_discussion'] = 'Recomemnded discussion';
-$string['advice:visit_course'] = 'Advice to visit course';
+$string['advice:recommended_discussion_help'] = 'Recomemnded discussion';
+$string['advice:last_stop'] = 'Latest accessed activity';
+$string['advice:last_stop_help'] = 'Latest accessed activity';
+$string['advice:visit_course'] = 'Forward to course';
+$string['advice:visit_course_help'] = 'Forward to course';
 $string['advice:averageprogress'] = 'Average progress';
 $string['advice:yourprogress'] = 'Your progress';
 $string['advice:postedby'] = 'Posted by {$a->author} on {$a->date}';
@@ -37,14 +46,25 @@ $string['advice:coursecompletion_desc_bad'] = 'Your progress is only {$a}% behin
 $string['advice:coursecompletion_desc_worst'] = 'You ara quite a bit behind. But nothing is lost. Try catching up. Please don\'t hesitate to ask your fellow students or teachers for help!';
 $string['advice:coursecompletion_desc_good'] = 'Your progress is looking fine. But there is no time to rest. A regular interaction with the course content is only recommended!';
 $string['advice:coursecompletion_desc_best'] = 'You are far ahead! But don\'t rest on your laurels!';
-$string['advice:feedback_title'] = 'Please consider giving some feedback as well, so we can support you better! \xF0\x9F\x99\x8F';
+$string['advice:feedback_title'] = 'Please consider giving some feedback as well, so we can support you better! &#128591;';
 $string['advice:laststop_title'] = 'Continue where you last stopped:';
 $string['advice:laststop_title_newchallenge'] = 'Continue with a new challenge:';
 $string['advice:recentactivities_title'] = 'These new forum discussions could be interesting for you:';
 $string['advice:recentactivities_action'] = 'The discussion regarding "{$a->activityname}" was posted on {$a->date}';
-$string['advice:recommendeddiscussion_title'] = 'Nobody replied to this students post yet. Maybe you could try to add something to the discussion?';
+$string['advice:recommendeddiscussion_title'] = 'Nobody replied to this students post yet. Maybe you could try to add something to the discussion? &#128657;';
 $string['advice:recommendeddiscussion_action'] = 'Reply now';
 $string['advice:visitcourse_title'] = 'Visit the course!';
+$string['advice:update'] = 'Update advice';
+$string['advice:load_new'] = 'Load new advice';
+$string['advice:restore_default'] = 'Restore default';
+$string['advice:edit'] = 'Edit "{$a}" advice';
+$string['advice:name'] = 'Advice name ';
+$string['advice:enabled'] = 'Enabled';
+$string['advice:targets'] = 'Analytics Targets';
+$string['advice:targets_help'] = 'Analytics Targets';
+$string['advice:targetsnum'] = 'Amount of targets: {$a}';
+$string['advice:created'] = '{$a->count} new advice defintion(s) loaded for component \'{$a->component}\'';
+$string['advice:updated'] = '{$a->count} advice defintion(s) updated for component \'{$a->component}\'';
 
 //----
 
@@ -68,6 +88,9 @@ $string['course_settings_form:pref_time_help'] = 'Here you can set a time of day
 $string['indicator:anyaccess'] = 'Any recent access';
 $string['indicator:anyaccess_help'] = 'TODO: Any recent access help text.';
 
+$string['indicator:anycompletions'] = 'Recent Completions';
+$string['indicator:anycompletions_help'] = 'TODO: Any recent access help text.';
+
 $string['indicator:anywriteaction'] = 'Any recent write action';
 $string['indicator:anywriteaction_help'] = 'TODO: Any recent write action help text.';
 
@@ -80,8 +103,6 @@ $string['indicator:socialpresenceincoursechat_help'] = 'TODO: Any write action i
 $string['indicator:socialpresenceincourseforum'] = 'Any write action in a course forum';
 $string['indicator:socialpresenceincourseforum_help'] = 'TODO: Any write action in a course forum help text.';
 //----
-
-$string['load_default_advice'] = 'Successfully loaded {$a->count} advice definitions for component \'{$a->component}\'';
 
 //----  Message
 $string['messageprovider:motbot_intervention'] = 'New prediction avaialble';
@@ -160,7 +181,9 @@ $string['mod_form:no_recent_accesses_fullmessagehtml'] = '<p>Hi {firstname} {las
 $string['mod_form:no_recent_accesses_header'] = 'No Recent Accesses Settings';
 $string['mod_form:no_recent_accesses_subject'] = 'We miss you, {firstname}!';
 
-$string['mod_form:recent_cognitive_presence_fullmessage'] = 'Hi {firstname} {lastname},
+$string['mod_form:recent_cognitive_presence_header'] = 'Recent cognitive presence Settings';
+$string['mod_form:recent_cognitive_presence_subject_0'] = 'You hav\'nt been around lately!';
+$string['mod_form:recent_cognitive_presence_fullmessage_0'] = 'Hi {firstname} {lastname},
 it seems like you haven\'t been around lately.
 
 {suggestions}
@@ -168,10 +191,34 @@ it seems like you haven\'t been around lately.
 Enjoy learning!
 
 Kind regards, your {motbot}.';
-$string['mod_form:recent_cognitive_presence_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you haven´t been around lately.</p><p>We´d be happy to welcome you back!</p></br><p>Your {motbot}</p>';
-$string['mod_form:recent_cognitive_presence_subject'] = 'You hav\'nt been around lately!';
+$string['mod_form:recent_cognitive_presence_fullmessagehtml_0'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you haven´t been around lately.</p><p>We´d be happy to welcome you back!</p></br><p>Your {motbot}</p>';
+
+$string['mod_form:recent_cognitive_presence_subject_1'] = 'You hav\'nt been very active lately!';
+$string['mod_form:recent_cognitive_presence_fullmessage_1'] = 'Hi {firstname} {lastname},
+it seems like you haven\'t been very active lately.
+Please let us know if you have any difficulties or problems with the learning content.
+
+{suggestions}
+
+Kind regards, your {motbot}.';
+$string['mod_form:recent_cognitive_presence_fullmessagehtml_1'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you haven´t been very active lately.</p><p>Please let us know if you have any difficulties or pronlems with the learning content.</p></br><p>Your {motbot}</p>';
+
+$string['mod_form:recent_cognitive_presence_subject_2'] = 'You have been active lately!';
+$string['mod_form:recent_cognitive_presence_fullmessage_2'] = 'Hi {firstname} {lastname},
+it\'s good to have you. Thank you for participating regularly in the learning activities!
+
+Kind regards, your {motbot}.';
+$string['mod_form:recent_cognitive_presence_fullmessagehtml_2'] = '<p>Hi {firstname} {lastname},</p></br><p>it\'s good to have you. Thank you for participating regularly in the learning activities!</p></br><p>Your {motbot}</p>';
+
+$string['mod_form:recent_cognitive_presence_subject_3'] = 'Congrats on you latest achievements!';
+$string['mod_form:recent_cognitive_presence_fullmessage_3'] = 'Hi {firstname} {lastname},
+I am very proud on your latest acomplishements. Keep on doing great work!
+
+Kind regards, your {motbot}.';
+$string['mod_form:recent_cognitive_presence_fullmessagehtml_3'] = '<p>Hi {firstname} {lastname},</p></br><p>I am very proud on your latest acomplishements. Keep on doing great work!</p></br><p>Your {motbot}</p>';
 
 
+$string['mod_form:too_long'] = 'This form field can only hold {$a} characters. Please check your input.';
 $string['mod_form:subject'] = 'Subject';
 //----
 
@@ -179,8 +226,8 @@ $string['mod_form:subject'] = 'Subject';
 $string['motbot:modelinactive'] = 'This model is deactivated or has no motbot message information associated with it in course.';
 $string['motbot:noinstance'] = 'No MotBot activity found in course.';
 $string['motbot:paused'] = 'MotBot is paused for this course.';
-$string['motbot:pleaceactivate'] = 'Please activate the MotBot first.';
-$string['motbot:thanksforfeedback'] = 'Thank you for your feedback!';
+$string['motbot:pleaseactivate'] = 'Please activate the MotBot first.';
+$string['motbot:thanksforfeedback'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for your feedback!</p></div>';
 $string['motbot:overview_header'] = 'MotBot overview';
 $string['motbot:helpful'] = 'Helpful';
 $string['motbot:unhelpful'] = 'Unhelpful';
@@ -239,6 +286,8 @@ $string['settings:advanced_options'] = 'Advanced options';
 $string['settings:course_settings_header'] = '{$a->pluginname} settings for {$a->coursename}';
 $string['settings:deleteinterventiondata'] = 'Delete intervention data';
 $string['settings:edit_motbot'] = 'MotBot Settings';
+$string['settings:edit_models'] = 'MotBot Analytics Model Settings';
+$string['settings:edit_advice'] = 'MotBot Advice Settings';
 //----
 
 //----  Analytic Targets
@@ -254,19 +303,16 @@ $string['target:course_dropout_neutral'] = 'Dropout risk';
 
 $string['target:lowsocialpresence'] = 'Students with low social presence (MotBot)';
 $string['target:lowsocialpresence_help'] = 'This target generates reminders for upcoming activities due.';
-$string['target:lowsocialpresenceinfo'] = 'All upcoming activities due insights are listed here. These students have received these insights directly.';
 $string['target:low_social_presence_short'] = 'Low social presence';
 $string['target:low_social_presence_neutral'] = 'Social presence';
 
 $string['target:norecentaccesses'] = 'Students who have not accessed the course recently (MotBot)';
 $string['target:norecentaccesses_help'] = 'This target identifies students who have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
-$string['target:norecentaccessesinfo'] = 'The following students have not accessed a course they are enrolled in within the set analysis interval (by default the past month).';
 $string['target:no_recent_accesses_short'] = 'No recent accesses';
 $string['target:no_recent_accesses_neutral'] = 'Attendance';
 
 $string['target:unhelpfulinterventions'] = 'MotBot that sends unhelpful interventions (MotBot)';
 $string['target:unhelpfulinterventions_help'] = 'MotBot that sends unhelpful interventions (MotBot)';
-$string['target:unhelpfulinterventionsinfo'] = 'MotBot that sends unhelpful interventions (MotBot)';
 $string['target:unhelpfulinterventions_short'] = 'Unhelpful interventions';
 $string['target:unhelpfulinterventions_neutral'] = 'Interventions';
 

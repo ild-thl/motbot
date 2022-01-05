@@ -42,7 +42,7 @@ class any_access extends \core_analytics\local\indicator\binary {
      *
      * @return \lang_string
      */
-    public static function get_name() : \lang_string {
+    public static function get_name(): \lang_string {
         return new \lang_string('indicator:anyaccess', 'motbot');
     }
 
@@ -82,7 +82,6 @@ class any_access extends \core_analytics\local\indicator\binary {
     protected function calculate_sample($sampleid, $sampleorigin, $starttime = false, $endtime = false) {
         $user = $this->retrieve('user', $sampleid);
 
-        print_r($this->lastaccess);
         // We first try using user_lastaccess as it is much faster than the log table.
         if (!$this->lastaccess) {
             // The user never accessed.

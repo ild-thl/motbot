@@ -48,7 +48,7 @@ function xmldb_motbot_upgrade($oldversion) {
 
 
     // Load default advice from all components.
-    include($CFG->dirroot . '/mod/motbot/load_default_advice.php');
+    \mod_motbot\retention\advice_manager::load_default_advice();
 
     return true;
 }

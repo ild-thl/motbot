@@ -42,7 +42,7 @@ class no_recent_accesses extends \core_course\analytics\target\no_recent_accesse
      * @return \lang_string
      */
     public static function get_name(): \lang_string {
-        return new \lang_string('target:norecentaccesses', 'motbot', null, 'en');
+        return new \lang_string('target:norecentaccesses', 'motbot');
     }
 
     /**

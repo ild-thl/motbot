@@ -100,6 +100,7 @@ $models = [
         'indicators' => [
             '\mod_motbot\analytics\indicator\any_access',
             '\mod_motbot\analytics\indicator\any_write_action',
+            '\mod_motbot\analytics\indicator\any_completions',
         ],
         'timesplitting' => '\core\analytics\time_splitting\past_week',
         'enabled' => true,

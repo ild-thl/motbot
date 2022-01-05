@@ -337,7 +337,7 @@ class intervention {
                 continue;
             }
             if ($prevint_record->state != \mod_motbot\retention\intervention::SUCCESSFUL) {
-                self::from_db($prevint_record)->set_state(self::UNSUCCESSFUL);
+                self::from_db($prevint_record)->set_state(\mod_motbot\retention\intervention::UNSUCCESSFUL);
                 $critical = true;
             }
         }
@@ -449,19 +449,18 @@ class intervention {
 
         // Retrieve message template.
         if ($this->get_context()->contextlevel == 50) {
-            $sql = "SELECT m.subject, m.fullmessage, m.fullmessagehtml
+            $sql = "SELECT m.subject, m.fullmessage, m.fullmessagehtml, m.prediction
                     FROM mdl_motbot_model m
                     JOIN mdl_motbot motbot ON m.motbot = motbot.id
                     WHERE motbot.course = :course
                     AND m.target = :target
-                    AND m.prediction = :prediction
-                    AND m.custom = 1;";
+                    AND m.prediction = :prediction";
             $motbot_model = $DB->get_record_sql($sql, array('course' => $this->get_context()->instanceid, 'target' => $this->target, 'prediction' => $this->prediction));
         } else {
             $motbot_model = $DB->get_record(
                 'motbot_model',
-                array('motbot' => null, 'target' => $this->target, 'prediction' => $this->prediction, 'custom' => 1),
-                'subject, fullmessage, fullmessagehtml',
+                array('motbot' => null, 'target' => $this->target, 'prediction' => $this->prediction),
+                'subject, fullmessage, fullmessagehtml, prediction',
                 IGNORE_MISSING
             );
         }
@@ -474,9 +473,15 @@ class intervention {
         $message->fullmessageformat = FORMAT_MARKDOWN;
 
         if ($motbot_model) {
-            $message->subject = $motbot_model->subject;
-            $body = $motbot_model->fullmessagehtml;
-            $message->fullmessage = $motbot_model->fullmessage;
+            if ($motbot_model->custom) {
+                $message->subject = $motbot_model->subject;
+                $body = $motbot_model->fullmessagehtml;
+                $message->fullmessage = $motbot_model->fullmessage;
+            } else {
+                $message->subject = new \lang_string('mod_form:' . $target_name . '_subject_' . $motbot_model->prediction, 'motbot', null, $recipient->lang);
+                $body = new \lang_string('mod_form:' . $target_name . '_fullmessagehtml_' . $motbot_model->prediction, 'motbot', null, $recipient->lang);
+                $message->fullmessage = new \lang_string('mod_form:' . $target_name . '_fullmessage_' . $motbot_model->prediction, 'motbot', null, $recipient->lang);
+            }
         } else {
             $message->subject = new \lang_string('mod_form:' . $target_name . '_subject', 'motbot', null, $recipient->lang);
             $body = new \lang_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot', null, $recipient->lang);

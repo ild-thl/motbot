@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 if ($hassiteconfig) {
 
     $modfolder = new admin_category(
-        'modmotbotfolder',
+        'modmotbot',
         new lang_string(
             'pluginname',
             'mod_motbot'
@@ -38,11 +38,29 @@ if ($hassiteconfig) {
     $ADMIN->add('modsettings', $modfolder);
 
     $ADMIN->add(
-        'modmotbotfolder',
+        'modmotbot',
         new admin_externalpage(
             'motbot_edit_motbot',
             get_string('settings:edit_motbot', 'mod_motbot'),
             $CFG->wwwroot . '/mod/motbot/edit_motbot.php'
+        )
+    );
+
+    $ADMIN->add(
+        'modmotbot',
+        new admin_externalpage(
+            'motbot_edit_models',
+            get_string('settings:edit_models', 'mod_motbot'),
+            $CFG->wwwroot . '/mod/motbot/edit_models.php'
+        )
+    );
+
+    $ADMIN->add(
+        'modmotbot',
+        new admin_externalpage(
+            'motbot_advice_settings',
+            get_string('settings:edit_advice', 'mod_motbot'),
+            $CFG->wwwroot . '/mod/motbot/advice_settings.php'
         )
     );
 }

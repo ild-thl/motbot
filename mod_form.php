@@ -67,169 +67,16 @@ class mod_motbot_mod_form extends moodleform_mod {
         $mform->setDefault('intro', array('text' => \get_string('mod_form:intro', 'motbot'), 'format' => FORMAT_HTML));
 
         if (!$this->motbot_models || empty($this->motbot_models)) {
-            $this->get_motbot_models();
+            $this->motbot_models = \mod_motbot\manager::get_motbot_models($this->current->instance);
         }
 
         foreach ($this->motbot_models as $motbot_model) {
-            $this->add_intervention_settings($motbot_model);
+            \mod_motbot\manager::add_intervention_settings($mform, $this->context, $motbot_model);
         }
 
         $this->standard_coursemodule_elements();
 
         $this->add_action_buttons();
-    }
-
-    /**
-     * Adds a new section to the form. This section allows the use of specific analytics models in a course and to edit the message templates of corresponding interventions.
-     *
-     * @param object $model
-     * @return void
-     */
-    private function add_intervention_settings($model) {
-        $mform = &$this->_form;
-
-        $target_name = \mod_motbot_get_name_of_target($model->target);
-
-        $mform->addElement('header', $target_name . '_header' . $model->prediction, get_string('mod_form:' . $target_name . '_header', 'motbot') . $model->prediction_description);
-
-        $mform->addElement('hidden', $target_name . '_id' . $model->prediction);
-        $mform->setType($target_name . '_id' . $model->prediction, PARAM_INT);
-
-        $mform->addElement('hidden', $target_name . '_motbot' . $model->prediction);
-        $mform->setType($target_name . '_motbot' . $model->prediction, PARAM_INT);
-
-        $mform->addElement('hidden', $target_name . '_model' . $model->prediction);
-        $mform->setType($target_name . '_model' . $model->prediction, PARAM_INT);
-
-        $mform->addElement('hidden', $target_name . '_target' . $model->prediction);
-        $mform->setType($target_name . '_target' . $model->prediction, PARAM_TEXT);
-
-        $mform->addElement('selectyesno', $target_name . '_active' . $model->prediction, get_string('mod_form:active', 'motbot'));
-        $mform->addHelpButton($target_name . '_active' . $model->prediction, 'mod_form:active', 'motbot');
-
-        $mform->addElement('selectyesno', $target_name . '_custom' . $model->prediction, get_string('mod_form:custom', 'motbot'));
-        $mform->addHelpButton($target_name . '_custom' . $model->prediction, 'mod_form:custom', 'motbot');
-
-
-        $mform->addElement('text', $target_name . '_subject' . $model->prediction, get_string('mod_form:subject', 'motbot'), array('size' => '64'));
-        $mform->setType($target_name . '_subject' . $model->prediction, PARAM_TEXT);
-        $mform->disabledIf($target_name . '_subject' . $model->prediction, $target_name . '_custom' . $model->prediction, 'eq', 0);
-
-        $mform->addElement('textarea', $target_name . '_fullmessage' . $model->prediction, get_string('mod_form:fullmessage', 'motbot'), 'wrap="virtual" rows="10" cols="150"');
-        $mform->setType($target_name . '_fullmessage' . $model->prediction, PARAM_TEXT);
-        $mform->disabledIf($target_name . '_fullmessage' . $model->prediction, $target_name . '_custom' . $model->prediction, 'eq', 0);
-
-        $mform->addElement('editor', $target_name . '_fullmessagehtml' . $model->prediction, get_string('mod_form:fullmessagehtml', 'motbot'), array('rows' => 15), mod_motbot_get_editor_options($this->context));
-        $mform->setType($target_name . '_fullmessagehtml' . $model->prediction, PARAM_RAW);
-        $mform->disabledIf($target_name . '_fullmessagehtml' . $model->prediction, $target_name . '_custom' . $model->prediction, 'eq', 0);
-
-        $mform->addElement('hidden', $target_name . '_usermodified' . $model->prediction);
-        $mform->setType($target_name . '_usermodified' . $model->prediction, PARAM_INT);
-
-        $mform->addElement('hidden', $target_name . '_timemodified' . $model->prediction);
-        $mform->setType($target_name . '_timemodified' . $model->prediction, PARAM_INT);
-
-        $mform->addElement('hidden', $target_name . '_timecreated' . $model->prediction);
-        $mform->setType($target_name . '_timecreated' . $model->prediction, PARAM_INT);
-
-        $mform->addElement('hidden', $target_name . '_prediction' . $model->prediction);
-        $mform->setType($target_name . '_prediction' . $model->prediction, PARAM_INT);
-    }
-
-
-
-    /**
-     * Creates default values for valid motbot models or gets prevoius settings, if they exist.
-     *
-     * @return array
-     */
-    private function get_motbot_models() {
-        global $DB;
-
-        // Get previous model settings for this specific motbot.
-        $motbot_models = $DB->get_records('motbot_model', array('motbot' => $this->current->instance));
-
-        // Get all available motbot models.
-        $sql = "SELECT *
-                FROM mdl_analytics_models
-                WHERE enabled = 1
-                AND target LIKE '%mod_motbot%';";
-        $models = $DB->get_records_sql($sql);
-
-        // Create deault values for models, that are valid for this course.
-        foreach ($models as $model) {
-            if (!$model->target::custom_intervention()) {
-                continue;
-            }
-            // Get variants for possible prediction results.
-            /** @var \mod_motbot\analytics\target\motbot_target $target */
-            $target = \core_analytics\manager::get_target($model->target);
-            $classes = $model->target::get_classes();
-            $predictions = array();
-            $ignored = array();
-            if ($target instanceof \core_analytics\local\target\discrete) {
-                $ignored = $target->ignored_predicted_classes();
-
-                foreach ($classes as $class) { // Skip classes, for which there won't be any predictions made in the future.
-                    if (!in_array($class, $ignored)) {
-                        $predictions[] = $class;
-                    }
-                }
-            } else {
-                $predictions = $classes;
-            }
-
-            foreach ($predictions as $count => $prediction) {
-                // Skip models, for which there are already previous records.
-                $exists = false;
-                foreach ($motbot_models as $motbot_model) {
-                    if ($model->target == $motbot_model->target && $prediction == $motbot_model->prediction) {
-                        $exists = true;
-                        $motbot_model->prediction_description = count($predictions) > 1 ? '(' . (((int)$count) + 1) . '/' . count($predictions) . ')' : '';
-                        $this->motbot_models[] = $motbot_model;
-                        break;
-                    }
-                }
-
-                if ($exists) {
-                    continue;
-                }
-
-                $target_name = \mod_motbot_get_name_of_target($model->target);
-
-                // Set default values.
-                $this->motbot_models[] = (object) [
-                    'id' => null,
-                    'motbot' => $this->current->instance,
-                    'model' => $model->id,
-                    'active' => 1,
-                    'custom' => 0,
-                    'target' => $model->target,
-                    'targetname' => null,
-                    'prediction' => $prediction,
-                    'prediction_description' => count($predictions) > 1 ? ' (' . (((int)$count) + 1) . '/' . count($predictions) . ')' : '',
-                    'subject' => \get_string('mod_form:' . $target_name . '_subject', 'motbot'),
-                    'fullmessage' => \get_string('mod_form:' . $target_name . '_fullmessage', 'motbot'),
-                    'fullmessagehtml' => \get_string('mod_form:' . $target_name . '_fullmessagehtml', 'motbot'),
-                    'attachementuri' => null,
-                    'usermodified' => null,
-                    'timecreated' => null,
-                    'timemodified' => null,
-                ];
-            }
-        }
-
-        // Set targetname, and prediction_name property where it isn't already set.
-        foreach ($this->motbot_models as $motbot_model) {
-            if (property_exists($motbot_model, 'targetname') && $motbot_model->targetname) {
-                continue;
-            }
-
-            $target_name = \mod_motbot_get_name_of_target($motbot_model->target);
-            $motbot_model->targetname = $target_name;
-        }
-
-        return $this->motbot_models;
     }
 
     /**
@@ -240,7 +87,7 @@ class mod_motbot_mod_form extends moodleform_mod {
      **/
     public function data_preprocessing(&$defaultvalues) {
         if (!$this->motbot_models || empty($this->motbot_models)) {
-            $this->get_motbot_models();
+            $this->motbot_models = \mod_motbot\manager::get_motbot_models();
         }
 
         foreach ($this->motbot_models as $motbot_model) {

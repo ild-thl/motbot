@@ -15,11 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Moodle page that displays a form to the looged in user,
- * that enables him/her to set options about how the module works.
- * The kind of form shown depends on the role of the user in the course.
- * Students get to enable Motbot activity for themselves and get to delete their intervention reords.
- * While tachers get redirected to the modedit form.
+ * Moodle page that displays a form to the logged in admin,
+ * that enables him/her to set options about how the motbot modules works.
  *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>

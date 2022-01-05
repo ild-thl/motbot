@@ -222,9 +222,11 @@ function motbot_cm_info_view(cm_info $cm) {
         $content = str_replace('class="mform"', 'class="mform float-right"', $content);
         $cm->set_name($motbot->name);
     } else {
+        // Show motivational quote of the day.
         $now = new DateTime("now", core_date::get_user_timezone_object());
         $dayofweek = $now->format('N');
-        $content = '<div style="font-style: italic; padding-left: 2em">' . \get_string('quote:' . $dayofweek % 6, 'motbot') . '</div>';
+        $quote_of_the_day = \get_string('quote:' . $dayofweek % 6, 'motbot');
+        $content = '<div style="font-style: italic; padding-left: 2em">' . $quote_of_the_day . '</div>';
     } // If enabled or not a student show a motivational quote instead.
 
     $cm->set_after_link($content);
@@ -237,16 +239,19 @@ function motbot_cm_info_view(cm_info $cm) {
  * @return void
  */
 function motbot_cm_info_dynamic(cm_info $cm) {
-    global $USER, $DB;
+    global $USER, $DB, $PAGE;
 
     $modulecontext = context_module::instance($cm->id);
     $coursecontext = context_course::instance($cm->course);
 
     if (!has_capability('mod/motbot:addinstance', $modulecontext)) {
-        // Display a diffrent icon depending on wether the motbot is enabled for the loged in user.
+        // Display a diffrent icon depending on wether the motbot is enabled for the logged in user.
         $active = $DB->get_record('motbot_course_user', array('motbot' => $cm->instance, 'user' => $USER->id, 'authorized' => 1));
         if ($active) {
-            if (!motbot_is_happy($cm->instance, $coursecontext->id)) {
+            $is_happy = \mod_motbot\manager::is_motbot_happy($cm->instance, $coursecontext->id);
+            // Load script that asynchronously reevaluates wether the motbot is happy and updates the icon accordingly.
+            $PAGE->requires->js_call_amd('mod_motbot/update_motbot_icon', 'init', array($cm->instance, $coursecontext->id, $is_happy));
+            if (!$is_happy) {
                 $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-unhappy.svg'));
             }
         } else {
@@ -260,37 +265,4 @@ function motbot_cm_info_dynamic(cm_info $cm) {
             $cm->set_name('Motbot disabled');
         }
     }
-}
-
-/**
- * Checks if a Motbot is happy. A Motbot is unhappy, when there are any ongoing interventions.
- *
- * @param int $motbotid
- * @param int $contextid
- * @return bool
- */
-function motbot_is_happy($motbotid, $contextid) {
-    global $DB, $USER;
-    $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'id, active');
-    foreach ($motbot_models as $motbot_model) {
-        if (!$motbot_model->active) {
-            continue;
-        }
-        $sql = "SELECT *
-                FROM mdl_motbot_intervention
-                WHERE contextid = :contextid
-                AND recipient = :recipient
-                AND model = :model
-                ORDER BY timecreated DESC
-                LIMIT 1";
-        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $USER->id, 'model' => $motbot_model->id), IGNORE_MISSING);
-        if (!$latest_intervention) {
-            continue;
-        }
-
-        if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL || $latest_intervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
-            return false;
-        }
-    }
-    return true;
 }

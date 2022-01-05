@@ -150,9 +150,17 @@ class low_social_presence extends \core_course\analytics\target\course_enrolment
         global $DB;
 
         $userid = \mod_motbot\manager::get_prediction_subject($sampleid);
-        $motbot = $DB->get_record('motbot', array('course' => $course->get_id()));
 
-        if ($motbot && !$DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
+        if (!$motbot = $DB->get_record('motbot', array('course' => $course->get_id()))) {
+            return false;
+        }
+
+        if (!$course_user = $DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $userid, 'authorized' => 1))) {
+            return false;
+        }
+
+        $disabled_models = json_decode($course_user->disabled_models);
+        if (!empty($disabled_models) && \in_array('\\' . \get_class($this), $disabled_models)) {
             return false;
         }
 

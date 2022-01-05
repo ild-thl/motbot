@@ -47,6 +47,13 @@ if (has_capability('mod/motbot:addinstance', $coursecontext)) {
     die;
 }
 
+// User has to be logged in.
+require_login($course, true, $cm);
+
+$PAGE->set_url('/mod/motbot/course_settings.php', array('id' => $cm->id));
+$PAGE->set_title(format_string($moduleinstance->name . ': ' . $course->fullname));
+$PAGE->set_heading(format_string($course->fullname));
+
 // Get prevoious settings.
 $motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
 $motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
@@ -93,12 +100,6 @@ $toform = (object) [
     'disabled_advice' => $motbot_course_user->disabled_advice,
     // 'pref_time' => $motbot_course_user->pref_time,
     // 'only_weekdays' => $motbot_course_user->only_weekdays,
-    'allow_course_completion' => true,
-    'allow_feedback' => true,
-    'allow_recent_activities' => true,
-    'allow_recent_forum_activity' => true,
-    'allow_recommended_discussion' => true,
-    'allow_visit_course' => true,
 ];
 
 $disabled_models = json_decode($motbot_course_user->disabled_models);
@@ -118,15 +119,10 @@ $todeleteform = (object) [
     'contextid' => $coursecontext->id,
 ];
 
-// User has to be logged in.
-require_login($course, true, $cm);
-
-$PAGE->set_url('/mod/motbot/course_settings.php', array('id' => $cm->id));
-$PAGE->set_title(format_string($moduleinstance->name . ': ' . $course->fullname));
-$PAGE->set_heading(format_string($course->fullname));
-
+$models = $DB->get_records('motbot_model', array('motbot' => $moduleinstance->id), '', 'id, target, active');
+$advice = $DB->get_records('motbot_advice', array());
 // Instantiate forms.
-$mform = new mod_motbot_course_settings_form();
+$mform = new mod_motbot_course_settings_form(null, array('models' => $models, 'advice' => $advice));
 $deletedataform = new mod_motbot_delete_intervention_data_form();
 
 // Form processing and displaying is done here.
@@ -147,12 +143,6 @@ if ($mform->is_cancelled()) {
     $motbot_course_user->allow_teacher_involvement = $form_data->allow_teacher_involvement;
     $motbot_course_user->disabled_models = $form_data->disabled_models;
     $motbot_course_user->disabled_advice = $form_data->disabled_advice;
-    // $motbot_course_user->pref_time = $form_data->pref_time;
-    // if($motbot_course_user->pref_time == -1) {
-    //     $auto_period = motbot_calc_user_active_period($motbot_course_user->user);
-    //     $motbot_course_user->pref_time = $auto_period;
-    // }
-    // $motbot_course_user->only_weekdays = $form_data->only_weekdays;
     $motbot_course_user->usermodified = $USER->id;
     $motbot_course_user->timemodified = $time;
     if (!$motbot_course_user->timecreated) {

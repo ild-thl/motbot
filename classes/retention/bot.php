@@ -64,8 +64,8 @@ class bot extends \core\task\scheduled_task {
             $user_pref = $DB->get_record('motbot_user', array('user' => $intervention->recipient), 'pref_time, only_weekdays', IGNORE_MISSING);
 
             // Check if now time is in a 3 hour period after the set prefered time.
-            if (!$user_pref->only_weekdays || ($user_pref->only_weekdays && $dayofweek < 6)) {
-                if ($user_pref->pref_time > -1 && $hour >= $user_pref->pref_time && $hour <= ($user_pref->pref_time - 3)) {
+            if (!$user_pref->only_weekdays || $dayofweek < 6) {
+                if ($user_pref->pref_time > -1 && $hour >= $user_pref->pref_time && $hour <= ($user_pref->pref_time + 3)) {
                     $this->intervene($intervention);
                 }
             }
@@ -93,11 +93,11 @@ class bot extends \core\task\scheduled_task {
             $intervention->set_state(\mod_motbot\retention\intervention::STORED);
         }
 
-        if ($intervention->get_context()->contextlevel == 50) {
-            if ($intervention->is_critical()) {
-                $this->inform_teachers($intervention);
-            }
+        // if ($intervention->get_context()->contextlevel == 50) {
+        if ($intervention->is_critical()) {
+            $this->inform_teachers($intervention);
         }
+        // }
     }
 
     /**

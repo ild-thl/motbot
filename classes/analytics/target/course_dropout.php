@@ -158,16 +158,6 @@ class course_dropout extends \core_course\analytics\target\course_dropout {
      * @return float|null 0 -> not at risk, 1 -> at risk
      */
     protected function calculate_sample($sampleid, \core_analytics\analysable $course, $starttime = false, $endtime = false) {
-        echo ('Calculate sample: ' . $sampleid);
-
-        $potential_cognitive_depth = $this->retrieve('\core_course\analytics\indicator\potential_cognitive_depth', $sampleid);
-        print_r('Cognitive Depth: ' . $potential_cognitive_depth);
-        $potential_social_breadth = $this->retrieve('\core_course\analytics\indicator\potential_social_breadth', $sampleid);
-        print_r('Social Breadth: ' . $potential_social_breadth);
-        return 0;
-
-        // ----------------
-
         if (!$this->enrolment_active_during_analysis_time($sampleid, $starttime, $endtime)) {
             // We should not use this sample as the analysis results could be misleading.
             echo ("no active erol during analysis time");

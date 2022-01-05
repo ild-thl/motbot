@@ -108,7 +108,6 @@ class last_stop extends \mod_motbot\retention\advice\action {
                 AND cm.completion = 1';
             $params = array('module' => $activity_log->objectid, 'course_module' => $activity_log->contextinstanceid, 'user' => $user->id);
             $activity = $DB->get_record_sql($sql, $params, IGNORE_MISSING);
-            \print_r($activity);
             if (!$activity) {
                 // Activity dosn't have completion tracking enabled. Therefore check next activity record.
                 continue;
@@ -164,7 +163,7 @@ class last_stop extends \mod_motbot\retention\advice\action {
             // Get the name of the activity.
             $activity_name = $DB->get_field($table->name, 'name', array('id' => $table->instance), IGNORE_MISSING);
             if ($activity_name) {
-                $this->title = \get_string('advice:laststop_title_newchallenge');
+                $this->title = \get_string('advice:laststop_title_newchallenge', 'motbot');
                 $this->action_url = $CFG->wwwroot . '/mod/' . $table->name . '/view.php?id=' . $uncompleted->cmid;
                 $this->action = \get_string('motbot:goto', 'motbot', $activity->name);
                 return;
@@ -178,7 +177,7 @@ class last_stop extends \mod_motbot\retention\advice\action {
             'name' => $course_name,
         ];
 
-        $this->title = \get_string('advice:laststop_title');
+        $this->title = \get_string('advice:laststop_title', 'motbot');
         $this->action_url = $CFG->wwwroot . $activity->url;
         $this->action = \get_string('motbot:goto', 'motbot', $activity->name);
     }

@@ -116,7 +116,7 @@ class recent_cognitive_presence extends \core_analytics\local\target\discrete {
      */
     public function ignored_predicted_classes() {
         // No need to process users that have been active.
-        return array(2, 3);
+        return array();
     }
 
     /**
@@ -175,7 +175,7 @@ class recent_cognitive_presence extends \core_analytics\local\target\discrete {
     }
 
     /**
-     * Calculation based on activities due indicator.
+     * Calculation of the cognitive presence based on diffrent indicators.
      *
      * @param int $sampleid
      * @param \core_analytics\analysable $analysable
@@ -184,7 +184,10 @@ class recent_cognitive_presence extends \core_analytics\local\target\discrete {
      * @return float
      */
     protected function calculate_sample($sampleid, \core_analytics\analysable $analysable, $starttime = false, $endtime = false) {
-        return 1;
+        $any_completions = $this->retrieve('\mod_motbot\analytics\indicator\any_completions', $sampleid);
+        if ($any_completions == \mod_motbot\analytics\indicator\any_completions::get_max_value()) {
+            return 3;
+        }
         $any_write_action = $this->retrieve('\mod_motbot\analytics\indicator\any_write_action', $sampleid);
         if ($any_write_action == \mod_motbot\analytics\indicator\any_write_action::get_max_value()) {
             return 2;
@@ -214,7 +217,7 @@ class recent_cognitive_presence extends \core_analytics\local\target\discrete {
      * @return bool
      */
     public static function custom_intervention() {
-        return false;
+        return true;
     }
 
     /**
@@ -232,7 +235,7 @@ class recent_cognitive_presence extends \core_analytics\local\target\discrete {
      * @return bool
      */
     public static function always_intervene() {
-        return false;
+        return true;
     }
 
     /**

@@ -25,7 +25,6 @@
 //moodleform is defined in formslib.php
 require_once("$CFG->libdir/formslib.php");
 require_once("locallib.php");
-
 /**
  * Form that lets user choose their preffered motbot settings for a specific course.
  *
@@ -40,12 +39,18 @@ class mod_motbot_course_settings_form extends moodleform {
     private $models = null;
 
     /**
+     * @var array Array of advice available for this moodle installation
+     */
+    private $advice = null;
+
+    /**
      * Form definition.
      * @return void
      */
     public function definition() {
         $mform = $this->_form;
-
+        $this->models = $this->_customdata['models'];
+        $this->advice = $this->_customdata['advice'];
         // Yes, No selector to enable motbot, as default disabled.
         $mform->addElement('selectyesno', 'authorized', get_string('course_settings_form:authorized', 'motbot'));
         $mform->setDefault('authorized', 0);
@@ -63,16 +68,11 @@ class mod_motbot_course_settings_form extends moodleform {
         // $mform->addElement('hidden', 'only_weekdays');
         // $mform->setType('only_weekdays', PARAM_INT);
 
-        $mform->addElement('header', 'advice_settings', get_string('course_settings_form:model_settings', 'motbot'), '', array('group' => 1, 'checked' => true), array(0, 1));
+        $mform->addElement('header', 'model_settings', get_string('course_settings_form:model_settings', 'motbot'), '', array('group' => 1, 'checked' => true), array(0, 1));
         $this->add_model_settings($mform);
 
         $mform->addElement('header', 'advice_settings', get_string('course_settings_form:advice_settings', 'motbot'), '', array('group' => 1, 'checked' => true), array(0, 1));
-        $mform->addElement('checkbox', 'allow_course_completion', get_string('advice:course_completion', 'motbot'), '', array('group' => 1), array(0, 1));
-        $mform->addElement('checkbox', 'allow_feedback', get_string('advice:feedback', 'motbot'), '', array('group' => 1), array(0, 1));
-        $mform->addElement('checkbox', 'allow_recent_activities', get_string('advice:recent_activities', 'motbot'), '', array('group' => 1), array(0, 1));
-        $mform->addElement('checkbox', 'allow_recent_forum_activity', get_string('advice:recent_forum_activity', 'motbot'), '', array('group' => 1), array(0, 1));
-        $mform->addElement('checkbox', 'allow_recommended_discussion', get_string('advice:recommended_discussion', 'motbot'), '', array('group' => 1), array(0, 1));
-        $mform->addElement('checkbox', 'allow_visit_course', get_string('advice:visit_course', 'motbot'), '', array('group' => 1), array(0, 1));
+        $this->add_advice_settings($mform);
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
@@ -82,16 +82,47 @@ class mod_motbot_course_settings_form extends moodleform {
     }
 
     /**
+     * Adds a checkbox for every advice option.
+     *
+     * @param object $mform
+     * @return void
+     */
+    private function add_advice_settings($mform) {
+        foreach ($this->advice as $advice) {
+            $mform->addElement('checkbox', $advice->name, $advice->name::get_name(), '', array('group' => 1), array(0, 1));
+            $mform->setDefault($advice->name, 1);
+        }
+    }
+
+
+
+    /**
+     * Creates a json string, containing information about wich models
+     * were disabled by the user in the submitted form.
+     *
+     * @param object $data Submitted form data.
+     * @return string Json String.
+     */
+    private function get_disabled_advice($data) {
+        $disabled_advice = array();
+        foreach ($this->advice as $advice) {
+            if (!property_exists($data, $advice->name)) {
+                $disabled_advice[] = $advice->name;
+            }
+        }
+        return json_encode($disabled_advice);
+    }
+
+    /**
      * Adds a checkbox for every analytics model.
      *
      * @param object $mform
      * @return void
      */
     private function add_model_settings($mform) {
-        $models = $this->get_models();
-        foreach ($models as $model) {
+        foreach ($this->models as $model) {
             $targetname = mod_motbot_get_name_of_target($model->target);
-            $mform->addElement('checkbox', $targetname, get_string('target:' . $targetname . '_short', 'motbot'), '', array('group' => 1), array(0, 1));
+            $mform->addElement('checkbox', $targetname, get_string('target:' . $targetname . '_neutral', 'motbot'), '', array('group' => 1), array(0, 1));
             $mform->setDefault($targetname, 1);
         }
     }
@@ -105,31 +136,13 @@ class mod_motbot_course_settings_form extends moodleform {
      */
     private function get_disabled_models($data) {
         $disabled_models = array();
-        $models = $this->get_models();
-        foreach ($models as $model) {
+        foreach ($this->models as $model) {
             $targetname = mod_motbot_get_name_of_target($model->target);
             if (!property_exists($data, $targetname)) {
                 $disabled_models[] = $model->target;
             }
         }
         return json_encode($disabled_models);
-    }
-
-    /**
-     * Gets all analytics models from the db.
-     *
-     * @return array
-     */
-    private function get_models() {
-        global $DB;
-        if (!$this->models) {
-            $sql = "SELECT *
-                FROM mdl_analytics_models
-                WHERE enabled = 1
-                AND target LIKE '%mod_motbot%';";
-            $this->models = $DB->get_records_sql($sql);
-        }
-        return $this->models;
     }
 
 
@@ -146,7 +159,7 @@ class mod_motbot_course_settings_form extends moodleform {
         }
 
         $data->disabled_models = $this->get_disabled_models($data);
-        $data->disabled_advice = '[]';
+        $data->disabled_advice = $this->get_disabled_advice($data);
 
         return $data;
     }

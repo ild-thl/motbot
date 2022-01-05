@@ -15,21 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Echo wether the motbot is happy.
+ *
  * @package   mod_motbot
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+require_once('../../config.php');
 
-defined('MOODLE_INTERNAL') || die();
+$motbotid = required_param('motbotid', PARAM_INT);           // MotBot ID.
+$contextid = required_param('contextid', PARAM_INT);           // Context ID.
 
-$plugin->version = 2021122717;
-$plugin->requires = 2018051701;
-// $plugin->requires = 2021051700;
-$plugin->component = 'mod_motbot';
-$plugin->maturity = MATURITY_ALPHA;
-// $plugin->release = 'TODO';
-
-// $plugin->dependencies = [
-//     'mod_forum' => ANY_VERSION,
-//     'mod_data' => TODO
-// ];
+echo json_encode(\mod_motbot\manager::is_motbot_happy($motbotid, $contextid));

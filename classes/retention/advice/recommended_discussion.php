@@ -81,7 +81,6 @@ class recommended_discussion extends \mod_motbot\retention\advice\forum_quote {
         if ($neglected_discussion && $neglected_discussion->id) {
             $author = $DB->get_record('user', array('id' => $neglected_discussion->userid), 'firstname, lastname', IGNORE_MISSING);
             $this->title = \get_string('advice:recommendeddiscussion_title', 'motbot');
-            // $this->title .= " \xF0\x9F\x9A\x92";
             $this->subject = $neglected_discussion->subject;
             $this->message = $neglected_discussion->message;
             $this->author = $author->firstname . ' ' . $author->lastname;
