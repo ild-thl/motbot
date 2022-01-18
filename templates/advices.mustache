@@ -36,10 +36,13 @@ Example context (json):
 }
 }}
 
-<h3>Suggestions:</h3>
 <div class="mod_motbot_advices">
-  {{#advices}}
-  {{{.}}}
-  <br />
-  {{/advices}}
+  <dl>
+    <dt class="h3">{{#str}} advice:plural, mod_motbot{{/str}}:</dt>
+    {{#advices}}
+    <dd>
+      {{{.}}}
+    </dd>
+    {{/advices}}
+  </dl>
 </div>

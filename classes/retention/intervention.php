@@ -261,6 +261,17 @@ class intervention {
                 $intervention->target = $analytics_model->target;
             }
         }
+
+        // set prediction to null, if there is only one prediction outcome to be expected.
+        $target = $intervention->get_target();
+        if ($target instanceof \core_analytics\local\target\discrete) {
+            $classes = $target::get_classes();
+            $ignored = $target->ignored_predicted_classes();
+            if (count($classes) - \count($ignored) <= 1) {
+                $intervention->prediction = null;
+            }
+        }
+
         // Get recipient id.
         $recipientid = \mod_motbot\manager::get_prediction_subject($prediction->sampleid, $intervention->target);
         if (!$recipientid) {
@@ -449,7 +460,7 @@ class intervention {
 
         // Retrieve message template.
         if ($this->get_context()->contextlevel == 50) {
-            $sql = "SELECT m.subject, m.fullmessage, m.fullmessagehtml, m.prediction
+            $sql = "SELECT m.subject, m.fullmessage, m.fullmessagehtml, m.prediction, m.custom
                     FROM mdl_motbot_model m
                     JOIN mdl_motbot motbot ON m.motbot = motbot.id
                     WHERE motbot.course = :course
@@ -460,7 +471,7 @@ class intervention {
             $motbot_model = $DB->get_record(
                 'motbot_model',
                 array('motbot' => null, 'target' => $this->target, 'prediction' => $this->prediction),
-                'subject, fullmessage, fullmessagehtml, prediction',
+                'subject, fullmessage, fullmessagehtml, prediction, custom',
                 IGNORE_MISSING
             );
         }

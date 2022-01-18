@@ -31,29 +31,36 @@ abstract class base {
     protected $course = null;
 
     /**
-    * Returns a lang_string object representing the name for the indicator or target.
-    *
-    * Used as column identificator.
-    *
-    * If there is a corresponding '_help' string this will be shown as well.
-    *
-    * @return \lang_string
-    */
-    public static abstract function get_name() : \lang_string;
+     * Returns a lang_string object representing the name for the indicator or target.
+     *
+     * Used as column identificator.
+     *
+     * If there is a corresponding '_help' string this will be shown as well.
+     *
+     * @return \lang_string
+     */
+    public static abstract function get_name(): \lang_string;
 
     /**
      * Generates advices as text.
      *
-     * @return void
-    */
+     * @return string
+     */
     public abstract function render();
 
     /**
      * Generates advices as html.
      *
-     * @return void
-    */
+     * @return string
+     */
     public abstract function render_html();
+
+    /**
+     * Generates telegram message object.
+     *
+     * @return array
+     */
+    public abstract function render_telegram();
 
     /**
      * Constructor.
@@ -61,6 +68,6 @@ abstract class base {
      * @param \core\user $user
      * @param \core\course $course
      * @return void
-    */
+     */
     public abstract function __construct($user, $course);
 }

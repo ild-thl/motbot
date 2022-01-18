@@ -26,7 +26,7 @@ namespace mod_motbot\retention\advice;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot.'/mod/motbot/locallib.php');
+require_once($CFG->dirroot . '/mod/motbot/locallib.php');
 
 /**
  * Abstract class for advices that need a title and one or more call to actions.
@@ -42,11 +42,11 @@ abstract class title_and_actionrow extends \mod_motbot\retention\advice\base {
     /**
      * Generates advices as text.
      *
-     * @return void
-    */
+     * @return string
+     */
     public function render() {
         $result = $this->title;
-        foreach($this->actions as $action) {
+        foreach ($this->actions as $action) {
             $result .=  PHP_EOL . '*' . $action['action'] . '*: _' . $action['action_url'] . '_';
         }
         return $result;
@@ -55,8 +55,8 @@ abstract class title_and_actionrow extends \mod_motbot\retention\advice\base {
     /**
      * Generates advices as html.
      *
-     * @return void
-    */
+     * @return string
+     */
     public function render_html() {
         global $OUTPUT;
 
@@ -66,5 +66,31 @@ abstract class title_and_actionrow extends \mod_motbot\retention\advice\base {
         ];
 
         return $OUTPUT->render_from_template('mod_motbot/title_and_actionrow', $context);
+    }
+
+    /**
+     * Generates telegram message object.
+     *
+     * @return array
+     */
+    public function render_telegram() {
+        $buttons = array();
+        foreach ($this->actions as $action) {
+            $buttons[] = [
+                "text" => $action['action_title'],
+                "url" => $action['action_url']
+            ];
+        }
+        $keyboard = \json_encode([
+            "inline_keyboard" => [
+                $buttons
+            ]
+        ]);
+
+        return [
+            'text' => $this->title,
+            'parse_mode' => 'Markdown',
+            'reply_markup' => $keyboard
+        ];
     }
 }

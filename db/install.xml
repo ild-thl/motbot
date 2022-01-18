@@ -60,7 +60,7 @@
         <FIELD NAME="recipient" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="model" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="target" TYPE="char" LENGTH="128" NOTNULL="false" SEQUENCE="false"/>
-        <FIELD NAME="prediction" TYPE="int" LENGTH="2" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="prediction" TYPE="int" LENGTH="2" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="desired_events" TYPE="char" LENGTH="512" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="state" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>

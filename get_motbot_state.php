@@ -24,6 +24,7 @@
 require_once('../../config.php');
 
 $motbotid = required_param('motbotid', PARAM_INT);           // MotBot ID.
-$contextid = required_param('contextid', PARAM_INT);           // Context ID.
 
-echo json_encode(\mod_motbot\manager::is_motbot_happy($motbotid, $contextid));
+require_login();
+
+echo json_encode(\mod_motbot\manager::is_motbot_happy($USER->id, $motbotid));

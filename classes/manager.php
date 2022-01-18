@@ -213,30 +213,46 @@ class manager {
         return $result;
     }
 
-
-
     /**
      * Checks if a Motbot is happy. A Motbot is unhappy, when there are any ongoing interventions.
      *
+     * @param int $userid
      * @param int $motbotid
-     * @param int $contextid
      * @return bool
      */
-    public static function is_motbot_happy($motbotid, $contextid) {
-        global $DB, $USER;
-        $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'id, active');
+    public static function is_motbot_happy($userid, $motbotid = null) {
+        global $DB;
+        if ($motbotid) {
+            $motbot_course = $DB->get_field('motbot', 'course', array('id' => $motbotid), IGNORE_MISSING);
+            $coursecontext = \context_course::instance($motbot_course);
+            $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'id, active');
+        } else {
+            $motbot_models = $DB->get_records('motbot_model', array(), '', 'id, active');
+        }
+
         foreach ($motbot_models as $motbot_model) {
             if (!$motbot_model->active) {
                 continue;
             }
-            $sql = "SELECT *
+            if ($motbotid) {
+                $sql = "SELECT *
                 FROM mdl_motbot_intervention
-                WHERE contextid = :contextid
-                AND recipient = :recipient
+                WHERE recipient = :recipient
+                AND model = :model
+                AND contextid = :contextid
+                ORDER BY timecreated DESC
+                LIMIT 1";
+                $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $coursecontext->id, 'recipient' => $userid, 'model' => $motbot_model->id), IGNORE_MISSING);
+            } else {
+                $sql = "SELECT *
+                FROM mdl_motbot_intervention
+                WHERE recipient = :recipient
                 AND model = :model
                 ORDER BY timecreated DESC
                 LIMIT 1";
-            $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $contextid, 'recipient' => $USER->id, 'model' => $motbot_model->id), IGNORE_MISSING);
+                $latest_intervention = $DB->get_record_sql($sql, array('recipient' => $userid, 'model' => $motbot_model->id), IGNORE_MISSING);
+            }
+
             if (!$latest_intervention) {
                 continue;
             }
@@ -246,6 +262,23 @@ class manager {
             }
         }
         return true;
+    }
+
+    /**
+     * Checks if user has enabled MotBot.
+     *
+     * @param int $userid
+     * @param int $motbotid
+     * @return bool
+     */
+    public static function is_motbot_enabled($userid, $motbotid = null) {
+        global $DB;
+
+        if ($motbotid == null) {
+            return $DB->record_exists('motbot_user', array('user' => $userid, 'authorized' => 1));
+        } else {
+            return $DB->record_exists('motbot_course_user', array('user' => $userid, 'motbot' => $motbotid, 'authorized' => 1));
+        }
     }
 
     /**
@@ -361,7 +394,6 @@ class manager {
                 continue;
             }
             // Get variants for possible prediction results.
-            /** @var \mod_motbot\analytics\target\motbot_target $target */
             $target = \core_analytics\manager::get_target($model->target);
 
             if ($motbotid) { // If a motbot id is given, only select models that analyse course enrolement specific data.
@@ -457,7 +489,7 @@ class manager {
         }
 
         if (!$adviceobjs || empty($adviceobjs)) {
-            return null;
+            return array();
         }
 
         // Discard misconfiguered advice.

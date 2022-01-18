@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $tasks = [
     [
-        'classname' => 'mod_motbot\retention\bot',
+        'classname' => 'mod_motbot\retention\taskbot',
         'blocking' => 0,
         'minute' => '*/2',
         'hour' => '*',

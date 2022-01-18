@@ -24,6 +24,7 @@
 
 //---- Advice
 $string['advice'] = 'Advice';
+$string['advice:plural'] = 'Advice';
 $string['advice:course_completion'] = 'Current course progress';
 $string['advice:course_completion_help'] = 'Current course progress';
 $string['advice:feedback'] = 'Feedback request';
@@ -38,7 +39,7 @@ $string['advice:last_stop'] = 'Latest accessed activity';
 $string['advice:last_stop_help'] = 'Latest accessed activity';
 $string['advice:visit_course'] = 'Forward to course';
 $string['advice:visit_course_help'] = 'Forward to course';
-$string['advice:averageprogress'] = 'Average progress';
+$string['advice:averageprogress'] = '⌀ progress';
 $string['advice:yourprogress'] = 'Your progress';
 $string['advice:postedby'] = 'Posted by {$a->author} on {$a->date}';
 $string['advice:coursecompletion_title'] = 'Your recent course progress:';
@@ -50,7 +51,7 @@ $string['advice:feedback_title'] = 'Please consider giving some feedback as well
 $string['advice:laststop_title'] = 'Continue where you last stopped:';
 $string['advice:laststop_title_newchallenge'] = 'Continue with a new challenge:';
 $string['advice:recentactivities_title'] = 'These new forum discussions could be interesting for you:';
-$string['advice:recentactivities_action'] = 'The discussion regarding "{$a->activityname}" was posted on {$a->date}';
+$string['advice:recentactivities_action'] = '{$a->activityname} added {$a->date}';
 $string['advice:recommendeddiscussion_title'] = 'Nobody replied to this students post yet. Maybe you could try to add something to the discussion? &#128657;';
 $string['advice:recommendeddiscussion_action'] = 'Reply now';
 $string['advice:visitcourse_title'] = 'Visit the course!';
@@ -65,11 +66,13 @@ $string['advice:targets_help'] = 'Analytics Targets';
 $string['advice:targetsnum'] = 'Amount of targets: {$a}';
 $string['advice:created'] = '{$a->count} new advice defintion(s) loaded for component \'{$a->component}\'';
 $string['advice:updated'] = '{$a->count} advice defintion(s) updated for component \'{$a->component}\'';
-
+$string['advice:noneavailable'] = 'No advice available.';
 //----
 
-//---- Bot
-$string['bot'] = 'Executes scheduled interventions';
+//---- Chatbot
+$string['chatbot'] = 'Chatbot';
+$string['chatbot:default'] = 'Hi {$a},
+how can I help you today?';
 //----
 
 //----  Course User Settings Form
@@ -247,6 +250,11 @@ $string['motbot:state'] = 'State';
 $string['motbot:wereteachersinformed'] = 'Were teachers informed';
 $string['motbot:message'] = 'Message';
 $string['motbot:enablingmotbot'] = 'Enabling Motbot';
+$string['motbot:disabled'] = 'The MotBot is currently deactivated.';
+$string['motbot:ishappy'] = 'The MotBot is happy.';
+$string['motbot:isunhappy'] = 'The MotBot could be happier.';
+$string['motbot:moreinfo'] = 'More info';
+$string['motbot:activate'] = 'Activate MotBot';
 //----
 
 //----  Plugin General
@@ -324,6 +332,10 @@ $string['target:upcoming_activities_due_short'] = 'Upcoming activities due';
 
 $string['targetlabellowsocialpresenceno'] = 'Student has low social presence.';
 $string['targetlabellowsocialpresenceyes'] = 'Student has enough social presence.';
+//----
+
+//---- Taskbot
+$string['taskbot'] = 'Executes scheduled interventions';
 //----
 
 $string['tomanyinstances'] = 'There should only be one MotBot activity in a course.';

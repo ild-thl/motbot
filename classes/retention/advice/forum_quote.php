@@ -47,7 +47,7 @@ abstract class forum_quote extends \mod_motbot\retention\advice\base {
     /**
      * Generates advices as text.
      *
-     * @return void
+     * @return string
      */
     public function render() {
         $message = $this->title . PHP_EOL;
@@ -64,7 +64,7 @@ abstract class forum_quote extends \mod_motbot\retention\advice\base {
     /**
      * Generates advices as html.
      *
-     * @return void
+     * @return string
      */
     public function render_html() {
         global $OUTPUT;
@@ -80,5 +80,36 @@ abstract class forum_quote extends \mod_motbot\retention\advice\base {
         ];
 
         return $OUTPUT->render_from_template('mod_motbot/forum_quote', $context);
+    }
+
+    /**
+     * Generates telegram message object.
+     *
+     * @return array
+     */
+    public function render_telegram() {
+        $message = $this->title . PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= \get_string('advice:postedby', 'motbot', array('author' => $this->author, 'date' => $this->date)) . ':' . PHP_EOL;
+        $message .= PHP_EOL;
+        $message .= '*' . $this->subject . '*' . PHP_EOL;
+        $message .= '```' . strip_tags($this->message) . '```';
+
+        $keyboard = \json_encode([
+            "inline_keyboard" => [
+                [
+                    [
+                        "text" => $this->action,
+                        "url" => $this->action_url
+                    ]
+                ]
+            ]
+        ]);
+
+        return [
+            'text' => $message,
+            'parse_mode' => 'Markdown',
+            'reply_markup' => $keyboard
+        ];
     }
 }

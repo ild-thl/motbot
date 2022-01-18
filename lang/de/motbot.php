@@ -24,6 +24,7 @@
 
 //---- Advice
 $string['advice'] = 'Empfehlung';
+$string['advice:plural'] = 'Empfehlungen';
 $string['advice:course_completion'] = 'Aktueller Kursfortschritt';
 $string['advice:course_completion_help'] = 'Aktueller Kursfortschritt';
 $string['advice:feedback'] = 'Aufforderung Feedback zu geben';
@@ -38,22 +39,22 @@ $string['advice:visit_course'] = 'Link zum Kurs';
 $string['advice:visit_course_help'] = 'Link zum Kurs';
 $string['advice:last_stop'] = 'Zuletzt bearbeitete Aktivität';
 $string['advice:last_stop_help'] = 'Zuletzt bearbeitete Aktivität';
-$string['advice:averageprogress'] = 'Durchschnittlicher Fortschritt';
+$string['advice:averageprogress'] = '⌀ Fortschritt';
 $string['advice:yourprogress'] = 'Dein Fortschritt';
 $string['advice:postedby'] = 'Veröffentlicht von {$a->author} am {$a->date}';
-$string['advice:coursecompletion_title'] = 'Dein aktueller Kursfortschritt:';
+$string['advice:coursecompletion_title'] = '📈 Dein aktueller Kursfortschritt:';
 $string['advice:coursecompletion_desc_bad'] = 'Dein Fortschritt ist nur {$a}% hinter dem Kursdurchschnitt. Du solltest keine Probleme haben aufzuholen.';
 $string['advice:coursecompletion_desc_worst'] = 'Du bist ganz schön hinterher, aber du hast noch Zeit aufzuholen. Bitte zögere nicht deine Mitstudierenden oder das Lehrpersonal um Hilfe zu fragen!';
 $string['advice:coursecompletion_desc_good'] = 'Dein Forstschritt ist gut. Dennoch empfehlen wir, sich regelmäßig mit den Kursinhalten zu beschäftigen.';
 $string['advice:coursecompletion_desc_best'] = 'Du bist weit voraus! Weiter so!';
-$string['advice:feedback_title'] = 'Bitte gib uns feedback, sodass wir dich noch besser unterstützen können! &#128591;';
+$string['advice:feedback_title'] = '🙏 Bitte gib uns feedback, sodass wir dich noch besser unterstützen können!';
 $string['advice:laststop_title'] = 'Mach weiter, wo du zuletzt aufgehört hast:';
 $string['advice:laststop_title_newchallenge'] = 'Beginne eine neue Herausforderung:';
-$string['advice:recentactivities_title'] = 'Neulich hinzugefügte Aktivitäten könnten wichtig für dich sein:';
-$string['advice:recentactivities_action'] = 'Die Aktivität oder Ressource {$a->activityname} wurde hinzugefügt am {$a->date}';
-$string['advice:recentforumactivity_title'] = 'Diese neuen Forendiskussionen könnten dich interessieren:';
+$string['advice:recentactivities_title'] = 'Diese neulich hinzugefügten Aktivitäten könnten wichtig für dich sein:';
+$string['advice:recentactivities_action'] = '{$a->activityname} hinzugefügt am {$a->date}';
+$string['advice:recentforumactivity_title'] = '🔥 Diese neuen Forendiskussionen könnten dich interessieren:';
 $string['advice:recentforumactivity_action'] = 'Die Diskussion {$a->subject} wurde am {$a->date} veröffentlicht';
-$string['advice:recommendeddiscussion_title'] = 'Es hat bisher noch niemand auf diesen Post geantwortet. Vielleicht kannst du etwas zu dieser Diskussion beitragen? &#128657;';
+$string['advice:recommendeddiscussion_title'] = '🚑 Es hat bisher noch niemand auf diesen Post geantwortet. Vielleicht kannst du etwas zu dieser Diskussion beitragen?;';
 $string['advice:recommendeddiscussion_action'] = 'Antworte jetzt';
 $string['advice:visitcourse_title'] = 'Besuch den Kurs!';
 $string['advice:update'] = 'Empfehlungen aktualisieren';
@@ -67,12 +68,13 @@ $string['advice:targets_help'] = 'Analytik-Ziele';
 $string['advice:targetsnum'] = 'Anzahl der Ziele: {$a}';
 $string['advice:created'] = '{$a->count} neue Empfehlungsdefinition(en) wurde(n) für Komponente \'{$a->component}\' geladen';
 $string['advice:updated'] = '{$a->count} Empfehlungsdefinition(en) wurde(n) für Komponente \'{$a->component}\' aktualisiert';
-
-
+$string['advice:noneavailable'] = 'Keine Empfehlungen verfügbar.';
 //----
 
-//---- Bot
-$string['bot'] = 'Ausführen von geplanten Interventionen';
+//---- Chatbot
+$string['chatbot'] = 'Chatbot';
+$string['chatbot:default'] = 'Hi {$a},
+wie kann ich dir heute helfen?';
 //----
 
 //----  Course User Settings Form
@@ -254,6 +256,11 @@ $string['motbot:state'] = 'Status';
 $string['motbot:wereteachersinformed'] = 'Wurde das Lehrpersonal informiert';
 $string['motbot:message'] = 'Nachricht';
 $string['motbot:enablingmotbot'] = 'Motbot wird aktiviert';
+$string['motbot:disabled'] = 'Der MotBot ist zurzeit deaktiviert.';
+$string['motbot:ishappy'] = 'Der MotBot ist zufrieden.';
+$string['motbot:isunhappy'] = 'Der MotBot könnte zufriedener sein.';
+$string['motbot:moreinfo'] = 'Mehr Infos';
+$string['motbot:activate'] = 'MotBot aktivieren';
 //----
 
 //----  Plugin General
@@ -325,6 +332,10 @@ $string['target:upcoming_activities_due_short'] = 'Bevorstehende fällige Aktivi
 
 $string['targetlabellowsocialpresenceno'] = 'Lernende:r mit geringer sozialer Präsenz';
 $string['targetlabellowsocialpresenceyes'] = 'Lernende:r mit ausreichend sozialer Präsenz.';
+//----
+
+//---- Taskbot
+$string['taskbot'] = 'Ausführen von geplanten Interventionen';
 //----
 
 $string['tomanyinstances'] = 'Es sollte nur eine MotBot Aktivität pro Kurs geben.';

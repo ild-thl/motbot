@@ -33,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bot extends \core\task\scheduled_task {
+class taskbot extends \core\task\scheduled_task {
 
     /**
      * Return the task's name as shown in admin screens.
@@ -41,7 +41,7 @@ class bot extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('bot', 'mod_motbot');
+        return get_string('taskbot', 'mod_motbot');
     }
 
     /**

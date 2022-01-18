@@ -69,7 +69,7 @@ class advice_manager {
      * @param \core\course $course
      * @param \mod_motbot\retention\core_analytics\local\target\base $target
      */
-    public function __construct($user, $course, $target) {
+    public function __construct($user, $course = null, $target = null) {
         $this->user = $user;
         $this->course = $course;
         $this->target = $target;
@@ -78,8 +78,7 @@ class advice_manager {
     /**
      * Initialize advice, that is available in this context (user, course, target).
      *
-     * @param string $class
-     * @return array
+     * @return mod_motbot\retention\advice\base[]
      */
     private function generate_advice() {
         global $DB;
@@ -88,14 +87,17 @@ class advice_manager {
         // Get advice settings.
         $advice_settings = $DB->get_records('motbot_advice', array());
 
-        $sql = 'SELECT cu.disabled_advice
+        $disabled_advice = null;
+        if ($this->course) {
+            $sql = 'SELECT cu.disabled_advice
             FROM {motbot_course_user} as cu
             JOIN {motbot} as m
             ON m.id = cu.motbot
             WHERE cu.user = :userid
             AND m.course = :courseid';
-        $course_user = $DB->get_record_sql($sql, array('userid' => $this->user->id, 'courseid' => $this->course->id), IGNORE_MISSING);
-        $disabled_advice = json_decode($course_user->disabled_advice);
+            $course_user = $DB->get_record_sql($sql, array('userid' => $this->user->id, 'courseid' => $this->course->id), IGNORE_MISSING);
+            $disabled_advice = json_decode($course_user->disabled_advice);
+        }
 
         // Initialize advice, if aplicable for the set target
         foreach ($advice_settings as $setting) {
@@ -103,12 +105,14 @@ class advice_manager {
                 continue;
             }
 
-            $targets = json_decode($setting->targets);
-            if (!in_array($this->target, $targets)) { // Skip, if target is not part of the defined aplicable targets.
-                continue;
+            if ($this->target) {
+                $targets = json_decode($setting->targets);
+                if (!in_array($this->target, $targets)) { // Skip, if target is not part of the defined aplicable targets.
+                    continue;
+                }
             }
 
-            if (!empty($disabled_advice) && in_array($setting->name, $disabled_advice)) {
+            if ($disabled_advice && !empty($disabled_advice) && in_array($setting->name, $disabled_advice)) {
                 continue;
             }
 
@@ -119,6 +123,66 @@ class advice_manager {
 
         return $advice;
     }
+
+
+    /**
+     * Initialize a random advice, that is available in this context (user, course).
+     *
+     * @return string|array
+     */
+    public function render_random_advice($format = 'html') {
+        global $DB;
+
+        // Get advice settings.
+        $advice_settings = array_values($DB->get_records('motbot_advice', array()));
+
+        $disabled_advice = null;
+        if ($this->course) {
+            $sql = 'SELECT cu.disabled_advice
+            FROM {motbot_course_user} as cu
+            JOIN {motbot} as m
+            ON m.id = cu.motbot
+            WHERE cu.user = :userid
+            AND m.course = :courseid';
+            $course_user = $DB->get_record_sql($sql, array('userid' => $this->user->id, 'courseid' => $this->course->id), IGNORE_MISSING);
+            $disabled_advice = json_decode($course_user->disabled_advice);
+        }
+
+        $count = count($advice_settings);
+        $startindex = random_int(0, $count - 1);
+
+        // Initialize advice, if aplicable for the set target
+        for ($i = 0; $i < $count; $i++) {
+            $current = ($startindex + $i) % $count;
+            $setting = $advice_settings[$current];
+
+            if (!$setting->enabled) { // Skip, if advice is disabled.
+                continue;
+            }
+
+            if ($this->target) {
+                $targets = json_decode($setting->targets);
+                if (!in_array($this->target, $targets)) { // Skip, if target is not part of the defined aplicable targets.
+                    continue;
+                }
+            }
+
+            if ($disabled_advice && !empty($disabled_advice) && in_array($setting->name, $disabled_advice)) {
+                continue;
+            }
+
+            if ($a = $this->get_advice_if_available($setting->name)) {
+                if ($format === 'html') {
+                    return $a->render_html();
+                } else if ($format === 'telegram') {
+                    return $a->render_telegram();
+                }
+                return $a->render();
+            }
+        }
+        return null;
+    }
+
 
     /**
      * Try to initialize a specific advice object.
@@ -132,6 +196,7 @@ class advice_manager {
             // Init new advice
             $advice = new $class($this->user, $this->course);
         } catch (\moodle_exception $e) {
+            print_r('"' . $class . '" not available.       ');
             print_r($e->getMessage());
         }
         return $advice;

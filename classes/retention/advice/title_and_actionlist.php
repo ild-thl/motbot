@@ -40,12 +40,12 @@ abstract class title_and_actionlist extends \mod_motbot\retention\advice\base {
     /**
      * Generates advices as text.
      *
-     * @return void
-    */
+     * @return string
+     */
     public function render() {
         $result = $this->title;
-        foreach($this->actions as $action) {
-            $result .= PHP_EOL . PHP_EOL . $action['action_title'] . PHP_EOL . '-> *' . $action['action'] . '*: _' . $action['action_url'] . '_';
+        foreach ($this->actions as $action) {
+            $result .= PHP_EOL . PHP_EOL . $action['action_title'] . PHP_EOL . '-> [' . $action['action'] . '](' . $action['action_url'] . ')';
         }
         return $result;
     }
@@ -53,8 +53,8 @@ abstract class title_and_actionlist extends \mod_motbot\retention\advice\base {
     /**
      * Generates advices as html.
      *
-     * @return void
-    */
+     * @return string
+     */
     public function render_html() {
         global $OUTPUT;
 
@@ -64,5 +64,18 @@ abstract class title_and_actionlist extends \mod_motbot\retention\advice\base {
         ];
 
         return $OUTPUT->render_from_template('mod_motbot/title_and_actionlist', $context);
+    }
+
+    /**
+     * Generates telegram message object.
+     *
+     * @return array
+     */
+    public function render_telegram() {
+
+        return [
+            'text' => $this->render(),
+            'parse_mode' => 'Markdown'
+        ];
     }
 }

@@ -242,15 +242,14 @@ function motbot_cm_info_dynamic(cm_info $cm) {
     global $USER, $DB, $PAGE;
 
     $modulecontext = context_module::instance($cm->id);
-    $coursecontext = context_course::instance($cm->course);
 
     if (!has_capability('mod/motbot:addinstance', $modulecontext)) {
         // Display a diffrent icon depending on wether the motbot is enabled for the logged in user.
         $active = $DB->get_record('motbot_course_user', array('motbot' => $cm->instance, 'user' => $USER->id, 'authorized' => 1));
         if ($active) {
-            $is_happy = \mod_motbot\manager::is_motbot_happy($cm->instance, $coursecontext->id);
+            $is_happy = \mod_motbot\manager::is_motbot_happy($USER->id, $cm->instance);
             // Load script that asynchronously reevaluates wether the motbot is happy and updates the icon accordingly.
-            $PAGE->requires->js_call_amd('mod_motbot/update_motbot_icon', 'init', array($cm->instance, $coursecontext->id, $is_happy));
+            $PAGE->requires->js_call_amd('mod_motbot/update_motbot_icon', 'init', array($cm->instance, $is_happy));
             if (!$is_happy) {
                 $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-unhappy.svg'));
             }

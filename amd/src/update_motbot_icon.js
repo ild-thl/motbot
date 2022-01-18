@@ -26,11 +26,10 @@
  * Get MotBot state and update MotBot icon if necessary.
  *
  * @param {num} motbotid
- * @param {num} contextid
  * @param {bool} wasHappy
  */
-export const init = async (motbotid, contextid, wasHappy) => {
-  let state = await getState(motbotid, contextid);
+export const init = async (motbotid, wasHappy) => {
+  let state = await getState(motbotid);
 
   setIcon(state, wasHappy);
 };
@@ -39,16 +38,12 @@ export const init = async (motbotid, contextid, wasHappy) => {
  * Get the current MotBot State.
  *
  * @param {num} motbotid
- * @param {num} contextid
  *
  * @returns {Promise<bool>}
  */
-async function getState(motbotid, contextid) {
+async function getState(motbotid) {
   let response = await fetch(
-    '/mod/motbot/get_motbot_state.php?motbotid=' +
-      motbotid +
-      '&contextid=' +
-      contextid
+    '/mod/motbot/get_motbot_state.php?motbotid=' + motbotid
   );
   return await response.json();
 }

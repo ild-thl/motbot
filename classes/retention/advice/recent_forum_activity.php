@@ -35,7 +35,7 @@ require_once($CFG->dirroot . '/mod/motbot/locallib.php');
  * @copyright 2021, Pascal Hürten <pascal.huerten@th-luebeck.de>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class recent_forum_activity extends \mod_motbot\retention\advice\title_and_actionlist {
+class recent_forum_activity extends \mod_motbot\retention\advice\title_and_actionrow {
     /**
      * Returns a lang_string object representing the name for the indicator or target.
      *
@@ -87,9 +87,9 @@ class recent_forum_activity extends \mod_motbot\retention\advice\title_and_actio
         $actions = array();
         foreach ($new_activities as $activity) {
             $this->actions[] = [
-                'action_title' => \get_string('advice:recentactivities_action', 'motbot'),
+                'action_title' => \get_string('advice:recentactivities_action', 'motbot', array('activityname' => $activity->other['modulename'], 'date' => userdate($activity->timecreated, \get_string('strftimedate', 'langconfig')))),
                 'action_url' => $CFG->wwwroot . '/mod/' . $activity->other['modulename'] . '/view.php?id=' . $activity->objectid,
-                'action' => \get_string('motbot:goto', 'motbot', $activity->other['name']),
+                'action' => \get_string('motbot:goto', 'motbot', $activity->other['name']) . ' (' . userdate($activity->timecreated, \get_string('strftimedate', 'langconfig')) . ')',
             ];
         }
 

@@ -43,7 +43,7 @@ abstract class action extends \mod_motbot\retention\advice\base {
     /**
      * Generates advices as text.
      *
-     * @return void
+     * @return string
      */
     public function render() {
         return ($this->title ? $this->title . " " : "") . '*' . $this->action . '*: _' . $this->action_url . '_';
@@ -52,7 +52,7 @@ abstract class action extends \mod_motbot\retention\advice\base {
     /**
      * Generates advices as html.
      *
-     * @return void
+     * @return string
      */
     public function render_html() {
         global $OUTPUT;
@@ -64,5 +64,29 @@ abstract class action extends \mod_motbot\retention\advice\base {
         ];
 
         return $OUTPUT->render_from_template('mod_motbot/action', $context);
+    }
+
+    /**
+     * Generates telegram message object.
+     *
+     * @return array
+     */
+    public function render_telegram() {
+        $keyboard = \json_encode([
+            "inline_keyboard" => [
+                [
+                    [
+                        "text" => $this->action,
+                        "url" => $this->action_url
+                    ]
+                ]
+            ]
+        ]);
+
+        return [
+            'parse_mode' => 'Markdown',
+            'reply_markup' => $keyboard,
+            'text' => $this->title
+        ];
     }
 }
