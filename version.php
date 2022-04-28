@@ -22,7 +22,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2022011422;
+$plugin->version = 2022030419;
 $plugin->requires = 2018051701;
 // $plugin->requires = 2021051700;
 $plugin->component = 'mod_motbot';
@@ -30,6 +30,6 @@ $plugin->maturity = MATURITY_ALPHA;
 // $plugin->release = 'TODO';
 
 // $plugin->dependencies = [
-//     'mod_forum' => ANY_VERSION,
-//     'mod_data' => TODO
+// 'mod_forum' => ANY_VERSION,
+// 'mod_data' => TODO
 // ];

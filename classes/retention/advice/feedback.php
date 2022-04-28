@@ -58,15 +58,17 @@ class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
      */
     public function __construct($user, $course) {
         global $DB, $CFG;
+        $this->user = $user;
+        $this->course = $course;
 
         // Stop initialization, if $course is unset.
-        if (!$course) {
+        if (!$this->course) {
             throw new \moodle_exception('No course given.');
         }
 
         // Stop initialization if user already took part in a feedback
         // or if ther is no feedback option available.
-        if (mod_motbot_has_completed_feedback($user->id, $course->id)) {
+        if (mod_motbot_has_completed_feedback($this->user->id, $this->course->id)) {
             throw new \moodle_exception('Feedback already given.');
         }
 
@@ -76,9 +78,9 @@ class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
             JOIN mdl_feedback f ON f.id = cm.instance
             WHERE cm.course = :courseid
             AND m.name = "feedback";';
-        $activities = $DB->get_records_sql($sql, array('courseid' => $course->id));
+        $activities = $DB->get_records_sql($sql, array('courseid' => $this->course->id));
 
-        $this->title = \get_string('advice:feedback_title', 'motbot');
+        $this->title = (new \lang_string('advice:feedback_title', 'motbot'))->out($this->user->lang);
 
         if (!$activities || empty($activities)) {
             throw new \moodle_exception('No feedback activity available.');
@@ -87,7 +89,7 @@ class feedback extends \mod_motbot\retention\advice\title_and_actionrow {
         foreach ($activities as $feedback) {
             $this->actions[] = [
                 'action_url' => $CFG->wwwroot . '/mod/feedback/view.php?id=' . $feedback->id,
-                'action' => \get_string('motbot:goto', 'motbot', $feedback->name),
+                'action' => (new \lang_string('motbot:goto', 'motbot', $feedback->name))->out($this->user->lang),
             ];
         }
     }

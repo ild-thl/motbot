@@ -73,6 +73,10 @@ class advice_manager {
         $this->user = $user;
         $this->course = $course;
         $this->target = $target;
+
+        if (!\mod_motbot\manager::is_motbot_enabled($user->id)) {
+            throw new \moodle_exception('Motbot disabled.');
+        };
     }
 
     /**
@@ -85,22 +89,28 @@ class advice_manager {
 
         $advice = array();
         // Get advice settings.
-        $advice_settings = $DB->get_records('motbot_advice', array());
+        $advicesettings = $DB->get_records('motbot_advice', array());
 
-        $disabled_advice = null;
+        $disabledadvice = null;
         if ($this->course) {
             $sql = 'SELECT cu.disabled_advice
-            FROM {motbot_course_user} as cu
-            JOIN {motbot} as m
+            FROM {motbot_course_user} cu
+            JOIN {motbot} m
             ON m.id = cu.motbot
             WHERE cu.user = :userid
             AND m.course = :courseid';
-            $course_user = $DB->get_record_sql($sql, array('userid' => $this->user->id, 'courseid' => $this->course->id), IGNORE_MISSING);
-            $disabled_advice = json_decode($course_user->disabled_advice);
+            $courseuser = $DB->get_record_sql(
+                $sql,
+                array('userid' => $this->user->id, 'courseid' => $this->course->id),
+                IGNORE_MISSING
+            );
+            if ($courseuser) {
+                $disabledadvice = json_decode($courseuser->disabled_advice);
+            }
         }
 
-        // Initialize advice, if aplicable for the set target
-        foreach ($advice_settings as $setting) {
+        // Initialize advice, if aplicable for the set target.
+        foreach ($advicesettings as $setting) {
             if (!$setting->enabled) { // Skip, if advice is disabled.
                 continue;
             }
@@ -112,7 +122,7 @@ class advice_manager {
                 }
             }
 
-            if ($disabled_advice && !empty($disabled_advice) && in_array($setting->name, $disabled_advice)) {
+            if ($disabledadvice && !empty($disabledadvice) && in_array($setting->name, $disabledadvice)) {
                 continue;
             }
 
@@ -134,27 +144,27 @@ class advice_manager {
         global $DB;
 
         // Get advice settings.
-        $advice_settings = array_values($DB->get_records('motbot_advice', array()));
+        $advicesettings = array_values($DB->get_records('motbot_advice', array()));
 
-        $disabled_advice = null;
+        $disabledadvice = null;
         if ($this->course) {
             $sql = 'SELECT cu.disabled_advice
-            FROM {motbot_course_user} as cu
-            JOIN {motbot} as m
+            FROM {motbot_course_user} cu
+            JOIN {motbot} m
             ON m.id = cu.motbot
             WHERE cu.user = :userid
             AND m.course = :courseid';
-            $course_user = $DB->get_record_sql($sql, array('userid' => $this->user->id, 'courseid' => $this->course->id), IGNORE_MISSING);
-            $disabled_advice = json_decode($course_user->disabled_advice);
+            $courseuser = $DB->get_record_sql($sql, array('userid' => $this->user->id, 'courseid' => $this->course->id), IGNORE_MISSING);
+            $disabledadvice = json_decode($courseuser->disabled_advice);
         }
 
-        $count = count($advice_settings);
+        $count = count($advicesettings);
         $startindex = random_int(0, $count - 1);
 
         // Initialize advice, if aplicable for the set target
         for ($i = 0; $i < $count; $i++) {
             $current = ($startindex + $i) % $count;
-            $setting = $advice_settings[$current];
+            $setting = $advicesettings[$current];
 
             if (!$setting->enabled) { // Skip, if advice is disabled.
                 continue;
@@ -167,7 +177,7 @@ class advice_manager {
                 }
             }
 
-            if ($disabled_advice && !empty($disabled_advice) && in_array($setting->name, $disabled_advice)) {
+            if ($disabledadvice && !empty($disabledadvice) && in_array($setting->name, $disabledadvice)) {
                 continue;
             }
 
@@ -193,11 +203,11 @@ class advice_manager {
     public function get_advice_if_available($class) {
         $advice = null;
         try {
-            // Init new advice
+            // Init new advice.
             $advice = new $class($this->user, $this->course);
         } catch (\moodle_exception $e) {
-            print_r('"' . $class . '" not available.       ');
-            print_r($e->getMessage());
+            echo('"' . $class . '" not available.       ');
+            echo($e->getMessage());
         }
         return $advice;
     }
@@ -208,20 +218,28 @@ class advice_manager {
      * @return string
      */
     public function render() {
-        $advice_output = '';
+        $adviceoutput = '';
 
         if ($this->advice == null) {
             $this->advice = $this->generate_advice();
         }
         if (empty($this->advice)) {
-            return $advice_output;
+            return $adviceoutput;
         }
 
-        foreach ($this->advice as $advice) {
-            $advice_output .= PHP_EOL . PHP_EOL . $advice->render();
+        $adviceoutput .= $this->advice[0]->render();
+
+        $advicecount = count($this->advice);
+
+        if ($advicecount < 2) {
+            return $adviceoutput;
         }
 
-        return $advice_output;
+        for ($i = 1; $i < count($this->advice); $i++) {
+            $adviceoutput .= PHP_EOL . PHP_EOL . $this->advice[$i]->render();
+        }
+
+        return $adviceoutput;
     }
 
     /**
@@ -231,13 +249,13 @@ class advice_manager {
      */
     public function render_html() {
         global $OUTPUT;
-        $advice_output = '';
+        $adviceoutput = '';
 
         if ($this->advice == null) {
             $this->advice = $this->generate_advice();
         }
         if (empty($this->advice)) {
-            return $advice_output;
+            return $adviceoutput;
         }
         $advices = array();
         foreach ($this->advice as $advice) {
@@ -246,9 +264,9 @@ class advice_manager {
         $context = (object) [
             "advices" => $advices,
         ];
-        $advice_output = $OUTPUT->render_from_template('mod_motbot/advices', $context);
+        $adviceoutput = $OUTPUT->render_from_template('mod_motbot/advices', $context);
 
-        return $advice_output;
+        return $adviceoutput;
     }
 
 
@@ -259,7 +277,7 @@ class advice_manager {
      * @param bool $update
      * @return bool
      */
-    static function create_advice($advice, $update = true) {
+    public static function create_advice($advice, $update = true) {
         global $DB;
 
         // Json Encode targets array, because DB only accepts strings.
@@ -281,7 +299,7 @@ class advice_manager {
                 $DB->update_record('motbot_advice', $advice);
             }
         } catch (\moodle_exception $e) {
-            error_log($e->getMessage());
+            throw $e;
         }
 
         return false;
@@ -353,7 +371,7 @@ class advice_manager {
     }
 
     public static function load_default_advice($update = false) {
-        foreach (\mod_motbot\retention\advice_manager::load_default_advice_for_all_components() as $type => $component) {
+        foreach (self::load_default_advice_for_all_components() as $type => $component) {
             foreach ($component as $componentname => $advicelist) {
                 $numcreated = 0;
                 $numupdated = 0;
@@ -400,9 +418,9 @@ class advice_manager {
      * @param array $advice_list List of declared advice.
      * @throws \coding_exception Exception thrown in case of invalid syntax.
      */
-    public static function validate_advice_declaration(array $advice_list) {
+    public static function validate_advice_declaration(array $advicelist) {
 
-        foreach ($advice_list as $advice) {
+        foreach ($advicelist as $advice) {
             if (!isset($advice['name'])) {
                 throw new \coding_exception('Missing advice name declaration');
             }

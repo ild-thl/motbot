@@ -62,7 +62,7 @@ class course_completion extends \mod_motbot\retention\advice\base {
     public function render() {
         $message = $this->title . PHP_EOL;
         $message .= PHP_EOL;
-        $message .= \get_string('advice:yourprogress', 'motbot') . ': ' . PHP_EOL;
+        $message .= (new \lang_string('advice:yourprogress', 'mod_motbot', null))->out($this->user->lang) . ': ' . PHP_EOL;
         $prog10 = round($this->user_progress * 10, 0);
         $prog100 = round($this->user_progress * 100, 0);
 
@@ -76,7 +76,7 @@ class course_completion extends \mod_motbot\retention\advice\base {
         }
         $message .= "| *" . $prog100 . '%*' . PHP_EOL;
         $message .= PHP_EOL;
-        $message .= \get_string('advice:averageprogress', 'motbot') . ': ' . PHP_EOL;
+        $message .= (new \lang_string('advice:averageprogress', 'motbot'))->out($this->user->lang) . ': ' . PHP_EOL;
         $avg_prog10 = round($this->avg_progress * 10, 0);
         $avg_prog100 = round($this->avg_progress * 100, 0);
         $message .= " |";
@@ -133,15 +133,17 @@ class course_completion extends \mod_motbot\retention\advice\base {
      */
     public function __construct($user, $course) {
         global $DB;
+        $this->user = $user;
+        $this->course = $course;
 
         // If the user already fully completed the course, do not generate advice.
-        if ($course) {
+        if ($this->course) {
             $is_course_completed_sql = "SELECT id
                 FROM mdl_course_completions
                 WHERE userid=:userid
                 AND timecompleted IS NOT NULL";
             $is_course_completed_sql .= " AND course=:courseid";
-            if ($DB->record_exists_sql($is_course_completed_sql, array('userid' => $user, 'courseid' => $course))) {
+            if ($DB->record_exists_sql($is_course_completed_sql, array('userid' => $this->user->id, 'courseid' => $this->course->id))) {
                 throw new \moodle_exception("The user already completed the course.");
             }
         }
@@ -158,14 +160,14 @@ class course_completion extends \mod_motbot\retention\advice\base {
             AND cxt.contextlevel =50
             AND cxt.instanceid = c.id
             AND  roleid = 5";
-        if ($course) {
+        if ($this->course) {
             $usercount_sql .= " AND c.id= :course";
 
-            if (!$users = $DB->get_record_sql($usercount_sql, array("course" => $course->id), IGNORE_MISSING)) {
+            if (!$users = $DB->get_record_sql($usercount_sql, array("course" => $this->course->id), IGNORE_MISSING)) {
                 throw new \dml_exception('Couldnt retrieve course users.');
             }
         } else if (!$users = $DB->get_record_sql($usercount_sql, array(), IGNORE_MISSING)) {
-            throw new \dml_exception('Couldnt retrieve course users.');
+            throw new \dml_exception('Couldnt retrieve users.');
         }
         if ($users->count == 0) {
             throw new \moodle_exception('No users in course.');
@@ -179,13 +181,13 @@ class course_completion extends \mod_motbot\retention\advice\base {
                 ON c.id = cc.criteriaid
                 WHERE cc.userid = :userid) cc
             ON c.course = cc.course";
-        if ($course) {
+        if ($this->course) {
             $user_sql .= " WHERE c.course = :course";
 
-            if (!$user_completion = $DB->get_record_sql($user_sql, array("userid" => $user->id, "course" => $course->id), IGNORE_MISSING)) {
+            if (!$user_completion = $DB->get_record_sql($user_sql, array("userid" => $this->user->id, "course" => $this->course->id), IGNORE_MISSING)) {
                 throw new \dml_exception('Couldnt retrieve user completion.');
             }
-        } else if (!$user_completion = $DB->get_record_sql($user_sql, array("userid" => $user->id), IGNORE_MISSING)) {
+        } else if (!$user_completion = $DB->get_record_sql($user_sql, array("userid" => $this->user->id), IGNORE_MISSING)) {
             throw new \dml_exception('Couldnt retrieve user completion.');
         }
         if ($user_completion->total == 0) {
@@ -206,36 +208,41 @@ class course_completion extends \mod_motbot\retention\advice\base {
                 ON c.id = cc.criteriaid) cc
             ON c.course = cc.course";
 
-        if ($course) {
+        if ($this->course) {
             $avg_sql .= " WHERE c.course = :course";
         }
         $avg_sql .= " GROUP BY c.course";
 
-        if ($course) {
-            if (!$avg_completion = $DB->get_record_sql($avg_sql, array("course" => $course->id), IGNORE_MISSING)) {
+        if ($this->course) {
+            if (!$avg_completion = $DB->get_record_sql($avg_sql, array("course" => $this->course->id), IGNORE_MISSING)) {
                 throw new \dml_exception('Couldnt retrieve average completion.');
             }
-            $this->avg_progress = round(($avg_completion->completed / $users->count) / $user_completion->total, 3);
+        } else {
+            if (!$avg_completion = $DB->get_record_sql($avg_sql, array(), IGNORE_MISSING)) {
+                throw new \dml_exception('Couldnt retrieve average completion.');
+            }
         }
-        //  else if (!$avg_completion = $DB->get_record_sql($avg_sql, array(), IGNORE_MISSING)) {
-        //     throw new \dml_exception('Couldnt retrieve average completion.');
-        // }
+        $this->avg_progress = round(($avg_completion->completed / $users->count) / $user_completion->total, 3);
 
-        $this->title = \get_string('advice:coursecompletion_title', 'motbot');
+        if ($this->course) {
+            $this->title = (new \lang_string('advice:coursecompletion_title', 'mod_motbot', $this->course->shortname))->out($this->user->lang);
+        } else {
+            $this->title = (new \lang_string('advice:completion_title', 'mod_motbot', null))->out($this->user->lang);
+        }
 
         // $difference = $this->user_progress - $this->avg_progress;
 
         // if ($difference < 0) {
         //     if ($difference >= -0.25) {
-        //         $this->desc = \get_string('advice:coursecompletion_desc_bad', 'motbot', abs(round($difference * 100, 0)));
+        //         $this->desc = (new \lang_string('advice:coursecompletion_desc_bad', 'motbot', abs(round($difference * 100, 0))))->out($this->user->lang);
         //     } else {
-        //         $this->desc = \get_string('advice:coursecompletion_desc_worst', 'motbot');
+        //         $this->desc = (new \lang_string('advice:coursecompletion_desc_worst', 'motbot'))->out($this->user->lang);
         //     }
         // } else {
         //     if ($difference <= 0.25) {
-        //         $this->desc = \get_string('advice:coursecompletion_desc_good', 'motbot');
+        //         $this->desc = (new \lang_string('advice:coursecompletion_desc_good', 'motbot'))->out($this->user->lang);
         //     } else {
-        //         $this->desc = \get_string('advice:coursecompletion_desc_best', 'motbot');
+        //         $this->desc = (new \lang_string('advice:coursecompletion_desc_best', 'motbot'))->out($this->user->lang);
         //     }
         // }
     }

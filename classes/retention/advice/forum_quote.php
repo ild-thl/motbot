@@ -52,7 +52,7 @@ abstract class forum_quote extends \mod_motbot\retention\advice\base {
     public function render() {
         $message = $this->title . PHP_EOL;
         $message .= PHP_EOL;
-        $message .= \get_string('advice:postedby', 'motbot', array('author' => $this->author, 'date' => $this->date)) . ':' . PHP_EOL;
+        $message .= (new \lang_string('advice:postedby', 'motbot', array('author' => $this->author, 'date' => $this->date)))->out($this->user->lang) . ':' . PHP_EOL;
         $message .= PHP_EOL;
         $message .= '*' . $this->subject . '*' . PHP_EOL;
         $message .= '```' . strip_tags($this->message) . '```' . PHP_EOL . PHP_EOL;
@@ -90,7 +90,7 @@ abstract class forum_quote extends \mod_motbot\retention\advice\base {
     public function render_telegram() {
         $message = $this->title . PHP_EOL;
         $message .= PHP_EOL;
-        $message .= \get_string('advice:postedby', 'motbot', array('author' => $this->author, 'date' => $this->date)) . ':' . PHP_EOL;
+        $message .= (new \lang_string('advice:postedby', 'motbot', array('author' => $this->author, 'date' => $this->date)))->out($this->user->lang) . ':' . PHP_EOL;
         $message .= PHP_EOL;
         $message .= '*' . $this->subject . '*' . PHP_EOL;
         $message .= '```' . strip_tags($this->message) . '```';

@@ -52,7 +52,7 @@ class mod_motbot_user_view {
     /**
      * @var string URL of a settings page.
      */
-    public $settings_url;
+    public $settingsurl;
 
     /**
      * Object definition.
@@ -90,19 +90,18 @@ class mod_motbot_user_view {
 
         $models = array();
 
-        $motbot_models = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'id, target, active');
-        foreach ($motbot_models as $motbot_model) {
-            $models[] = $this->get_model_data($motbot_model);
+        $motbotmodels = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'id, target, active');
+        foreach ($motbotmodels as $motbotmodel) {
+            $models[] = $this->get_model_data($motbotmodel);
         }
 
-
         function sort_models_by_enable($a, $b) {
-            if ($a["enabled"] == $b["enabled"]) return 0;
+            if ($a["enabled"] == $b["enabled"]) { return 0;
+            }
             return (!$b["enabled"] && $b["enabled"]) ? -1 : 1;
         }
 
         usort($models, "sort_models_by_enable");
-
 
         $contextinfo = [
             'settings_url' => $this->settings_url,
@@ -119,13 +118,13 @@ class mod_motbot_user_view {
      *
      * @return array
      */
-    public function get_model_data($motbot_model) {
+    public function get_model_data($motbotmodel) {
         global $DB;
 
-        $target_name = mod_motbot_get_name_of_target($motbot_model->target);
+        $targetname = mod_motbot_get_name_of_target($motbotmodel->target);
         $model = [
-            "name" => \get_string('target:' . $target_name . '_neutral', 'motbot'),
-            "enabled" => $motbot_model->active,
+            "name" => get_string('target:' . $targetname . '_neutral', 'motbot'),
+            "enabled" => $motbotmodel->active,
             "hasdata" => false,
             "state" => '',
             "date" => null,
@@ -133,7 +132,7 @@ class mod_motbot_user_view {
             "intervention_url" => null,
         ];
 
-        if (!$motbot_model->active) {
+        if (!$motbotmodel->active) {
             return $model;
         }
 
@@ -144,20 +143,20 @@ class mod_motbot_user_view {
             AND model = :model
             ORDER BY timecreated DESC
             LIMIT 1";
-        $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $this->contextid, 'recipient' => $this->userid, 'model' => $motbot_model->id), IGNORE_MISSING);
+        $latestintervention = $DB->get_record_sql($sql, array('contextid' => $this->contextid, 'recipient' => $this->userid, 'model' => $motbotmodel->id), IGNORE_MISSING);
 
-        if (!$latest_intervention) {
+        if (!$latestintervention) {
             $model["image"] = 'happy_motbot';
             return $model;
         }
 
-        $model["state"] = \get_string('state:' . $latest_intervention->state, 'motbot');
+        $model["state"] = get_string('state:' . $latestintervention->state, 'motbot');
         $model["hasdata"] = true;
-        $model["date"] = userdate($latest_intervention->timemodified);
-        if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
-            $model["intervention_url"] = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $latest_intervention->message))->out(false);
+        $model["date"] = userdate($latestintervention->timemodified);
+        if ($latestintervention->state == \mod_motbot\retention\intervention::INTERVENED || $latestintervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
+            $model["intervention_url"] = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $latestintervention->message))->out(false);
             $model["image"] = 'unhappy_motbot';
-        } else if ($latest_intervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
+        } else if ($latestintervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
             $model["image"] = 'unhappy_motbot';
         } else {
             $model["image"] = 'happy_motbot';

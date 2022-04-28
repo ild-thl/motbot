@@ -56,9 +56,11 @@ class recommended_discussion extends \mod_motbot\retention\advice\forum_quote {
      */
     public function __construct($user, $course) {
         global $CFG, $DB;
+        $this->user = $user;
+        $this->course = $course;
 
         // Stop initialization, if $course is unset.
-        if (!$course) {
+        if (!$this->course) {
             throw new \moodle_exception('No course given.');
         }
 
@@ -77,16 +79,16 @@ class recommended_discussion extends \mod_motbot\retention\advice\forum_quote {
             ON d.id = pp.id
             WHERE d.course = :course
             AND p.replycount = 0";
-        $neglected_discussion = $DB->get_record_sql($sql, array('course' => $course->id), IGNORE_MISSING);
-        if ($neglected_discussion && $neglected_discussion->id) {
-            $author = $DB->get_record('user', array('id' => $neglected_discussion->userid), 'firstname, lastname', IGNORE_MISSING);
-            $this->title = \get_string('advice:recommendeddiscussion_title', 'motbot');
-            $this->subject = $neglected_discussion->subject;
-            $this->message = $neglected_discussion->message;
+        $neglecteddiscussion = $DB->get_record_sql($sql, array('course' => $this->course->id), IGNORE_MISSING);
+        if ($neglecteddiscussion && $neglecteddiscussion->id) {
+            $author = $DB->get_record('user', array('id' => $neglecteddiscussion->userid), 'firstname, lastname', IGNORE_MISSING);
+            $this->title = (new \lang_string('advice:recommendeddiscussion_title', 'motbot'))->out($this->user->lang);
+            $this->subject = $neglecteddiscussion->subject;
+            $this->message = $neglecteddiscussion->message;
             $this->author = $author->firstname . ' ' . $author->lastname;
-            $this->date = userdate($neglected_discussion->timecreated);
-            $this->action_url = $CFG->wwwroot . '/mod/forum/discuss.php?d=' . $neglected_discussion->id;
-            $this->action =  \get_string('advice:recommendeddiscussion_action', 'motbot');
+            $this->date = userdate($neglecteddiscussion->timecreated);
+            $this->action_url = $CFG->wwwroot . '/mod/forum/discuss.php?d=' . $neglecteddiscussion->id;
+            $this->action = (new \lang_string('advice:recommendeddiscussion_action', 'motbot'))->out($this->user->lang);
         } else {
             throw new \moodle_exception('No recommended discussion.');
         }

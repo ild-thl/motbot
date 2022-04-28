@@ -54,13 +54,13 @@ class edit_advice extends \moodleform {
             $targets[] = $optionname;
         }
 
-        $available_targets = array();
+        $availabletargets = array();
         foreach ($this->_customdata['available_targets'] as $classname => $target) {
             $optionname = \tool_analytics\output\helper::class_to_option($classname);
-            $available_targets[$optionname] = $target->get_name();
+            $availabletargets[$optionname] = $target->get_name();
         }
 
-        $mform->addElement('select', 'targets', get_string('advice:targets', 'mod_motbot'), $available_targets);
+        $mform->addElement('select', 'targets', get_string('advice:targets', 'mod_motbot'), $availabletargets);
         $mform->getElement('targets')->setMultiple(true);
         $mform->setDefault('targets', $targets);
 

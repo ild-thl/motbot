@@ -43,7 +43,7 @@ class mod_motbot_overview {
     /**
      * @var string URL for a settings page.
      */
-    public $settings_url;
+    public $settingsurl;
 
     /**
      * Object definition.
@@ -91,14 +91,13 @@ class mod_motbot_overview {
             $models[] = $this->get_model_data($amodel);
         }
 
-
         function sort_models_by_enable($a, $b) {
-            if($a["enabled"] == $b["enabled"]) return 0;
+            if($a["enabled"] == $b["enabled"]) { return 0;
+            }
             return (!$b["enabled"] && $b["enabled"]) ? -1 : 1;
         }
 
         usort($models, "sort_models_by_enable");
-
 
         $contextinfo = [
             'settings_url' => $this->settings_url,
@@ -118,9 +117,9 @@ class mod_motbot_overview {
     public function get_model_data($amodel) {
         global $DB;
 
-        $target_name = mod_motbot_get_name_of_target($amodel->target);
+        $targetname = mod_motbot_get_name_of_target($amodel->target);
         $model = [
-            "name" => \get_string('target:' . $target_name . '_neutral', 'motbot'),
+            "name" => get_string('target:' . $targetname . '_neutral', 'motbot'),
             "enabled" => true,
             "hasdata" => false,
             "state" => '',
@@ -135,20 +134,20 @@ class mod_motbot_overview {
             AND target = :target
             ORDER BY timecreated DESC
             LIMIT 1";
-        $latest_intervention = $DB->get_record_sql($sql, array('recipient' => $this->userid, 'target' => $amodel->target), IGNORE_MISSING);
+        $latestintervention = $DB->get_record_sql($sql, array('recipient' => $this->userid, 'target' => $amodel->target), IGNORE_MISSING);
 
-        if(!$latest_intervention) {
+        if(!$latestintervention) {
             $model["image"] = 'happy_motbot';
             return $model;
         }
 
-        $model["state"] = \get_string('state:' . $latest_intervention->state, 'motbot');
+        $model["state"] = get_string('state:' . $latestintervention->state, 'motbot');
         $model["hasdata"] = true;
-        $model["date"] = userdate($latest_intervention->timemodified);
-        if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
-            $model["intervention_url"] = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $latest_intervention->message))->out(false);
+        $model["date"] = userdate($latestintervention->timemodified);
+        if ($latestintervention->state == \mod_motbot\retention\intervention::INTERVENED || $latestintervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL) {
+            $model["intervention_url"] = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $latestintervention->message))->out(false);
             $model["image"] = 'unhappy_motbot';
-        } else if ($latest_intervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
+        } else if ($latestintervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
             $model["image"] = 'unhappy_motbot';
         } else {
             $model["image"] = 'happy_motbot';

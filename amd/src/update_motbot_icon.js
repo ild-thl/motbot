@@ -19,9 +19,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// import {exception as displayException} from 'core/notification';
-// import Templates from 'core/templates';
-
 /**
  * Get MotBot state and update MotBot icon if necessary.
  *

@@ -36,4 +36,4 @@ if ($intervention) {
 
 // Redirect back to notifications, where users
 $url = new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message . '&offset=0');
-redirect($url, \get_string('motbot:thanksforfeedback', 'motbot'), 1, \core\output\notification::NOTIFY_SUCCESS);
+redirect($url, get_string('motbot:thanksforfeedback', 'motbot'), 1, \core\output\notification::NOTIFY_SUCCESS);

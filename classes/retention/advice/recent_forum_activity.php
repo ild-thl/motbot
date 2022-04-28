@@ -60,39 +60,56 @@ class recent_forum_activity extends \mod_motbot\retention\advice\title_and_actio
      */
     public function __construct($user, $course) {
         global $DB, $CFG;
+        $this->user = $user;
+        $this->course = $course;
 
         if (!$logstore = \core_analytics\manager::get_analytics_logstore()) {
             throw new \coding_exception('No available log stores');
         }
 
         $endtime = time();
-        $lastaccess_condition = array('userid' => $user->id);
-        if ($course) {
-            $lastaccess_condition['courseid'] = $course->id;
+        $lastaccesscondition = array('userid' => $this->user->id);
+        if ($this->course) {
+            $lastaccesscondition['courseid'] = $this->course->id;
         }
-        $lastaccess = $DB->get_record('user_lastaccess', $lastaccess_condition, '*', IGNORE_MISSING);
+        $lastaccess = $DB->get_record('user_lastaccess', $lastaccesscondition, '*', IGNORE_MISSING);
         $starttime = $lastaccess->timeaccess;
-        $select = "eventname = :eventname AND timecreated > :starttime AND timecreated <= :endtime";
-        $params = array('eventname' => '\core\event\course_module_created', 'starttime' => $starttime, 'endtime' => $endtime);
-        if ($course) {
-            $select .= " AND courseid = :courseid";
-            $params['courseid'] = $course->id;
+        $sql = "SELECT d.id, d.course, p.userid, p.created, p.subject
+                     FROM {forum_discussions} d
+                LEFT JOIN {forum_posts} p
+                          ON d.id = p.discussion
+                    WHERE p.userid != :userid
+                      AND p.parent = 0
+                      AND p.deleted = 0
+                      AND p.created > :starttime
+                      AND p.created <= :endtime";
+        $params = array('userid' => $this->user->id, 'starttime' => $starttime, 'endtime' => $endtime);
+        if ($this->course) {
+            $sql .= " AND d.course = :courseid";
+            $params['courseid'] = $this->course->id;
         }
-        $new_activities = $logstore->get_events_select($select, $params, 'timecreated DESC', 0, 5);
+        $sql .= " ORDER BY p.created DESC LIMIT 5";
+        $newdiscussions = $DB->get_records_sql($sql, $params, IGNORE_MISSING);
 
-        if (empty($new_activities)) {
-            throw new \moodle_exception('No recent activities.');
+        if (empty($newdiscussions)) {
+            throw new \moodle_exception('No recent forum discussions.');
         }
 
-        $actions = array();
-        foreach ($new_activities as $activity) {
+        foreach ($newdiscussions as $discussion) {
             $this->actions[] = [
-                'action_title' => \get_string('advice:recentactivities_action', 'motbot', array('activityname' => $activity->other['modulename'], 'date' => userdate($activity->timecreated, \get_string('strftimedate', 'langconfig')))),
-                'action_url' => $CFG->wwwroot . '/mod/' . $activity->other['modulename'] . '/view.php?id=' . $activity->objectid,
-                'action' => \get_string('motbot:goto', 'motbot', $activity->other['name']) . ' (' . userdate($activity->timecreated, \get_string('strftimedate', 'langconfig')) . ')',
+                'action_title' => $discussion->subject .
+                ' (' .
+                    userdate(
+                        $discussion->created,
+                        (new \lang_string('strftimedate', 'langconfig'))->out($this->user->lang)
+                    ) .
+                ')',
+                'action_url' => (new \moodle_url('/mod/forum/discuss.php', array('id' => $discussion->id)))->out(),
+                'action' => (new \lang_string('motbot:goto', 'motbot', $discussion->subject))->out($this->user->lang)
+                . ' (' . userdate($discussion->created, (new \lang_string('strftimedate', 'langconfig'))->out($this->user->lang)) . ')',
             ];
         }
 
-        $this->title = \get_string('advice:recentactivities_title', 'motbot');
+        $this->title = (new \lang_string('advice:recentforumactivity_title', 'motbot'))->out($this->user->lang);
     }
 }

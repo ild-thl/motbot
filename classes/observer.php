@@ -49,12 +49,12 @@ class observer {
         $context = \context_course::instance($event->courseid);
 
         // Update intervention state.
-        $success = self::set_intervention_success($event->userid, $context->id, $event->eventname);
+        $success = self::update_intervention_success($event->userid, $context->id, $event->eventname);
         if ($success) {
             try {
                 $course = $DB->get_record('course', array('id' => $event->courseid), '*', IGNORE_MISSING);
                 $suggestion = new \mod_motbot\retention\advice\last_stop($USER, $course);
-                \core\notification::success(\get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot', $suggestion->render_html()));
+                \core\notification::success(get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot', $suggestion->render_html()));
             } catch (\moodle_exception $e) {
                 print_r($e->getMessage());
             }
@@ -77,10 +77,10 @@ class observer {
             AND c.contextlevel = 50;';
         $contextid = $DB->get_record_sql($sql, array('cmid' => $cmid))->cid;
 
-        $success = self::set_intervention_success($event->userid, $contextid, $event->eventname);
+        $success = self::update_intervention_success($event->userid, $contextid, $event->eventname);
         if ($success) {
             try {
-                \core\notification::success(\get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot'));
+                \core\notification::success(get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot'));
             } catch (\moodle_exception $e) {
                 print_r($e->getMessage());
             }
@@ -96,13 +96,13 @@ class observer {
     public static function user_loggedin($event) {
         global $USER;
         // Update intervention state.
-        $success = self::set_intervention_success($event->userid, null, $event->eventname);
+        $success = self::update_intervention_success($event->userid, null, $event->eventname);
 
         // Give positive feedback and suggestion in case of success.
         if ($success) {
             try {
                 $suggestion = new \mod_motbot\retention\advice\last_stop($USER, null);
-                \core\notification::success(\get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot', $suggestion->render_html()));
+                \core\notification::success(get_string('reaction:' . \str_replace('\\', '', $event->eventname), 'motbot', $suggestion->render_html()));
             } catch (\moodle_exception $e) {
                 print_r($e->getMessage());
             }
@@ -117,19 +117,19 @@ class observer {
      * @param string $eventname
      * @return bool
      */
-    private static function set_intervention_success($recipient, $contextid, $eventname) {
+    private static function update_intervention_success($recipient, $contextid, $eventname) {
         global $DB;
 
-        $conditions_array = array(
+        $conditionsarray = array(
             'recipient' => $recipient,
             'state' => \mod_motbot\retention\intervention::INTERVENED,
         );
 
         if ($contextid) {
-            $conditions_array['contextid'] = $contextid;
+            $conditionsarray['contextid'] = $contextid;
         }
 
-        $records = $DB->get_records('motbot_intervention', $conditions_array);
+        $records = $DB->get_records('motbot_intervention', $conditionsarray);
         $success = false;
         foreach ($records as $record) {
             if (in_array($eventname, json_decode($record->desired_events))) {

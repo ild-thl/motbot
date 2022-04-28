@@ -56,39 +56,55 @@ class recent_activities extends \mod_motbot\retention\advice\title_and_actionrow
      */
     public function __construct($user, $course) {
         global $DB, $CFG;
+        $this->user = $user;
+        $this->course = $course;
 
         if (!$logstore = \core_analytics\manager::get_analytics_logstore()) {
             throw new \coding_exception('No available log stores');
         }
 
         $endtime = time();
-        $lastaccess_condition = array('userid' => $user->id);
-        if ($course) {
-            $lastaccess_condition['courseid'] = $course->id;
+        $lastaccesscondition = array('userid' => $this->user->id);
+        if ($this->course) {
+            $lastaccesscondition['courseid'] = $this->course->id;
         }
-        $lastaccess = $DB->get_record('user_lastaccess', $lastaccess_condition, '*', IGNORE_MISSING);
+        $lastaccess = $DB->get_records('user_lastaccess', $lastaccesscondition, 'timeaccess DESC', 'timeaccess', 0, 1);
         $starttime = $lastaccess->timeaccess;
-        $select = "eventname = :eventname AND timecreated > :starttime AND timecreated <= :endtime";
-        $params = array('eventname' => '\core\event\course_module_created', 'starttime' => $starttime, 'endtime' => $endtime);
-        if ($course) {
+        $select = "(eventname = :create OR eventname = :update) AND timecreated > :starttime AND timecreated <= :endtime";
+        $params = array('create' => '\core\event\course_module_created', 'update' => '\core\event\course_module_updated', 'starttime' => $starttime, 'endtime' => $endtime);
+        if ($this->course) {
             $select .= " AND courseid = :courseid";
-            $params['courseid'] = $course->id;
+            $params['courseid'] = $this->course->id;
         }
-        $new_activities = $logstore->get_events_select($select, $params, 'timecreated DESC', 0, 5);
+        $newactivities = $logstore->get_events_select($select, $params, 'timecreated DESC', 0, 5);
 
-        if (empty($new_activities)) {
+        if (empty($newactivities)) {
             throw new \moodle_exception('No recent activities.');
         }
 
-        $actions = array();
-        foreach ($new_activities as $activity) {
+        foreach ($newactivities as $activity) {
+            $status = '';
+            if ($activity->eventname === '\core\event\course_module_created') {
+                $status = (new \lang_string('new'))->out($this->user->lang);
+            } else {
+                $status = (new \lang_string('motbot:updated', 'motbot'))->out($this->user->lang);
+            }
             $this->actions[] = [
-                'action_title' => \get_string('advice:recentactivities_action', 'motbot', array('activityname' => $activity->other['modulename'], 'date' => userdate($activity->timecreated, \get_string('strftimedate', 'langconfig')))),
+                'action_title' => $status . ': ' . $activity->other['name'] .
+                ' (' . userdate(
+                    $activity->timecreated,
+                    (new \lang_string('strftimedate', 'langconfig'))->out($this->user->lang)
+                ) . ')',
                 'action_url' => $CFG->wwwroot . '/mod/' . $activity->other['modulename'] . '/view.php?id=' . $activity->objectid,
-                'action' => \get_string('motbot:goto', 'motbot', $activity->other['name']) . ' (' . userdate($activity->timecreated, \get_string('strftimedate', 'langconfig')) . ')',
+                'action' => $status . ': ' .
+                (new \lang_string('motbot:goto', 'motbot', $activity->other['name']))->out($this->user->lang) .
+                ' (' . userdate(
+                    $activity->timecreated,
+                    (new \lang_string('strftimedate', 'langconfig'))->out($this->user->lang)
+                ) . ')',
             ];
         }
 
-        $this->title = \get_string('advice:recentactivities_title', 'motbot');
+        $this->title = (new \lang_string('advice:recentactivities_title', 'motbot'))->out($this->user->lang);
     }
 }

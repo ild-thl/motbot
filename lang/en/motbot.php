@@ -22,7 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-//---- Advice
+// ---- Advice
 $string['advice'] = 'Advice';
 $string['advice:plural'] = 'Advice';
 $string['advice:course_completion'] = 'Current course progress';
@@ -42,17 +42,20 @@ $string['advice:visit_course_help'] = 'Forward to course';
 $string['advice:averageprogress'] = '⌀ progress';
 $string['advice:yourprogress'] = 'Your progress';
 $string['advice:postedby'] = 'Posted by {$a->author} on {$a->date}';
-$string['advice:coursecompletion_title'] = 'Your recent course progress:';
-$string['advice:coursecompletion_desc_bad'] = 'Your progress is only {$a}% behind course average. You can easily catch up!';
+$string['advice:coursecompletion_title'] = '📈 Your recent progress in the course {$a}:';
+$string['advice:completion_title'] = '📈 Your recent progress:';
+$string['advice:coursecompletion_desc_bad'] = 'Your progress is only {$a}% behind average. You can easily catch up!';
 $string['advice:coursecompletion_desc_worst'] = 'You ara quite a bit behind. But nothing is lost. Try catching up. Please don\'t hesitate to ask your fellow students or teachers for help!';
 $string['advice:coursecompletion_desc_good'] = 'Your progress is looking fine. But there is no time to rest. A regular interaction with the course content is only recommended!';
 $string['advice:coursecompletion_desc_best'] = 'You are far ahead! But don\'t rest on your laurels!';
-$string['advice:feedback_title'] = 'Please consider giving some feedback as well, so we can support you better! &#128591;';
+$string['advice:feedback_title'] = '🙏 Please consider giving some feedback as well, so we can support you better!';
 $string['advice:laststop_title'] = 'Continue where you last stopped:';
 $string['advice:laststop_title_newchallenge'] = 'Continue with a new challenge:';
-$string['advice:recentactivities_title'] = 'These new forum discussions could be interesting for you:';
+$string['advice:recentactivities_title'] = '🔥 These new or updated activities could be interesting for you:';
 $string['advice:recentactivities_action'] = '{$a->activityname} added {$a->date}';
-$string['advice:recommendeddiscussion_title'] = 'Nobody replied to this students post yet. Maybe you could try to add something to the discussion? &#128657;';
+$string['advice:recentforumactivity_title'] = '🔥 These new forum discussions could be interesting for you:';
+$string['advice:recentforumactivity_action'] = 'The discussion {$a->subject} was posted on the {$a->date}';
+$string['advice:recommendeddiscussion_title'] = '🚑 Nobody replied to this students post yet. Maybe you could try to add something to the discussion? &#128657;';
 $string['advice:recommendeddiscussion_action'] = 'Reply now';
 $string['advice:visitcourse_title'] = 'Visit the course!';
 $string['advice:update'] = 'Update advice';
@@ -67,15 +70,15 @@ $string['advice:targetsnum'] = 'Amount of targets: {$a}';
 $string['advice:created'] = '{$a->count} new advice defintion(s) loaded for component \'{$a->component}\'';
 $string['advice:updated'] = '{$a->count} advice defintion(s) updated for component \'{$a->component}\'';
 $string['advice:noneavailable'] = 'No advice available.';
-//----
+// ----
 
-//---- Chatbot
+// ---- Chatbot
 $string['chatbot'] = 'Chatbot';
 $string['chatbot:default'] = 'Hi {$a},
 how can I help you today?';
-//----
+// ----
 
-//----  Course User Settings Form
+// ----  Course User Settings Form
 $string['course_settings_form:advice_settings'] = 'Enabled advice options';
 $string['course_settings_form:allow_teacher_involvement'] = 'Allow teacher involvement?';
 $string['course_settings_form:allow_teacher_involvement_help'] = 'When "Yes" is checked, teachers will be informed of your situation in case other means of interventions fail.';
@@ -85,9 +88,9 @@ $string['course_settings_form:model_settings'] = 'Enabled models';
 $string['course_settings_form:only_weekdays'] = 'Only send interventions on weekdays';
 $string['course_settings_form:pref_time'] = 'Prefered time of day for receiveing messages:';
 $string['course_settings_form:pref_time_help'] = 'Here you can set a time of day. The MotBot will try to send you messages at this time. If you select auto, the motbot will use a time calculated by your usual active hours.';
-//----
+// ----
 
-//----  Indicator
+// ----  Indicator
 $string['indicator:anyaccess'] = 'Any recent access';
 $string['indicator:anyaccess_help'] = 'TODO: Any recent access help text.';
 
@@ -105,9 +108,9 @@ $string['indicator:socialpresenceincoursechat_help'] = 'TODO: Any write action i
 
 $string['indicator:socialpresenceincourseforum'] = 'Any write action in a course forum';
 $string['indicator:socialpresenceincourseforum_help'] = 'TODO: Any write action in a course forum help text.';
-//----
+// ----
 
-//----  Message
+// ----  Message
 $string['messageprovider:motbot_intervention'] = 'New prediction avaialble';
 $string['messageprovider:motbot_teacher_intervention'] = 'MotBot teacher intervention';
 
@@ -127,15 +130,15 @@ MotBot detected undesirable intervention results.</p><p>
 There are either an uncommon amount of negative interventions or students that received interventions found them unhelpful.</p><p>
 Please check motbot settings and check wether the calculated model is appropriate.</p><p>
 Kind regards MotBot {motbot}</p>';
-//----
+// ----
 
-//----  Module
+// ----  Module
 $string['modulename'] = 'MotBot';
 $string['modulenameplural'] = 'MotBot';
-//----
+// ----
 
 
-//----  Mod Form
+// ----  Mod Form
 $string['mod_form:active'] = 'Active';
 $string['mod_form:active_help'] = 'Select wether this model should analyze useractivity in this course and try to send interventions to users.';
 
@@ -223,9 +226,9 @@ $string['mod_form:recent_cognitive_presence_fullmessagehtml_3'] = '<p>Hi {firstn
 
 $string['mod_form:too_long'] = 'This form field can only hold {$a} characters. Please check your input.';
 $string['mod_form:subject'] = 'Subject';
-//----
+// ----
 
-//---- MotBot General
+// ---- MotBot General
 $string['motbot:modelinactive'] = 'This model is deactivated or has no motbot message information associated with it in course.';
 $string['motbot:noinstance'] = 'No MotBot activity found in course.';
 $string['motbot:paused'] = 'MotBot is paused for this course.';
@@ -255,50 +258,51 @@ $string['motbot:ishappy'] = 'The MotBot is happy.';
 $string['motbot:isunhappy'] = 'The MotBot could be happier.';
 $string['motbot:moreinfo'] = 'More info';
 $string['motbot:activate'] = 'Activate MotBot';
-//----
+$string['motbot:updated'] = 'Updated';
+// ----
 
-//----  Plugin General
+// ----  Plugin General
 $string['pluginadministration'] = 'Plugin Administration';
 $string['pluginname'] = 'MotBot';
-//----
+// ----
 
 
-//----  Quotes
+// ----  Quotes
 $string['quote:0'] = 'Start where you are. Use what you have. Do what you can. - Arthur Ashe';
 $string['quote:1'] = 'You will never win if you never begin. - Helen Rowland';
 $string['quote:2'] = 'Good, better, best. Never let it rest. \'Til your good is better and your better is best. - St. Jerome';
 $string['quote:3'] = 'It always seems impossible until it´s done. - Nelson Mandela';
 $string['quote:4'] = 'With the new day comes new  strength and new thoughts. - Eleanor Roosevelt';
 $string['quote:5'] = 'Step by step and the thing is done. - Charles Atlas';
-//----
+// ----
 
-//---- Event reactions
+// ---- Event reactions
 $string['reaction:coreeventcourse_viewed'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>It\'s good to have you back!</p>&nbsp;{$a}</div>';
 $string['reaction:coreeventuser_loggedin'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>It\'s good to have you back!</p>&nbsp;{$a}</div>';
 $string['reaction:mod_forumeventdiscussion_created'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for participating in the forums!</p></div>';
 $string['reaction:mod_forumeventpost_created'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for participating in the forums!</p></div>';
 $string['reaction:mod_forumeventassessable_uploaded'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for participating in the forums!</p></div>';
 $string['reaction:mod_chateventmessage_sent'] = '<div class="row"><img src="http://localhost/theme/image.php/boost/motbot/1639056026/icon" class="iconlarge activityicon" alt="" role="presentation" aria-hidden="true">&nbsp;&nbsp;<p>Thank you for participating in the chat!</p></div>';
-//----
+// ----
 
-//----  State of Intervention
+// ----  State of Intervention
 $string['state:0'] = 'Scheduled';
 $string['state:1'] = 'Intervened';
 $string['state:2'] = 'Successful';
 $string['state:3'] = 'Unsuccessful';
 $string['state:4'] = 'Stored';
-//----
+// ----
 
-//----  Settings
+// ----  Settings
 $string['settings:advanced_options'] = 'Advanced options';
 $string['settings:course_settings_header'] = '{$a->pluginname} settings for {$a->coursename}';
 $string['settings:deleteinterventiondata'] = 'Delete intervention data';
 $string['settings:edit_motbot'] = 'MotBot Settings';
 $string['settings:edit_models'] = 'MotBot Analytics Model Settings';
 $string['settings:edit_advice'] = 'MotBot Advice Settings';
-//----
+// ----
 
-//----  Analytic Targets
+// ----  Analytic Targets
 $string['target:recentcognitivepresence'] = 'Students recent cognitive presence (MotBot)';
 $string['target:recentcognitivepresence_help'] = 'This target describes how much the student has interacted with moodle content recently.';
 $string['target:recent_cognitive_presence_short'] = 'Recent cognitive presence';
@@ -332,11 +336,11 @@ $string['target:upcoming_activities_due_short'] = 'Upcoming activities due';
 
 $string['targetlabellowsocialpresenceno'] = 'Student has low social presence.';
 $string['targetlabellowsocialpresenceyes'] = 'Student has enough social presence.';
-//----
+// ----
 
-//---- Taskbot
+// ---- Taskbot
 $string['taskbot'] = 'Executes scheduled interventions';
-//----
+// ----
 
 $string['tomanyinstances'] = 'There should only be one MotBot activity in a course.';
 

@@ -52,7 +52,7 @@ class mod_motbot_teacher_view {
     /**
      * @var string URL to a settings page.
      */
-    public $settings_url;
+    public $settingsurl;
 
     /**
      * Object definition.
@@ -93,18 +93,18 @@ class mod_motbot_teacher_view {
 
         $models = array();
 
-        $motbot_models = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'target, active');
-        foreach ($motbot_models as $motbot_model) {
-            $models[] = $this->get_model_data($motbot_model);
+        $motbotmodels = $DB->get_records('motbot_model', array('motbot' => $this->motbotid), '', 'target, active');
+        foreach ($motbotmodels as $motbotmodel) {
+            $models[] = $this->get_model_data($motbotmodel);
         }
 
         // Sort models so inactive models come last.
         function sort_models_by_enable($a, $b) {
-            if ($a["enabled"] == $b["enabled"]) return 0;
+            if ($a["enabled"] == $b["enabled"]) { return 0;
+            }
             return (!$b["enabled"] && $b["enabled"]) ? -1 : 1;
         }
         usort($models, "sort_models_by_enable");
-
 
         $contextinfo = [
             'settings_url' => $this->settings_url,
@@ -122,10 +122,10 @@ class mod_motbot_teacher_view {
     public function get_model_data($message) {
         global $DB;
 
-        $target_name = mod_motbot_get_name_of_target($message->target);
+        $targetname = mod_motbot_get_name_of_target($message->target);
         // Default values.
         $model = [
-            "name" => \get_string('target:' . $target_name . '_neutral', 'motbot'),
+            "name" => get_string('target:' . $targetname . '_neutral', 'motbot'),
             "enabled" => $message->active,
             "count" => 0,
             "helpful" => 0,
@@ -160,10 +160,10 @@ class mod_motbot_teacher_view {
             AND target = :target
             ORDER BY timecreated DESC
             LIMIT 1";
-        $last_intervention = $DB->get_record_sql($sql, array('contextid' => $this->contextid, 'target' => $message->target), IGNORE_MISSING);
+        $lastintervention = $DB->get_record_sql($sql, array('contextid' => $this->contextid, 'target' => $message->target), IGNORE_MISSING);
 
-        if ($last_intervention) {
-            $model["last_intervention"] = userdate($last_intervention->timecreated);
+        if ($lastintervention) {
+            $model["last_intervention"] = userdate($lastintervention->timecreated);
         }
 
         return $model;

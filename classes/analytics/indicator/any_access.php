@@ -66,7 +66,7 @@ class any_access extends \core_analytics\local\indicator\binary {
 
         if ($analysable instanceof \core_analytics\user) {
             // Indexed by userid (there is a UNIQUE KEY at DB level).
-            $this->lastaccess = $DB->get_field('user_lastaccess', 'timeaccess', ['userid' => $analysable->get_id()], IGNORE_MISSING);
+            $this->lastaccess = $DB->get_field('user', 'lastaccess', ['id' => $analysable->get_id()], IGNORE_MISSING);
         }
     }
 

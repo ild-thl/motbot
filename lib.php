@@ -59,22 +59,22 @@ function motbot_add_instance($data, $mform = null) {
 
     $id = $DB->insert_record('motbot', $data);
 
-    foreach ($data->motbot_models as $motbot_model) {
-        $motbot_model->motbot = $id;
-        $motbot_model->timecreated = $data->timecreated;
-        $motbot_model->usermodified = $USER->id;
-        $motbot_model->id = $DB->insert_record('motbot_model', $motbot_model);
+    foreach ($data->motbot_models as $motbotmodel) {
+        $motbotmodel->motbot = $id;
+        $motbotmodel->timecreated = $data->timecreated;
+        $motbotmodel->usermodified = $USER->id;
+        $motbotmodel->id = $DB->insert_record('motbot_model', $motbotmodel);
 
-        $target_name = $motbot_model->targetname;
+        $targetname = $motbotmodel->targetname;
 
-        if ($mform and !empty($data->{$target_name . '_fullmessagehtml' . $motbot_model->prediction}['itemid'])) {
+        if ($mform and !empty($data->{$targetname . '_fullmessagehtml' . $motbotmodel->prediction}['itemid'])) {
 
-            $draftitemid = $data->{$target_name . '_fullmessagehtml' . $motbot_model->prediction}['itemid'];
+            $draftitemid = $data->{$targetname . '_fullmessagehtml' . $motbotmodel->prediction}['itemid'];
             $cmid = $data->coursemodule;
             $context = context_module::instance($cmid);
 
-            $motbot_model->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $motbot_model->fullmessagehtml);
-            $DB->update_record('motbot_model', $motbot_model);
+            $motbotmodel->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $motbotmodel->fullmessagehtml);
+            $DB->update_record('motbot_model', $motbotmodel);
         }
     }
 
@@ -97,24 +97,24 @@ function motbot_update_instance($data, $mform = null) {
     $data->timemodified = time();
     $data->id = $data->instance;
 
-    foreach ($data->motbot_models as $motbot_model) {
-        $motbot_model->timemodified = $data->timemodified;
-        $motbot_model->usermodified = $USER->id;
-        if (!isset($motbot_model->id)) {
-            $motbot_model->motbot = $data->id;
-            $motbot_model->timecreated = $data->timemodified;
-            $motbot_model->id = $DB->insert_record('motbot_model', $motbot_model);
+    foreach ($data->motbot_models as $motbotmodel) {
+        $motbotmodel->timemodified = $data->timemodified;
+        $motbotmodel->usermodified = $USER->id;
+        if (!isset($motbotmodel->id)) {
+            $motbotmodel->motbot = $data->id;
+            $motbotmodel->timecreated = $data->timemodified;
+            $motbotmodel->id = $DB->insert_record('motbot_model', $motbotmodel);
         } else {
-            $DB->update_record('motbot_model', $motbot_model);
+            $DB->update_record('motbot_model', $motbotmodel);
         }
-        $target_name = $motbot_model->targetname;
+        $targetname = $motbotmodel->targetname;
 
-        $draftitemid = $data->{$target_name . '_fullmessagehtml' . $motbot_model->prediction}['itemid'];
+        $draftitemid = $data->{$targetname . '_fullmessagehtml' . $motbotmodel->prediction}['itemid'];
         $cmid = $data->coursemodule;
         $context = context_module::instance($cmid);
         if ($draftitemid) {
-            $motbot_model->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $motbot_model->fullmessagehtml);
-            $DB->update_record('motbot_model', $motbot_model);
+            $motbotmodel->fullmessagehtml = file_save_draft_area_files($draftitemid, $context->id, 'mod_motbot', 'attachment', 0, mod_motbot_get_editor_options($context), $motbotmodel->fullmessagehtml);
+            $DB->update_record('motbot_model', $motbotmodel);
         }
     }
 
@@ -204,10 +204,10 @@ function motbot_cm_info_view(cm_info $cm) {
     $courseid = required_param('id', PARAM_INT);
 
     $motbot = $DB->get_record('motbot', array('id' => $cm->instance), '*', MUST_EXIST);
-    $motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $USER->id), '*');
+    $motbotcourseuser = $DB->get_record('motbot_course_user', array('motbot' => $motbot->id, 'user' => $USER->id), '*');
 
-    if (!$motbot_course_user) {
-        $motbot_course_user = (object) [
+    if (!$motbotcourseuser) {
+        $motbotcourseuser = (object) [
             'id' => null,
             'motbot' => $motbot->id,
             'user' => $USER->id,
@@ -217,16 +217,16 @@ function motbot_cm_info_view(cm_info $cm) {
     }
 
     // Display a form that lets students enable the motbot, if they haven't already.
-    if (!$motbot_course_user->authorized && !has_capability('mod/motbot:addinstance', $modulecontext)) {
-        $content = mod_motbot_view_enable_module_form($motbot_course_user, $courseid);
+    if (!$motbotcourseuser->authorized && !has_capability('mod/motbot:addinstance', $modulecontext)) {
+        $content = mod_motbot_view_enable_module_form($motbotcourseuser, $courseid);
         $content = str_replace('class="mform"', 'class="mform float-right"', $content);
         $cm->set_name($motbot->name);
     } else {
         // Show motivational quote of the day.
         $now = new DateTime("now", core_date::get_user_timezone_object());
         $dayofweek = $now->format('N');
-        $quote_of_the_day = \get_string('quote:' . $dayofweek % 6, 'motbot');
-        $content = '<div style="font-style: italic; padding-left: 2em">' . $quote_of_the_day . '</div>';
+        $quoteoftheday = get_string('quote:' . $dayofweek % 6, 'motbot');
+        $content = '<div style="font-style: italic; padding-left: 2em">' . $quoteoftheday . '</div>';
     } // If enabled or not a student show a motivational quote instead.
 
     $cm->set_after_link($content);
@@ -247,10 +247,10 @@ function motbot_cm_info_dynamic(cm_info $cm) {
         // Display a diffrent icon depending on wether the motbot is enabled for the logged in user.
         $active = $DB->get_record('motbot_course_user', array('motbot' => $cm->instance, 'user' => $USER->id, 'authorized' => 1));
         if ($active) {
-            $is_happy = \mod_motbot\manager::is_motbot_happy($USER->id, $cm->instance);
+            $ishappy = \mod_motbot\manager::is_motbot_happy($USER->id, $cm->instance);
             // Load script that asynchronously reevaluates wether the motbot is happy and updates the icon accordingly.
-            $PAGE->requires->js_call_amd('mod_motbot/update_motbot_icon', 'init', array($cm->instance, $is_happy));
-            if (!$is_happy) {
+            $PAGE->requires->js_call_amd('mod_motbot/update_motbot_icon', 'init', array($cm->instance, $ishappy));
+            if (!$ishappy) {
                 $cm->set_icon_url(new \moodle_url('/mod/motbot/pix/icon-unhappy.svg'));
             }
         } else {

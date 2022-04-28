@@ -56,14 +56,16 @@ class visit_course extends \mod_motbot\retention\advice\title_and_action {
      */
     public function __construct($user, $course) {
         global $CFG;
+        $this->user = $user;
+        $this->course = $course;
 
         // Stop initialization, if $course is unset.
-        if (!$course) {
+        if (!$this->course) {
             throw new \moodle_exception('No course given.');
         }
 
-        $this->title = \get_string('advice:visitcourse_title', 'motbot');
-        $this->action_url = $CFG->wwwroot . '/course/view.php?id=' . $course->id;
-        $this->action = \get_string('motbot:goto', 'motbot', $course->shortname);
+        $this->title = (new \lang_string('advice:visitcourse_title', 'motbot'))->out($this->user->lang);
+        $this->action_url = $CFG->wwwroot . '/course/view.php?id=' . $this->course->id;
+        $this->action = (new \lang_string('motbot:goto', 'motbot', $this->course->shortname))->out($this->user->lang);
     }
 }

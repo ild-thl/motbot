@@ -45,20 +45,20 @@ function mod_motbot_get_editor_options($context) {
  * @param bool $include_messages If true, also include links to the corresponding notifications.
  * @return string HTML table, showing intervention data.
  */
-function mod_motbot_get_interventions_table($userid, $contextid = null, $include_messages = false) {
+function mod_motbot_get_interventions_table($userid, $contextid = null, $includemessages = false) {
     global $DB;
 
     // Only get interventions of a speicif context, if $contextid is set.
     $condition = 'WHERE i.recipient = :userid';
-    $params_array = array('userid' => $userid);
+    $paramsarray = array('userid' => $userid);
     if ($contextid) {
         $condition .= 'AND i.contextid = :contextid';
-        $params_array = array_merge($params_array, array('contextid' => $contextid));
+        $paramsarray = array_merge($paramsarray, array('contextid' => $contextid));
     }
 
     // Select columns. Include message column if $include_messages is set.
     $select = 'i.id, i.timecreated, i.state, i.teachers_informed, i.target';
-    if ($include_messages) {
+    if ($includemessages) {
         $select .= ', i.message';
     }
 
@@ -67,7 +67,7 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
         ORDER BY timecreated DESC;";
 
     // Get interventions.
-    $interventions = $DB->get_records_sql($sql, $params_array, IGNORE_MISSING);
+    $interventions = $DB->get_records_sql($sql, $paramsarray, IGNORE_MISSING);
 
     // Format intervention data.
 
@@ -76,12 +76,12 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
         foreach ($interventions as $intervention) {
             $row = array();
             $targetname = mod_motbot_get_name_of_target($intervention->target);
-            $row[] = \get_string('target:' . $targetname . '_short', 'motbot');
-            $row[] =  userdate($intervention->timecreated);
-            $row[] =  \get_string('state:' . $intervention->state, 'motbot');
-            $row[] =  $intervention->teachers_informed ? 'Yes' : 'No';
-            if ($include_messages) {
-                $row[] =   '<a href="' . (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message))->out(false) . '">View</a>';
+            $row[] = get_string('target:' . $targetname . '_short', 'motbot');
+            $row[] = userdate($intervention->timecreated);
+            $row[] = get_string('state:' . $intervention->state, 'motbot');
+            $row[] = $intervention->teachers_informed ? 'Yes' : 'No';
+            if ($includemessages) {
+                $row[] = '<a href="' . (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $intervention->message))->out(false) . '">View</a>';
             }
             $content[] = $row;
         }
@@ -90,10 +90,10 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
     $table = new html_table();
     $table->attributes['class'] = 'generaltable';
 
-    $head = array(\get_string('motbot:reason', 'motbot'), \get_string('motbot:date', 'motbot'), \get_string('motbot:state', 'motbot'), \get_string('motbot:wereteachersinformed', 'motbot'));
+    $head = array(get_string('motbot:reason', 'motbot'), get_string('motbot:date', 'motbot'), get_string('motbot:state', 'motbot'), get_string('motbot:wereteachersinformed', 'motbot'));
     $align = array('left ', 'left', 'left', 'left', 'left');
-    if ($include_messages) {
-        $head[] = \get_string('motbot:message', 'motbot');
+    if ($includemessages) {
+        $head[] = get_string('motbot:message', 'motbot');
         $align[] = 'left';
     }
     $table->head  = $head;
@@ -115,7 +115,7 @@ function mod_motbot_get_interventions_table($userid, $contextid = null, $include
  * @param int $courseid
  * @return string HTML form.
  */
-function mod_motbot_view_enable_module_form($motbot_course_user, $courseid) {
+function mod_motbot_view_enable_module_form($motbotcourseuser, $courseid) {
     global $CFG, $DB;
 
     $toform = (object) [
@@ -129,15 +129,15 @@ function mod_motbot_view_enable_module_form($motbot_course_user, $courseid) {
         // Handle form cancel operation, if cancel button is present on form.
     } else if ($mform->get_data()) {
         // In this case you process validated data. $mform->get_data() returns data posted in form.
-        $motbot_course_user->authorized = true;
+        $motbotcourseuser->authorized = true;
 
-        if (!$motbot_course_user->id) {
-            $DB->insert_record('motbot_course_user', $motbot_course_user);
+        if (!$motbotcourseuser->id) {
+            $DB->insert_record('motbot_course_user', $motbotcourseuser);
         } else {
-            $DB->update_record('motbot_course_user', $motbot_course_user);
+            $DB->update_record('motbot_course_user', $motbotcourseuser);
         }
 
-        redirect($CFG->wwwroot . '/course/view.php?id=' . $courseid, \get_string('motbot:enablingmotbot', 'motbot'), 1);
+        redirect($CFG->wwwroot . '/course/view.php?id=' . $courseid, get_string('motbot:enablingmotbot', 'motbot'), 1);
     } else {
         // This branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
         // or on the first display of the form.
@@ -233,15 +233,15 @@ function motbot_calc_user_active_period($user) {
         }
     }
 
-    $active_period = 0;
-    $highest_count = 0;
+    $activeperiod = 0;
+    $highestcount = 0;
 
     foreach ($steps as $step => $count) {
-        if ($count > $highest_count) {
-            $highest_count = $count;
-            $active_period = $step;
+        if ($count > $highestcount) {
+            $highestcount = $count;
+            $activeperiod = $step;
         }
     }
 
-    return $active_period - $interval;
+    return $activeperiod - $interval;
 }

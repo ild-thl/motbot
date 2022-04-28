@@ -55,13 +55,13 @@ $PAGE->set_title(format_string($moduleinstance->name . ': ' . $course->fullname)
 $PAGE->set_heading(format_string($course->fullname));
 
 // Get prevoious settings.
-$motbot_user = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
-$motbot_course_user = $DB->get_record('motbot_course_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
+$motbotuser = $DB->get_record('motbot_user', array('user' => $USER->id), '*');
+$motbotcourseuser = $DB->get_record('motbot_course_user', array('motbot' => $moduleinstance->id, 'user' => $USER->id), '*');
 
 // In case there are no previous settings, set default options.
-if (!$motbot_user) {
+if (!$motbotuser) {
     $time = time();
-    $motbot_user = (object) [
+    $motbotuser = (object) [
         'id' => null,
         'user' => $USER->id,
         'authorized' => 0,
@@ -74,8 +74,8 @@ if (!$motbot_user) {
 }
 
 // In case there are no previous settings, set default options.
-if (!$motbot_course_user) {
-    $motbot_course_user = (object) [
+if (!$motbotcourseuser) {
+    $motbotcourseuser = (object) [
         'id' => null,
         'motbot' => $moduleinstance->id,
         'user' => $USER->id,
@@ -94,21 +94,21 @@ if (!$motbot_course_user) {
 // Set default values for course_settings_form.
 $toform = (object) [
     'id' => $id,
-    'authorized' => $motbot_course_user->authorized,
-    'allow_teacher_involvement' => $motbot_course_user->allow_teacher_involvement,
-    'disabled_models' => $motbot_course_user->disabled_models,
-    'disabled_advice' => $motbot_course_user->disabled_advice,
+    'authorized' => $motbotcourseuser->authorized,
+    'allow_teacher_involvement' => $motbotcourseuser->allow_teacher_involvement,
+    'disabled_models' => $motbotcourseuser->disabled_models,
+    'disabled_advice' => $motbotcourseuser->disabled_advice,
     // 'pref_time' => $motbot_course_user->pref_time,
     // 'only_weekdays' => $motbot_course_user->only_weekdays,
 ];
 
-$disabled_models = json_decode($motbot_course_user->disabled_models);
-foreach ($disabled_models as $d) {
+$disabledmodels = json_decode($motbotcourseuser->disabled_models);
+foreach ($disabledmodels as $d) {
     $targetname = mod_motbot_get_name_of_target($d);
     $toform->$targetname = 0;
 }
-$disabled_advice = json_decode($motbot_course_user->disabled_advice);
-foreach ($disabled_advice as $d) {
+$disabledadvice = json_decode($motbotcourseuser->disabled_advice);
+foreach ($disabledadvice as $d) {
     $toform->$d = 0;
 }
 
@@ -129,7 +129,7 @@ $deletedataform = new mod_motbot_delete_intervention_data_form();
 if ($mform->is_cancelled()) {
     // Handle form cancel operation.
 
-    if ($motbot_course_user->authorized) {
+    if ($motbotcourseuser->authorized) {
         $url = $CFG->wwwroot . '/mod/motbot/view.php?id=' . $id;
     } else {
         $url = $CFG->wwwroot . '/course/view.php?id=' . $course->id;
@@ -138,36 +138,36 @@ if ($mform->is_cancelled()) {
 } else if ($fromform = $mform->get_data()) {
     // Process validated data. $mform->get_data() returns data posted in form.
     $time = time();
-    $form_data = $mform->get_data();
-    $motbot_course_user->authorized = $form_data->authorized;
-    $motbot_course_user->allow_teacher_involvement = $form_data->allow_teacher_involvement;
-    $motbot_course_user->disabled_models = $form_data->disabled_models;
-    $motbot_course_user->disabled_advice = $form_data->disabled_advice;
-    $motbot_course_user->usermodified = $USER->id;
-    $motbot_course_user->timemodified = $time;
-    if (!$motbot_course_user->timecreated) {
-        $motbot_course_user->timecreated = $time;
+    $formdata = $mform->get_data();
+    $motbotcourseuser->authorized = $formdata->authorized;
+    $motbotcourseuser->allow_teacher_involvement = $formdata->allow_teacher_involvement;
+    $motbotcourseuser->disabled_models = $formdata->disabled_models;
+    $motbotcourseuser->disabled_advice = $formdata->disabled_advice;
+    $motbotcourseuser->usermodified = $USER->id;
+    $motbotcourseuser->timemodified = $time;
+    if (!$motbotcourseuser->timecreated) {
+        $motbotcourseuser->timecreated = $time;
     }
 
-    $motbot_user->authorized = $form_data->authorized;
-    $motbot_user->allow_teacher_involvement = $form_data->allow_teacher_involvement;
-    $motbot_user->usermodified = $USER->id;
-    $motbot_user->timemodified = $time;
-    if (!$motbot_user->timecreated) {
-        $motbot_user->timecreated = $time;
+    $motbotuser->authorized = $formdata->authorized;
+    $motbotuser->allow_teacher_involvement = $formdata->allow_teacher_involvement;
+    $motbotuser->usermodified = $USER->id;
+    $motbotuser->timemodified = $time;
+    if (!$motbotuser->timecreated) {
+        $motbotuser->timecreated = $time;
     }
     // Update user records.
-    if (!$motbot_course_user->id) {
-        $DB->insert_record('motbot_course_user', $motbot_course_user);
+    if (!$motbotcourseuser->id) {
+        $DB->insert_record('motbot_course_user', $motbotcourseuser);
     } else {
-        $DB->update_record('motbot_course_user', $motbot_course_user);
+        $DB->update_record('motbot_course_user', $motbotcourseuser);
     }
 
-    if (!$motbot_user->id) {
-        $DB->insert_record('motbot_user', $motbot_user);
+    if (!$motbotuser->id) {
+        $DB->insert_record('motbot_user', $motbotuser);
     }
 
-    if ($motbot_course_user->authorized) {
+    if ($motbotcourseuser->authorized) {
         $url = $CFG->wwwroot . '/mod/motbot/view.php?id=' . $id;
     } else {
         $url = $CFG->wwwroot . '/course/view.php?id=' . $course->id;
@@ -185,7 +185,7 @@ if ($mform->is_cancelled()) {
     // or on the first display of the form.
 
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('settings:course_settings_header', 'motbot', array('pluginname' => \get_string('pluginname', 'motbot'), 'coursename' => $course->fullname)));
+    echo $OUTPUT->heading(get_string('settings:course_settings_header', 'motbot', array('pluginname' => get_string('pluginname', 'motbot'), 'coursename' => $course->fullname)));
 
     // Set default data (if any).
     $mform->set_data($toform);

@@ -23,7 +23,7 @@
  */
 
 if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
+    die('Direct access to this script is forbidden.');    // It must be included from a Moodle page
 }
 
 require_once($CFG->dirroot . '/course/moodleform_mod.php');
@@ -43,7 +43,7 @@ class mod_motbot_mod_form extends moodleform_mod {
     /**
      * @var array Array of motbot models, for which there are supposed to be individual setting sections in the form.
      */
-    private $motbot_models = array();
+    private $motbotmodels = array();
 
     /**
      * Form definition.
@@ -62,14 +62,14 @@ class mod_motbot_mod_form extends moodleform_mod {
         $mform->addHelpButton('active', 'mod_form:active', 'motbot');
 
         $this->standard_intro_elements();
-        $mform->setDefault('intro', array('text' => \get_string('mod_form:intro', 'motbot'), 'format' => FORMAT_HTML));
+        $mform->setDefault('intro', array('text' => get_string('mod_form:intro', 'motbot'), 'format' => FORMAT_HTML));
 
         if (!$this->motbot_models || empty($this->motbot_models)) {
             $this->motbot_models = \mod_motbot\manager::get_motbot_models($this->current->instance);
         }
 
-        foreach ($this->motbot_models as $motbot_model) {
-            \mod_motbot\manager::add_intervention_settings($mform, $this->context, $motbot_model);
+        foreach ($this->motbot_models as $motbotmodel) {
+            \mod_motbot\manager::add_intervention_settings($mform, $this->context, $motbotmodel);
         }
 
         $this->standard_coursemodule_elements();
@@ -88,31 +88,31 @@ class mod_motbot_mod_form extends moodleform_mod {
             $this->motbot_models = \mod_motbot\manager::get_motbot_models();
         }
 
-        foreach ($this->motbot_models as $motbot_model) {
-            $target_name = $motbot_model->targetname;
-            $draftitemid = file_get_submitted_draft_itemid($target_name . '_fullmessagehtml' . $motbot_model->prediction);
-            $defaultvalues[$target_name . '_id' . $motbot_model->prediction] = $motbot_model->id;
-            $defaultvalues[$target_name . '_motbot' . $motbot_model->prediction] = $motbot_model->motbot;
-            $defaultvalues[$target_name . '_model' . $motbot_model->prediction] = $motbot_model->model;
-            $defaultvalues[$target_name . '_active' . $motbot_model->prediction] = $motbot_model->active;
-            $defaultvalues[$target_name . '_custom' . $motbot_model->prediction] = $motbot_model->custom;
-            $defaultvalues[$target_name . '_target' . $motbot_model->prediction] = $motbot_model->target;
-            $defaultvalues[$target_name . '_prediction' . $motbot_model->prediction] = $motbot_model->prediction;
-            $defaultvalues[$target_name . '_subject' . $motbot_model->prediction] = $motbot_model->subject;
-            $defaultvalues[$target_name . '_fullmessage' . $motbot_model->prediction] = $motbot_model->fullmessage;
-            $defaultvalues[$target_name . '_fullmessagehtml' . $motbot_model->prediction]['text']   = file_prepare_draft_area(
+        foreach ($this->motbot_models as $motbotmodel) {
+            $targetname = $motbotmodel->targetname;
+            $draftitemid = file_get_submitted_draft_itemid($targetname . '_fullmessagehtml' . $motbotmodel->prediction);
+            $defaultvalues[$targetname . '_id' . $motbotmodel->prediction] = $motbotmodel->id;
+            $defaultvalues[$targetname . '_motbot' . $motbotmodel->prediction] = $motbotmodel->motbot;
+            $defaultvalues[$targetname . '_model' . $motbotmodel->prediction] = $motbotmodel->model;
+            $defaultvalues[$targetname . '_active' . $motbotmodel->prediction] = $motbotmodel->active;
+            $defaultvalues[$targetname . '_custom' . $motbotmodel->prediction] = $motbotmodel->custom;
+            $defaultvalues[$targetname . '_target' . $motbotmodel->prediction] = $motbotmodel->target;
+            $defaultvalues[$targetname . '_prediction' . $motbotmodel->prediction] = $motbotmodel->prediction;
+            $defaultvalues[$targetname . '_subject' . $motbotmodel->prediction] = $motbotmodel->subject;
+            $defaultvalues[$targetname . '_fullmessage' . $motbotmodel->prediction] = $motbotmodel->fullmessage;
+            $defaultvalues[$targetname . '_fullmessagehtml' . $motbotmodel->prediction]['text']   = file_prepare_draft_area(
                 $draftitemid,
                 $this->context->id,
                 'mod_motbot',
                 'attachment',
                 0,
                 mod_motbot_get_editor_options($this->context),
-                $motbot_model->fullmessagehtml
+                $motbotmodel->fullmessagehtml
             );
-            $defaultvalues[$target_name . '_fullmessagehtml' . $motbot_model->prediction]['itemid'] = $draftitemid;
-            $defaultvalues[$target_name . '_usermodified' . $motbot_model->prediction] = $motbot_model->usermodified;
-            $defaultvalues[$target_name . '_timemodified' . $motbot_model->prediction] = $motbot_model->timemodified;
-            $defaultvalues[$target_name . '_timecreated' . $motbot_model->prediction] = $motbot_model->timecreated;
+            $defaultvalues[$targetname . '_fullmessagehtml' . $motbotmodel->prediction]['itemid'] = $draftitemid;
+            $defaultvalues[$targetname . '_usermodified' . $motbotmodel->prediction] = $motbotmodel->usermodified;
+            $defaultvalues[$targetname . '_timemodified' . $motbotmodel->prediction] = $motbotmodel->timemodified;
+            $defaultvalues[$targetname . '_timecreated' . $motbotmodel->prediction] = $motbotmodel->timecreated;
         }
     }
 
@@ -130,8 +130,8 @@ class mod_motbot_mod_form extends moodleform_mod {
 
         $data->motbot_models = array();
 
-        foreach ($this->motbot_models as $motbot_model) {
-            $data->motbot_models[] = $this->get_message_data($motbot_model->targetname, $motbot_model->prediction, $data);
+        foreach ($this->motbot_models as $motbotmodel) {
+            $data->motbot_models[] = $this->get_message_data($motbotmodel->targetname, $motbotmodel->prediction, $data);
         }
 
         return $data;
@@ -144,27 +144,27 @@ class mod_motbot_mod_form extends moodleform_mod {
      * @param object $data Form input data.
      * @return object
      **/
-    private function get_message_data($target_name, $prediction, $data) {
+    private function get_message_data($targetname, $prediction, $data) {
         // Filter out badly formatted break lines.
-        $fullmessagehtml = $data->{$target_name . '_fullmessagehtml' . $prediction}['text'];
+        $fullmessagehtml = $data->{$targetname . '_fullmessagehtml' . $prediction}['text'];
         $fullmessagehtml = str_replace("<p><br></p>", "<br>", $fullmessagehtml);
         $fullmessagehtml = str_replace("<p></p>", "<br>", $fullmessagehtml);
 
         return (object) [
-            'id' => $data->{$target_name . '_id' . $prediction},
-            'motbot' => $data->{$target_name . '_motbot' . $prediction},
-            'model' => $data->{$target_name . '_model' . $prediction},
-            'active' => $data->{$target_name . '_active' . $prediction},
-            'custom' => $data->{$target_name . '_custom' . $prediction},
-            'target' => $data->{$target_name . '_target' . $prediction},
-            'prediction' => $data->{$target_name . '_prediction' . $prediction},
-            'targetname' => $target_name,
-            'subject' => $data->{$target_name . '_subject' . $prediction},
-            'fullmessage' => $data->{$target_name . '_fullmessage' . $prediction},
+            'id' => $data->{$targetname . '_id' . $prediction},
+            'motbot' => $data->{$targetname . '_motbot' . $prediction},
+            'model' => $data->{$targetname . '_model' . $prediction},
+            'active' => $data->{$targetname . '_active' . $prediction},
+            'custom' => $data->{$targetname . '_custom' . $prediction},
+            'target' => $data->{$targetname . '_target' . $prediction},
+            'prediction' => $data->{$targetname . '_prediction' . $prediction},
+            'targetname' => $targetname,
+            'subject' => $data->{$targetname . '_subject' . $prediction},
+            'fullmessage' => $data->{$targetname . '_fullmessage' . $prediction},
             'fullmessagehtml' => $fullmessagehtml,
-            'usermodified' => $data->{$target_name . '_usermodified' . $prediction},
-            'timemodified' => $data->{$target_name . '_timemodified' . $prediction},
-            'timecreated' => $data->{$target_name . '_timecreated' . $prediction},
+            'usermodified' => $data->{$targetname . '_usermodified' . $prediction},
+            'timemodified' => $data->{$targetname . '_timemodified' . $prediction},
+            'timecreated' => $data->{$targetname . '_timecreated' . $prediction},
         ];
     }
 }

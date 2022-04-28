@@ -56,19 +56,24 @@ class last_stop extends \mod_motbot\retention\advice\action {
      */
     public function __construct($user, $course) {
         global $CFG, $DB;
-
-
+        $this->user = $user;
+        $this->course = $course;
 
         // Stop initialization, if $user is unset.
-        if (!$user) {
+        if (!$this->user) {
             throw new \moodle_exception('No user given.');
         }
 
         // If there is no course given, get last accesed course instead.
-        if ($course) {
-            $last_course = $course->id;
+        if ($this->course) {
+            $last_course = $this->course->id;
         } else {
-            $last_course = $DB->get_field('user_lastaccess', 'courseid', array('userid' => $user->id), IGNORE_MISSING);
+            $last_accessed_course_sql = "SELECT courseid 
+                FROM {user_lastaccess} 
+                WHERE userid = :userid  
+                ORDER BY timeaccess DESC 
+                LIMIT 1";
+            $last_course = $DB->get_record_sql($last_accessed_course_sql, array('userid' => $this->user->id), IGNORE_MISSING);
         }
 
         // Stop initialization, if the user dosn't have any last access records.
@@ -83,7 +88,7 @@ class last_stop extends \mod_motbot\retention\advice\action {
 
         // Get the latest course_module_viewed events.
         $select = "eventname LIKE :eventname AND userid = :userid AND courseid = :courseid";
-        $params = array('eventname' => '%course_module_viewed', 'userid' => $user->id, 'courseid' => $last_course);
+        $params = array('eventname' => '%course_module_viewed', 'userid' => $this->user->id, 'courseid' => $last_course);
         $last_activities = $logstore->get_events_select($select, $params, 'timecreated DESC', 0, 25);
 
         $checked_activites = array();
@@ -106,7 +111,7 @@ class last_stop extends \mod_motbot\retention\advice\action {
                 WHERE m.id = :module
                 AND cm.id = :course_module
                 AND cm.completion = 1';
-            $params = array('module' => $activity_log->objectid, 'course_module' => $activity_log->contextinstanceid, 'user' => $user->id);
+            $params = array('module' => $activity_log->objectid, 'course_module' => $activity_log->contextinstanceid, 'user' => $this->user->id);
             $activity = $DB->get_record_sql($sql, $params, IGNORE_MISSING);
             if (!$activity) {
                 // Activity dosn't have completion tracking enabled. Therefore check next activity record.
@@ -115,9 +120,9 @@ class last_stop extends \mod_motbot\retention\advice\action {
 
             // Recommend this activity, if it wasn't yet completed by the user.
             if (!$activity->completed) {
-                $this->title = \get_string('advice:laststop_title', 'motbot');
+                $this->title = (new \lang_string('advice:laststop_title', 'mod_motbot', null))->out($this->user->lang);
                 $this->action_url = $CFG->wwwroot . '/mod/' . $activity_log->objecttable . '/view.php?id=' . $activity_log->contextinstanceid;
-                $this->action = \get_string('motbot:goto', 'motbot', $activity->name);
+                $this->action = (new \lang_string('motbot:goto', 'mod_motbot', $activity->name))->out($this->user->lang);
                 return;
             }
 
@@ -129,7 +134,7 @@ class last_stop extends \mod_motbot\retention\advice\action {
                     WHERE a.userid = :user) AS cccc ON cccc.criteriaid = ccc.id
                 WHERE ccc.course = :course
                 AND cccc.id IS NULL';
-            $params = array('course' => $last_course, 'user' => $user->id);
+            $params = array('course' => $last_course, 'user' => $this->user->id);
             $uncompleted_criteria = $DB->get_records_sql($sql, $params, IGNORE_MISSING);
 
             if (count($uncompleted_criteria) < 1) {
@@ -163,9 +168,9 @@ class last_stop extends \mod_motbot\retention\advice\action {
             // Get the name of the activity.
             $activity_name = $DB->get_field($table->name, 'name', array('id' => $table->instance), IGNORE_MISSING);
             if ($activity_name) {
-                $this->title = \get_string('advice:laststop_title_newchallenge', 'motbot');
+                $this->title = (new \lang_string('advice:laststop_title_newchallenge', 'mod_motbot', null))->out($this->user->lang);
                 $this->action_url = $CFG->wwwroot . '/mod/' . $table->name . '/view.php?id=' . $uncompleted->cmid;
-                $this->action = \get_string('motbot:goto', 'motbot', $activity->name);
+                $this->action = (new \lang_string('motbot:goto', 'mod_motbot', $activity->name))->out($this->user->lang);
                 return;
             }
         }
@@ -177,8 +182,8 @@ class last_stop extends \mod_motbot\retention\advice\action {
             'name' => $course_name,
         ];
 
-        $this->title = \get_string('advice:laststop_title', 'motbot');
+        $this->title = (new \lang_string('advice:laststop_title', 'mod_motbot', null))->out($this->user->lang);
         $this->action_url = $CFG->wwwroot . $activity->url;
-        $this->action = \get_string('motbot:goto', 'motbot', $activity->name);
+        $this->action = (new \lang_string('motbot:goto', 'mod_motbot', $activity->name))->out($this->user->lang);
     }
 }

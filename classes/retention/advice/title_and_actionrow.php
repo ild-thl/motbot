@@ -47,7 +47,7 @@ abstract class title_and_actionrow extends \mod_motbot\retention\advice\base {
     public function render() {
         $result = $this->title;
         foreach ($this->actions as $action) {
-            $result .=  PHP_EOL . '*' . $action['action'] . '*: _' . $action['action_url'] . '_';
+            $result .= PHP_EOL . '' . $action['action_title'] . ': ' . $action['action_url'];
         }
         return $result;
     }
@@ -77,14 +77,14 @@ abstract class title_and_actionrow extends \mod_motbot\retention\advice\base {
         $buttons = array();
         foreach ($this->actions as $action) {
             $buttons[] = [
-                "text" => $action['action_title'],
-                "url" => $action['action_url']
+                [
+                    "text" => $action['action_title'],
+                    "url" => $action['action_url']
+                ]
             ];
         }
         $keyboard = \json_encode([
-            "inline_keyboard" => [
-                $buttons
-            ]
+            "inline_keyboard" => $buttons
         ]);
 
         return [

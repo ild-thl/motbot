@@ -22,7 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-//moodleform is defined in formslib.php
+// moodleform is defined in formslib.php
 require_once("$CFG->libdir/formslib.php");
 require_once("locallib.php");
 /**
@@ -36,7 +36,7 @@ class mod_motbot_edit_models_form extends moodleform {
     /**
      * @var array Array of motbot models, for which there are supposed to be individual setting sections in the form.
      */
-    private $motbot_models = null;
+    private $motbotmodels = null;
 
     /**
      * Form definition.
@@ -51,8 +51,8 @@ class mod_motbot_edit_models_form extends moodleform {
             $this->motbot_models = \mod_motbot\manager::get_motbot_models();
         }
 
-        foreach ($this->motbot_models as $motbot_model) {
-            \mod_motbot\manager::add_intervention_settings($mform, \context_system::instance(), $motbot_model);
+        foreach ($this->motbot_models as $motbotmodel) {
+            \mod_motbot\manager::add_intervention_settings($mform, \context_system::instance(), $motbotmodel);
         }
 
         $this->add_action_buttons();
@@ -73,8 +73,8 @@ class mod_motbot_edit_models_form extends moodleform {
 
         $data->motbot_models = array();
 
-        foreach ($this->motbot_models as $motbot_model) {
-            $data->motbot_models[] = $this->get_message_data($motbot_model->targetname, $motbot_model->prediction, $data);
+        foreach ($this->motbot_models as $motbotmodel) {
+            $data->motbot_models[] = $this->get_message_data($motbotmodel->targetname, $motbotmodel->prediction, $data);
         }
 
         return $data;
@@ -87,26 +87,26 @@ class mod_motbot_edit_models_form extends moodleform {
      * @param object $data Form input data.
      * @return object
      **/
-    private function get_message_data($target_name, $prediction, $data) {
+    private function get_message_data($targetname, $prediction, $data) {
         // Filter out badly formatted break lines.
-        $fullmessagehtml = $data->{$target_name . '_fullmessagehtml' . $prediction}['text'];
+        $fullmessagehtml = $data->{$targetname . '_fullmessagehtml' . $prediction}['text'];
         $fullmessagehtml = str_replace("<p><br></p>", "<br>", $fullmessagehtml);
         $fullmessagehtml = str_replace("<p></p>", "<br>", $fullmessagehtml);
 
         $message = (object) [
-            'id' => $data->{$target_name . '_id' . $prediction},
-            'motbot' => $data->{$target_name . '_motbot' . $prediction},
-            'model' => $data->{$target_name . '_model' . $prediction},
-            'active' => $data->{$target_name . '_active' . $prediction},
-            'custom' => $data->{$target_name . '_custom' . $prediction},
-            'target' => $data->{$target_name . '_target' . $prediction},
-            'prediction' => $data->{$target_name . '_prediction' . $prediction},
-            'targetname' => $target_name,
+            'id' => $data->{$targetname . '_id' . $prediction},
+            'motbot' => $data->{$targetname . '_motbot' . $prediction},
+            'model' => $data->{$targetname . '_model' . $prediction},
+            'active' => $data->{$targetname . '_active' . $prediction},
+            'custom' => $data->{$targetname . '_custom' . $prediction},
+            'target' => $data->{$targetname . '_target' . $prediction},
+            'prediction' => $data->{$targetname . '_prediction' . $prediction},
+            'targetname' => $targetname,
             'fullmessagehtml' => $fullmessagehtml,
-            'usermodified' => $data->{$target_name . '_usermodified' . $prediction},
-            'timemodified' => $data->{$target_name . '_timemodified' . $prediction},
-            'timecreated' => $data->{$target_name . '_timecreated' . $prediction},
-            'itemid' => $data->{$target_name . '_fullmessagehtml' . $prediction}['itemid'],
+            'usermodified' => $data->{$targetname . '_usermodified' . $prediction},
+            'timemodified' => $data->{$targetname . '_timemodified' . $prediction},
+            'timecreated' => $data->{$targetname . '_timecreated' . $prediction},
+            'itemid' => $data->{$targetname . '_fullmessagehtml' . $prediction}['itemid'],
         ];
 
         if ($message->prediction === '') {
@@ -118,15 +118,15 @@ class mod_motbot_edit_models_form extends moodleform {
         }
 
         if ($message->custom) {
-            $message->subject = $data->{$target_name . '_subject' . $prediction};
-            $message->fullmessage = $data->{$target_name . '_fullmessage' . $prediction};
+            $message->subject = $data->{$targetname . '_subject' . $prediction};
+            $message->fullmessage = $data->{$targetname . '_fullmessage' . $prediction};
         } else {
             if (is_scalar($prediction)) {
-                $message->subject = \get_string('mod_form:' . $target_name . '_subject' . '_' . $prediction, 'motbot');
-                $message->fullmessage = \get_string('mod_form:' . $target_name . '_fullmessage' . '_' . $prediction, 'motbot');
+                $message->subject = get_string('mod_form:' . $targetname . '_subject' . '_' . $prediction, 'motbot');
+                $message->fullmessage = get_string('mod_form:' . $targetname . '_fullmessage' . '_' . $prediction, 'motbot');
             } else {
-                $message->subject = \get_string('mod_form:' . $target_name . '_subject', 'motbot');
-                $message->fullmessage = \get_string('mod_form:' . $target_name . '_fullmessage', 'motbot');
+                $message->subject = get_string('mod_form:' . $targetname . '_subject', 'motbot');
+                $message->fullmessage = get_string('mod_form:' . $targetname . '_fullmessage', 'motbot');
             }
         }
 

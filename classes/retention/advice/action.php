@@ -46,7 +46,7 @@ abstract class action extends \mod_motbot\retention\advice\base {
      * @return string
      */
     public function render() {
-        return ($this->title ? $this->title . " " : "") . '*' . $this->action . '*: _' . $this->action_url . '_';
+        return ($this->title ? $this->title . " " : "") . '[' . $this->action . '](' . $this->action_url . ')';
     }
 
     /**

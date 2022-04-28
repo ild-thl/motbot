@@ -67,7 +67,7 @@ class manager {
 
         $intervention = \mod_motbot\retention\intervention::from_prediction($prediction);
 
-        // self::intervene($intervention);
+        self::intervene($intervention);
     }
 
     /**
@@ -83,7 +83,7 @@ class manager {
 
         $message = $intervention->get_intervention_message();
 
-        $messageid = \mod_motbot\manager::send_message($message);
+        $messageid = self::send_message($message);
         if ($messageid) {
             $intervention->set_messageid($messageid);
             $intervention->set_state(\mod_motbot\retention\intervention::INTERVENED);
@@ -123,7 +123,7 @@ class manager {
     /**
      * Sends a message to a user.
      *
-     * @param object $message
+     * @param \core\message\message $message
      * @param \core\user $userto
      * @return int|null Id of sent message, null the message couldn't be sent.
      */
@@ -137,21 +137,21 @@ class manager {
             $message->userto = $userto;
         }
 
-
-        // Actually send the message
+        // Actually send the message.
         try {
             $messageid = message_send($message);
+
+            // Update contexturl with messageid, so user get redirected to the full message, wehen they click on a notification.
+            if ($messageid) {
+                self::set_message_contexturl($messageid);
+                echo ('Message ' . $messageid . ' sent to User ' . $message->userto->id);
+
+                return $messageid;
+            }
         } catch (\moodle_exception $e) {
-            print_r($e->getMessage());
+            throw $e;
         }
-
-        // Update contexturl with messageid, so user get redirected to the full message, wehen they click on a notification.
-        if ($messageid) {
-            self::set_message_contexturl($messageid);
-            echo ('Message ' . $messageid . ' sent to User ' . $message->userto->id);
-        }
-
-        return $messageid;
+        return null;
     }
 
     /**
@@ -168,8 +168,8 @@ class manager {
         }
 
         // URl leading to the message itself.
-        $message->contexturl = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $messageid . '&offset=0'))->out(false); // A relevant URL for the notification
-        $message->contexturlname = \get_string('motbot:notification', 'motbot');
+        $message->contexturl = (new \moodle_url('/message/output/popup/notifications.php?notificationid=' . $messageid . '&offset=0'))->out(false);
+        $message->contexturlname = get_string('motbot:notification', 'motbot');
 
         $DB->update_record('notifications', $message);
     }
@@ -223,15 +223,15 @@ class manager {
     public static function is_motbot_happy($userid, $motbotid = null) {
         global $DB;
         if ($motbotid) {
-            $motbot_course = $DB->get_field('motbot', 'course', array('id' => $motbotid), IGNORE_MISSING);
-            $coursecontext = \context_course::instance($motbot_course);
-            $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'id, active');
+            $motbotcourse = $DB->get_field('motbot', 'course', array('id' => $motbotid), IGNORE_MISSING);
+            $coursecontext = \context_course::instance($motbotcourse);
+            $motbotmodels = $DB->get_records('motbot_model', array('motbot' => $motbotid), '', 'id, active');
         } else {
-            $motbot_models = $DB->get_records('motbot_model', array(), '', 'id, active');
+            $motbotmodels = $DB->get_records('motbot_model', array(), '', 'id, active');
         }
 
-        foreach ($motbot_models as $motbot_model) {
-            if (!$motbot_model->active) {
+        foreach ($motbotmodels as $motbotmodel) {
+            if (!$motbotmodel->active) {
                 continue;
             }
             if ($motbotid) {
@@ -242,7 +242,7 @@ class manager {
                 AND contextid = :contextid
                 ORDER BY timecreated DESC
                 LIMIT 1";
-                $latest_intervention = $DB->get_record_sql($sql, array('contextid' => $coursecontext->id, 'recipient' => $userid, 'model' => $motbot_model->id), IGNORE_MISSING);
+                $latestintervention = $DB->get_record_sql($sql, array('contextid' => $coursecontext->id, 'recipient' => $userid, 'model' => $motbotmodel->id), IGNORE_MISSING);
             } else {
                 $sql = "SELECT *
                 FROM mdl_motbot_intervention
@@ -250,14 +250,16 @@ class manager {
                 AND model = :model
                 ORDER BY timecreated DESC
                 LIMIT 1";
-                $latest_intervention = $DB->get_record_sql($sql, array('recipient' => $userid, 'model' => $motbot_model->id), IGNORE_MISSING);
+                $latestintervention = $DB->get_record_sql($sql, array('recipient' => $userid, 'model' => $motbotmodel->id), IGNORE_MISSING);
             }
 
-            if (!$latest_intervention) {
+            if (!$latestintervention) {
                 continue;
             }
 
-            if ($latest_intervention->state == \mod_motbot\retention\intervention::INTERVENED || $latest_intervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL || $latest_intervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
+            if ($latestintervention->state == \mod_motbot\retention\intervention::INTERVENED ||
+                $latestintervention->state == \mod_motbot\retention\intervention::UNSUCCESSFUL ||
+                $latestintervention->state == \mod_motbot\retention\intervention::SCHEDULED) {
                 return false;
             }
         }
@@ -289,57 +291,61 @@ class manager {
      * @param object $model
      * @return void
      */
-    public static  function add_intervention_settings($mform, $context, $model) {
-        $target_name = \mod_motbot_get_name_of_target($model->target);
+    public static function add_intervention_settings($mform, $context, $model) {
+        $targetname = \mod_motbot_get_name_of_target($model->target);
 
-        $mform->addElement('header', $target_name . '_header' . $model->prediction, get_string('mod_form:' . $target_name . '_header', 'motbot') . $model->prediction_description);
+        $mform->addElement('header', $targetname . '_header' . $model->prediction, get_string('mod_form:' . $targetname . '_header', 'motbot') . $model->prediction_description);
 
-        $mform->addElement('hidden', $target_name . '_id' . $model->prediction);
-        $mform->setType($target_name . '_id' . $model->prediction, PARAM_RAW);
-        $mform->setDefault($target_name . '_id' . $model->prediction, null);
+        $mform->addElement('hidden', $targetname . '_id' . $model->prediction);
+        $mform->setType($targetname . '_id' . $model->prediction, PARAM_RAW);
+        $mform->setDefault($targetname . '_id' . $model->prediction, null);
 
-        $mform->addElement('hidden', $target_name . '_motbot' . $model->prediction);
-        $mform->setType($target_name . '_motbot' . $model->prediction, PARAM_RAW);
-        $mform->setDefault($target_name . '_motbot' . $model->prediction, null);
+        $mform->addElement('hidden', $targetname . '_motbot' . $model->prediction);
+        $mform->setType($targetname . '_motbot' . $model->prediction, PARAM_RAW);
+        $mform->setDefault($targetname . '_motbot' . $model->prediction, null);
 
-        $mform->addElement('hidden', $target_name . '_model' . $model->prediction);
-        $mform->setType($target_name . '_model' . $model->prediction, PARAM_RAW);
+        $mform->addElement('hidden', $targetname . '_model' . $model->prediction);
+        $mform->setType($targetname . '_model' . $model->prediction, PARAM_RAW);
 
-        $mform->addElement('hidden', $target_name . '_target' . $model->prediction);
-        $mform->setType($target_name . '_target' . $model->prediction, PARAM_RAW);
+        $mform->addElement('hidden', $targetname . '_target' . $model->prediction);
+        $mform->setType($targetname . '_target' . $model->prediction, PARAM_RAW);
 
-        $mform->addElement('hidden', $target_name . '_prediction' . $model->prediction);
-        $mform->setType($target_name . '_prediction' . $model->prediction, PARAM_RAW);
-        $mform->setDefault($target_name . '_prediction' . $model->prediction, null);
+        $mform->addElement('hidden', $targetname . '_prediction' . $model->prediction);
+        $mform->setType($targetname . '_prediction' . $model->prediction, PARAM_RAW);
+        $mform->setDefault($targetname . '_prediction' . $model->prediction, null);
 
-        $mform->addElement('selectyesno', $target_name . '_active' . $model->prediction, get_string('mod_form:active', 'motbot'));
-        $mform->addHelpButton($target_name . '_active' . $model->prediction, 'mod_form:active', 'motbot');
+        $mform->addElement('selectyesno', $targetname . '_active' . $model->prediction, get_string('mod_form:active', 'motbot'));
+        $mform->addHelpButton($targetname . '_active' . $model->prediction, 'mod_form:active', 'motbot');
 
-        $mform->addElement('selectyesno', $target_name . '_custom' . $model->prediction, get_string('mod_form:custom', 'motbot'));
-        $mform->addHelpButton($target_name . '_custom' . $model->prediction, 'mod_form:custom', 'motbot');
+        $mform->addElement('selectyesno', $targetname . '_custom' . $model->prediction, get_string('mod_form:custom', 'motbot'));
+        $mform->addHelpButton($targetname . '_custom' . $model->prediction, 'mod_form:custom', 'motbot');
 
+        $mform->addElement('text', $targetname . '_subject' . $model->prediction, get_string('mod_form:subject', 'motbot'), array('size' => '64'));
+        $mform->setType($targetname . '_subject' . $model->prediction, PARAM_TEXT);
+        $mform->addRule($targetname . '_subject' . $model->prediction, get_string('mod_form:too_long', 'motbot', 64), 'maxlength', 64, 'client');
+        $mform->disabledIf($targetname . '_subject' . $model->prediction, $targetname . '_custom' . $model->prediction, 'eq', 0);
 
-        $mform->addElement('text', $target_name . '_subject' . $model->prediction, get_string('mod_form:subject', 'motbot'), array('size' => '64'));
-        $mform->setType($target_name . '_subject' . $model->prediction, PARAM_TEXT);
-        $mform->addRule($target_name . '_subject' . $model->prediction, \get_string('mod_form:too_long', 'motbot', 64), 'maxlength', 64, 'client');
-        $mform->disabledIf($target_name . '_subject' . $model->prediction, $target_name . '_custom' . $model->prediction, 'eq', 0);
+        $mform->addElement('textarea', $targetname . '_fullmessage' . $model->prediction, get_string('mod_form:fullmessage', 'motbot'), 'wrap="virtual" rows="10" cols="150"');
+        $mform->setType($targetname . '_fullmessage' . $model->prediction, PARAM_TEXT);
+        $mform->disabledIf($targetname . '_fullmessage' . $model->prediction, $targetname . '_custom' . $model->prediction, 'eq', 0);
 
-        $mform->addElement('textarea', $target_name . '_fullmessage' . $model->prediction, get_string('mod_form:fullmessage', 'motbot'), 'wrap="virtual" rows="10" cols="150"');
-        $mform->setType($target_name . '_fullmessage' . $model->prediction, PARAM_TEXT);
-        $mform->disabledIf($target_name . '_fullmessage' . $model->prediction, $target_name . '_custom' . $model->prediction, 'eq', 0);
+        $mform->addElement(
+            'editor',
+            $targetname . '_fullmessagehtml' . $model->prediction,
+            get_string('mod_form:fullmessagehtml', 'motbot'),
+            array('rows' => 15), mod_motbot_get_editor_options($context)
+        );
+        $mform->setType($targetname . '_fullmessagehtml' . $model->prediction, PARAM_RAW);
+        $mform->disabledIf($targetname . '_fullmessagehtml' . $model->prediction, $targetname . '_custom' . $model->prediction, 'eq', 0);
 
-        $mform->addElement('editor', $target_name . '_fullmessagehtml' . $model->prediction, get_string('mod_form:fullmessagehtml', 'motbot'), array('rows' => 15), mod_motbot_get_editor_options($context));
-        $mform->setType($target_name . '_fullmessagehtml' . $model->prediction, PARAM_RAW);
-        $mform->disabledIf($target_name . '_fullmessagehtml' . $model->prediction, $target_name . '_custom' . $model->prediction, 'eq', 0);
+        $mform->addElement('hidden', $targetname . '_usermodified' . $model->prediction);
+        $mform->setType($targetname . '_usermodified' . $model->prediction, PARAM_ALPHA);
 
-        $mform->addElement('hidden', $target_name . '_usermodified' . $model->prediction);
-        $mform->setType($target_name . '_usermodified' . $model->prediction, PARAM_ALPHA);
+        $mform->addElement('hidden', $targetname . '_timemodified' . $model->prediction);
+        $mform->setType($targetname . '_timemodified' . $model->prediction, PARAM_ALPHA);
 
-        $mform->addElement('hidden', $target_name . '_timemodified' . $model->prediction);
-        $mform->setType($target_name . '_timemodified' . $model->prediction, PARAM_ALPHA);
-
-        $mform->addElement('hidden', $target_name . '_timecreated' . $model->prediction);
-        $mform->setType($target_name . '_timecreated' . $model->prediction, PARAM_ALPHA);
+        $mform->addElement('hidden', $targetname . '_timecreated' . $model->prediction);
+        $mform->setType($targetname . '_timecreated' . $model->prediction, PARAM_ALPHA);
     }
 
     /**
@@ -376,10 +382,10 @@ class manager {
     public static function get_motbot_models($motbotid = null) {
         global $DB;
 
-        $model_info = array();
+        $modelinfo = array();
 
         // Get previous model settings for this specific motbot.
-        $motbot_models = $DB->get_records('motbot_model', array('motbot' => $motbotid));
+        $motbotmodels = $DB->get_records('motbot_model', array('motbot' => $motbotid));
 
         // Get all available motbot models.
         $sql = "SELECT *
@@ -423,11 +429,11 @@ class manager {
             foreach ($predictions as $index => $prediction) {
                 // Skip models, for which there are already previous records.
                 $exists = false;
-                foreach ($motbot_models as $motbot_model) {
-                    if ($model->target == $motbot_model->target && (count($predictions) <= 1 || $prediction == $motbot_model->prediction)) {
+                foreach ($motbotmodels as $motbotmodel) {
+                    if ($model->target == $motbotmodel->target && (count($predictions) <= 1 || $prediction == $motbotmodel->prediction)) {
                         $exists = true;
-                        $motbot_model->prediction_description = count($predictions) > 1 ? '(' . (((int)$index) + 1) . '/' . count($predictions) . ')' : '';
-                        $model_info[] = $motbot_model;
+                        $motbotmodel->prediction_description = count($predictions) > 1 ? '(' . (((int)$index) + 1) . '/' . count($predictions) . ')' : '';
+                        $modelinfo[] = $motbotmodel;
                         break;
                     }
                 }
@@ -436,10 +442,10 @@ class manager {
                     continue;
                 }
 
-                $target_name = \mod_motbot_get_name_of_target($model->target);
+                $targetname = \mod_motbot_get_name_of_target($model->target);
 
                 // Set default values.
-                $model_info[] = (object) [
+                $modelinfo[] = (object) [
                     'id' => null,
                     'motbot' => $motbotid,
                     'model' => $model->id,
@@ -449,9 +455,9 @@ class manager {
                     'targetname' => null,
                     'prediction' => count($predictions) > 1 ? $prediction : null,
                     'prediction_description' => count($predictions) > 1 ? ' (' . (((int)$index) + 1) . '/' . count($predictions) . ')' : '',
-                    'subject' => \get_string('mod_form:' . $target_name . '_subject' . (count($predictions) > 1 ? '_' . $prediction : ''), 'motbot'),
-                    'fullmessage' => \get_string('mod_form:' . $target_name . '_fullmessage' . (count($predictions) > 1 ? '_' . $prediction : ''), 'motbot'),
-                    'fullmessagehtml' => \get_string('mod_form:' . $target_name . '_fullmessagehtml' . (count($predictions) > 1 ? '_' . $prediction : ''), 'motbot'),
+                    'subject' => get_string('mod_form:' . $targetname . '_subject' . (count($predictions) > 1 ? '_' . $prediction : ''), 'motbot'),
+                    'fullmessage' => get_string('mod_form:' . $targetname . '_fullmessage' . (count($predictions) > 1 ? '_' . $prediction : ''), 'motbot'),
+                    'fullmessagehtml' => get_string('mod_form:' . $targetname . '_fullmessagehtml' . (count($predictions) > 1 ? '_' . $prediction : ''), 'motbot'),
                     'attachementuri' => null,
                     'usermodified' => null,
                     'timecreated' => null,
@@ -461,16 +467,16 @@ class manager {
         }
 
         // Set targetname, and prediction_name property where it isn't already set.
-        foreach ($model_info as $motbot_model) {
-            if (property_exists($motbot_model, 'targetname') && $motbot_model->targetname) {
+        foreach ($modelinfo as $motbotmodel) {
+            if (property_exists($motbotmodel, 'targetname') && $motbotmodel->targetname) {
                 continue;
             }
 
-            $target_name = \mod_motbot_get_name_of_target($motbot_model->target);
-            $motbot_model->targetname = $target_name;
+            $targetname = \mod_motbot_get_name_of_target($motbotmodel->target);
+            $motbotmodel->targetname = $targetname;
         }
 
-        return $model_info;
+        return $modelinfo;
     }
 
     /**
@@ -493,21 +499,21 @@ class manager {
         }
 
         // Discard misconfiguered advice.
-        $advice_list = array();
+        $advicelist = array();
         foreach ($adviceobjs as $obj) {
             $advice = new \mod_motbot\retention\advice($obj);
 
             if ($advice->is_available()) {
-                $advice_list[$obj->id] = $advice;
+                $advicelist[$obj->id] = $advice;
             }
         }
 
-        if (count($advice_list) === 1) {
-            return \reset($advice_list);
+        if (count($advicelist) === 1) {
+            return \reset($advicelist);
         }
 
         // Sort the advice by the name using the current session language.
-        \core_collator::asort_objects_by_method($advice_list, 'get_name');
-        return $advice_list;
+        \core_collator::asort_objects_by_method($advicelist, 'get_name');
+        return $advicelist;
     }
 }
