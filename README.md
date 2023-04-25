@@ -8,7 +8,11 @@ At this point following usecases are fully supported:
 
 ## Installation
 1. Install Moodle 3.5 or later.
-2. Clone this repo to /<your_moodle_installation>/mod/motbot.
+2. Clone this repo with branch until_moodle_311 to /<your_moodle_installation>/mod/motbot.
+  ```
+    git clone --branch until_moodle_311 https://github.com/ild-thl/motbot.git motbot  
+  ```
+
 3. As an admin follow the upgrade steps prompted to you by moodle.
 4. Go to site administration -> analytics -> analytics models and enable all motbot models and set appropriate time intervals.
 5. Add a motbot activity to a course and set active. (Enroled students have to enable their motbot individually before the bot cal analyse their larning activity)
