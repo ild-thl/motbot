@@ -33,10 +33,12 @@ function xmldb_motbot_install() {
     global $CFG;
     $result = true;
 
-    $new_item = "\nmodulenameplural,mod_motbot|/mod/motbot/overview.php|grades";
+    $old_item = "\nmodulenameplural,mod_motbot|/mod/motbot/overview.php|grades";
+    $new_item = "\nmotbots,mod_motbot|/mod/motbot/overview.php";
     $menu = $CFG->customusermenuitems;
     // Remove any old motbot menu items, if there are any.
     $menu = str_replace($new_item, "", $menu);
+    $menu = str_replace($old_item, "", $menu);
 
     // Add the motbot menu item.
     $menu = $menu .= $new_item;
