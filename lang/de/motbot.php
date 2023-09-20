@@ -194,12 +194,21 @@ $string['mod_form:no_recent_accesses_subject'] = 'Besuche den Kurs {course_short
 $string['mod_form:recent_cognitive_presence_header'] = 'Recent cognitive presence Settings';
 
 $string['mod_form:recent_cognitive_presence_subject_0'] = 'Wo warst du solang?';
+$string['mod_form:recent_cognitive_presence_subject'] = 'Wo warst du solang?';
 $string['mod_form:recent_cognitive_presence_fullmessage_0'] = 'Hi {firstname} {lastname},
 es scheint als hättest du dich schon lange nicht mehr eingeloggt.
 
 {suggestions}
 
 Viele Grüße, dein {motbot}.';
+
+$string['mod_form:recent_cognitive_presence_fullmessage'] = 'Hi {firstname} {lastname},
+es scheint als hättest du dich schon lange nicht mehr eingeloggt.
+
+{suggestions}
+
+Viele Grüße, dein {motbot}.';
+$string['mod_form:recent_cognitive_presence_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>es scheint als hättest du dich schon lange nicht mehr eingeloggt.</p></br><p>Viele Grüße, dein {motbot}</p>';
 $string['mod_form:recent_cognitive_presence_fullmessagehtml_0'] = '<p>Hi {firstname} {lastname},</p></br><p>es scheint als hättest du dich schon lange nicht mehr eingeloggt.</p></br><p>Viele Grüße, dein {motbot}</p>';
 
 

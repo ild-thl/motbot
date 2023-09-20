@@ -188,6 +188,7 @@ $string['mod_form:no_recent_accesses_header'] = 'No Recent Accesses Settings';
 $string['mod_form:no_recent_accesses_subject'] = 'We miss you, {firstname}!';
 
 $string['mod_form:recent_cognitive_presence_header'] = 'Recent cognitive presence Settings';
+$string['mod_form:recent_cognitive_presence_subject'] = 'You hav\'nt been around lately!';
 $string['mod_form:recent_cognitive_presence_subject_0'] = 'You hav\'nt been around lately!';
 $string['mod_form:recent_cognitive_presence_fullmessage_0'] = 'Hi {firstname} {lastname},
 it seems like you haven\'t been around lately.
@@ -197,6 +198,16 @@ it seems like you haven\'t been around lately.
 Enjoy learning!
 
 Kind regards, your {motbot}.';
+$string['mod_form:recent_cognitive_presence_fullmessage'] = 'Hi {firstname} {lastname},
+it seems like you haven\'t been around lately.
+
+{suggestions}
+
+Enjoy learning!
+
+Kind regards, your {motbot}.';
+
+$string['mod_form:recent_cognitive_presence_fullmessagehtml'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you haven´t been around lately.</p><p>We´d be happy to welcome you back!</p></br><p>Your {motbot}</p>';
 $string['mod_form:recent_cognitive_presence_fullmessagehtml_0'] = '<p>Hi {firstname} {lastname},</p></br><p>it seems like you haven´t been around lately.</p><p>We´d be happy to welcome you back!</p></br><p>Your {motbot}</p>';
 
 $string['mod_form:recent_cognitive_presence_subject_1'] = 'You hav\'nt been very active lately!';
