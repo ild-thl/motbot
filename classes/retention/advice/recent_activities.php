@@ -79,9 +79,7 @@ class recent_activities extends \mod_motbot\retention\advice\title_and_actionrow
             // Handle the case when no records are found - ain't to be possible but anyway.
             $starttime = $endtime; // The follow up query won't return any results -> No recent activities. is thrown.  
         }
-        
 
-        $starttime = $lastaccess->timeaccess;
         $select = "(eventname = :create OR eventname = :update) AND timecreated > :starttime AND timecreated <= :endtime";
         $params = array('create' => '\core\event\course_module_created', 'update' => '\core\event\course_module_updated', 'starttime' => $starttime, 'endtime' => $endtime);
         if ($this->course) {
