@@ -73,7 +73,16 @@ class recent_forum_activity extends \mod_motbot\retention\advice\title_and_actio
             $lastaccesscondition['courseid'] = $this->course->id;
         }
         $lastaccess = $DB->get_record('user_lastaccess', $lastaccesscondition, '*', IGNORE_MISSING);
-        $starttime = $lastaccess->timeaccess;
+        // ADDED tinjohn throws warning for empty result.
+        // $starttime = $lastaccess->timeaccess;
+        if ($lastaccess !== null && isset($lastaccess->timeaccess)) {
+            $starttime = $lastaccess->timeaccess;
+        } else {
+            // fast fix
+            $starttime = $endtime; // Oder eine andere Standardbehandlung
+        }
+        // END.
+
         $sql = "SELECT d.id, d.course, p.userid, p.created, p.subject
                      FROM {forum_discussions} d
                 LEFT JOIN {forum_posts} p
